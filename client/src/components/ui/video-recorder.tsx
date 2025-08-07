@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, RotateCcw, Images, Circle, Square, Zap, Sparkles, Music, Type, Scroll, X } from "lucide-react";
+import { Camera, RotateCcw, Images, Circle, Square, Zap, Sparkles, Music, Type, Scroll, X, FlipHorizontal, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "./button";
 import Teleprompter from "@/components/ui/teleprompter";
 import { useMediaRecorder } from "@/hooks/use-media-recorder";
@@ -22,6 +25,11 @@ export default function VideoRecorder({
   const [duration, setDuration] = useState<15 | 30 | 60>(15);
   const [showTeleprompter, setShowTeleprompter] = useState(false);
   const [flashEnabled, setFlashEnabled] = useState(false);
+  const [mirrorEnabled, setMirrorEnabled] = useState(true);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { stream, startCamera, switchCamera, stopCamera, facingMode } = useCamera();
   const { 
@@ -51,6 +59,74 @@ export default function VideoRecorder({
     }
   };
 
+  // Show save modal when recording stops
+  useEffect(() => {
+    if (recordedBlob && !isRecording) {
+      setShowSaveModal(true);
+    }
+  }, [recordedBlob, isRecording]);
+
+  // Save reel mutation
+  const saveReelMutation = useMutation({
+    mutationFn: async (reelData: {
+      title: string;
+      description?: string;
+      videoUrl: string;
+      duration: number;
+      script?: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/reels", reelData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reel Saved!",
+        description: "Your reel has been saved successfully.",
+      });
+      setShowSaveModal(false);
+    },
+    onError: () => {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your reel. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveReel = (title: string, description?: string) => {
+    if (recordedBlob) {
+      // Create a blob URL for the video (in real app, you'd upload to cloud storage)
+      const videoUrl = URL.createObjectURL(recordedBlob);
+      
+      saveReelMutation.mutate({
+        title,
+        description,
+        videoUrl,
+        duration: recordingTime,
+        script: currentScript,
+      });
+    }
+  };
+
+  const downloadVideo = () => {
+    if (recordedBlob) {
+      const url = URL.createObjectURL(recordedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `thoxt-reel-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: "Your video is being downloaded.",
+      });
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -67,7 +143,7 @@ export default function VideoRecorder({
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
             data-testid="video-preview"
           />
         ) : (
@@ -82,15 +158,27 @@ export default function VideoRecorder({
 
         {/* Top Controls Overlay */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center" data-testid="top-controls">
-          <Button
-            variant="ghost" 
-            size="icon"
-            className={`bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 ${flashEnabled ? 'text-thoxt-yellow' : ''}`}
-            onClick={() => setFlashEnabled(!flashEnabled)}
-            data-testid="button-flash"
-          >
-            <Zap className="w-5 h-5" />
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              variant="ghost" 
+              size="icon"
+              className={`bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 ${flashEnabled ? 'text-thoxt-yellow' : ''}`}
+              onClick={() => setFlashEnabled(!flashEnabled)}
+              data-testid="button-flash"
+            >
+              <Zap className="w-5 h-5" />
+            </Button>
+            
+            <Button
+              variant="ghost" 
+              size="icon"
+              className={`bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 ${mirrorEnabled ? 'text-thoxt-yellow' : ''}`}
+              onClick={() => setMirrorEnabled(!mirrorEnabled)}
+              data-testid="button-mirror"
+            >
+              <FlipHorizontal className="w-5 h-5" />
+            </Button>
+          </div>
           
           <div className="flex space-x-2" data-testid="duration-controls">
             {[15, 30, 60].map((dur) => (
@@ -222,6 +310,65 @@ export default function VideoRecorder({
             <RotateCcw className="text-white w-6 h-6" />
           </Button>
         </div>
+        
+        {/* Save Modal */}
+        {showSaveModal && recordedBlob && (
+          <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
+            <div className="bg-thoxt-gray p-6 rounded-lg w-80 mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-white">Save Your Reel</h3>
+              
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Enter reel title..."
+                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow"
+                  id="reel-title"
+                  data-testid="input-reel-title"
+                />
+                
+                <textarea
+                  placeholder="Add description (optional)..."
+                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow h-20 resize-none"
+                  id="reel-description"
+                  data-testid="textarea-reel-description"
+                />
+                
+                <div className="flex space-x-2">
+                  <Button
+                    className="flex-1 bg-thoxt-yellow text-black font-medium hover:bg-yellow-400"
+                    onClick={() => {
+                      const title = (document.getElementById('reel-title') as HTMLInputElement)?.value || 'Untitled Reel';
+                      const description = (document.getElementById('reel-description') as HTMLTextAreaElement)?.value;
+                      handleSaveReel(title, description);
+                    }}
+                    disabled={saveReelMutation.isPending}
+                    data-testid="button-save-reel"
+                  >
+                    {saveReelMutation.isPending ? 'Saving...' : 'Save Reel'}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+                    onClick={downloadVideo}
+                    data-testid="button-download-reel"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+                    onClick={() => setShowSaveModal(false)}
+                    data-testid="button-cancel-save"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

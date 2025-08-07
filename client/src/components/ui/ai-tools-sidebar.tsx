@@ -46,14 +46,40 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
       });
     },
     onError: (error) => {
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate script. Please try again.",
-        variant: "destructive",
-      });
       console.error("Script generation error:", error);
+      // Provide a fallback script when API fails
+      const fallbackScript = generateFallbackScript(customTopic || selectedArticleId, selectedTone, selectedDuration);
+      setGeneratedScript(fallbackScript);
+      onScriptGenerated(fallbackScript);
+      
+      toast({
+        title: "Using Demo Script",
+        description: "API unavailable. Generated a demo script for testing.",
+        variant: "default",
+      });
     },
   });
+
+  // Generate fallback script when API is unavailable
+  const generateFallbackScript = (source: string, tone: string, duration: number): string => {
+    const toneStyles = {
+      engaging: "Hey everyone! 🔥",
+      formal: "Welcome to today's topic.",
+      funny: "So... this is happening! 😄",
+      educational: "Let's explore this together."
+    };
+    
+    const opener = toneStyles[tone as keyof typeof toneStyles] || toneStyles.engaging;
+    const topic = customTopic || "this amazing topic";
+    
+    if (duration === 15) {
+      return `${opener} Today we're talking about ${topic}. This is something you need to know about. What do you think? Drop a comment! 💭`;
+    } else if (duration === 30) {
+      return `${opener} Let's dive into ${topic} today! This is really important because it affects all of us. Here's what you need to know - it's changing how we think about everything. What's your take on this? Share your thoughts below! 🚀`;
+    } else {
+      return `${opener} Welcome back! Today I want to talk about ${topic} and why it matters to all of us. This is something I've been thinking about a lot lately, and I think you'll find it really interesting too. The key thing to understand is that this impacts our daily lives in ways we might not even realize. So here's what I've learned, and I'd love to hear your perspective on this. Make sure to subscribe for more content like this, and let me know in the comments what you think! 🎯`;
+    }
+  };
 
   const handleGenerateScript = () => {
     if (!selectedTone || !selectedDuration) {
@@ -107,7 +133,12 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           <div className="space-y-2">
             <Select 
               value={selectedArticleId} 
-              onValueChange={setSelectedArticleId}
+              onValueChange={(value) => {
+                setSelectedArticleId(value);
+                if (value) {
+                  setCustomTopic(""); // Clear custom topic when article is selected
+                }
+              }}
               disabled={articlesLoading || !!customTopic}
             >
               <SelectTrigger className="w-full bg-gray-800 text-white border-gray-700" data-testid="select-article">
@@ -128,7 +159,12 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
               type="text"
               placeholder="Enter custom topic..."
               value={customTopic}
-              onChange={(e) => setCustomTopic(e.target.value)}
+              onChange={(e) => {
+                setCustomTopic(e.target.value);
+                if (e.target.value) {
+                  setSelectedArticleId(""); // Clear article selection when custom topic is entered
+                }
+              }}
               className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow"
               disabled={!!selectedArticleId}
               data-testid="input-custom-topic"
