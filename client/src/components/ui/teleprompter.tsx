@@ -6,11 +6,33 @@ interface TeleprompterProps {
   isVisible: boolean;
   script: string;
   onClose: () => void;
+  isRecording?: boolean;
+  recordingTime?: number;
 }
 
-export default function Teleprompter({ isVisible, script, onClose }: TeleprompterProps) {
+export default function Teleprompter({ isVisible, script, onClose, isRecording = false, recordingTime = 0 }: TeleprompterProps) {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [words, setWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (script) {
+      setWords(script.split(' ').filter(word => word.trim()));
+    }
+  }, [script]);
+
+  useEffect(() => {
+    if (isRecording && isVisible && words.length > 0) {
+      // Highlight words based on recording time
+      // Assume average reading speed of 150 words per minute (0.4 seconds per word)
+      const wordsPerSecond = 150 / 60;
+      const expectedWordIndex = Math.floor(recordingTime * wordsPerSecond);
+      setCurrentWordIndex(Math.min(expectedWordIndex, words.length - 1));
+    } else if (!isRecording) {
+      setCurrentWordIndex(0);
+    }
+  }, [isRecording, recordingTime, words.length, isVisible]);
 
   useEffect(() => {
     if (!isVisible || !isScrolling) return;
@@ -46,7 +68,31 @@ export default function Teleprompter({ isVisible, script, onClose }: Teleprompte
           data-testid="teleprompter-text"
         >
           {script ? (
-            <p>{script}</p>
+            <div className="text-left">
+              {words.map((word, index) => {
+                const isActive = isRecording && index === currentWordIndex;
+                const isPast = isRecording && index < currentWordIndex;
+                
+                return (
+                  <span
+                    key={index}
+                    className={`transition-all duration-300 ${
+                      isActive
+                        ? 'bg-thoxt-yellow text-black px-1 rounded font-bold scale-110 inline-block'
+                        : isPast
+                        ? 'text-gray-400'
+                        : 'text-white'
+                    }`}
+                    style={{
+                      marginRight: '4px',
+                      display: 'inline-block'
+                    }}
+                  >
+                    {word}
+                  </span>
+                );
+              })}
+            </div>
           ) : (
             <p className="text-gray-400">Generate a script using the AI tools to see it here...</p>
           )}

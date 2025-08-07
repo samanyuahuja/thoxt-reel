@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "./button";
 import Teleprompter from "@/components/ui/teleprompter";
 import { useMediaRecorder } from "@/hooks/use-media-recorder";
+import { useCanvasRecorder } from "@/hooks/use-canvas-recorder";
 import { useCamera } from "@/hooks/use-camera";
 import type { TextOverlay } from "./text-overlay-modal";
 import type { VideoFilter } from "./filters-modal";
@@ -47,12 +48,27 @@ export default function VideoRecorder({
 
   const { stream, startCamera, switchCamera, stopCamera, facingMode } = useCamera();
   const { 
-    isRecording, 
-    recordingTime, 
-    startRecording, 
-    stopRecording, 
-    recordedBlob 
+    isRecording: isBasicRecording, 
+    recordingTime: basicRecordingTime, 
+    startRecording: startBasicRecording, 
+    stopRecording: stopBasicRecording, 
+    recordedBlob: basicRecordedBlob 
   } = useMediaRecorder(stream);
+  
+  const {
+    isRecording: isCanvasRecording,
+    recordingTime: canvasRecordingTime,
+    startRecording: startCanvasRecording,
+    stopRecording: stopCanvasRecording,
+    recordedBlob: canvasRecordedBlob,
+    canvasRef
+  } = useCanvasRecorder();
+  
+  // Use canvas recording when mirror or filters are enabled
+  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter;
+  const isRecording = useCanvasMode ? isCanvasRecording : isBasicRecording;
+  const recordingTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
+  const recordedBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
 
   useEffect(() => {
     startCamera();
@@ -67,13 +83,24 @@ export default function VideoRecorder({
 
   const handleRecordToggle = () => {
     if (isRecording) {
-      stopRecording();
+      if (useCanvasMode) {
+        stopCanvasRecording();
+      } else {
+        stopBasicRecording();
+      }
       // Pause background music when stopping recording
       if (backgroundAudioRef.current) {
         backgroundAudioRef.current.pause();
       }
     } else {
-      startRecording();
+      if (useCanvasMode && videoRef.current) {
+        startCanvasRecording(videoRef.current, {
+          mirrorEnabled,
+          filter: currentFilter?.cssFilter
+        });
+      } else {
+        startBasicRecording();
+      }
       // Start background music when starting recording
       if (currentMusic && backgroundAudioRef.current) {
         backgroundAudioRef.current.src = currentMusic.url;
@@ -176,6 +203,12 @@ export default function VideoRecorder({
 
   return (
     <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio" style={{ width: '380px', height: '675px' }} data-testid="video-recorder">
+      {/* Hidden Canvas for Recording */}
+      <canvas
+        ref={canvasRef}
+        style={{ display: 'none' }}
+      />
+      
       {/* Video Preview Area */}
       <div className="w-full h-full relative">
         {stream ? (
@@ -254,6 +287,8 @@ export default function VideoRecorder({
           isVisible={showTeleprompter}
           script={currentScript}
           onClose={() => setShowTeleprompter(false)}
+          isRecording={isRecording}
+          recordingTime={recordingTime}
         />
         
         {/* Text Overlays */}

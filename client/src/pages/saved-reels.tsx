@@ -107,7 +107,7 @@ export default function SavedReels() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-thoxt-dark text-white">
+    <div className="flex h-screen bg-thoxt-dark text-white">
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
@@ -183,179 +183,181 @@ export default function SavedReels() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto bg-thoxt-gray p-6 min-h-0" data-testid="reels-content">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-thoxt-yellow mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading your reels...</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center text-red-400">
-                <p>Failed to load reels. Please try again.</p>
-              </div>
-            </div>
-          ) : !sortedReels || sortedReels.length === 0 ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Play className="w-12 h-12 text-gray-500" />
+        <div className="flex-1 bg-thoxt-gray" data-testid="reels-content">
+          <div className="h-full overflow-y-auto p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-thoxt-yellow mx-auto mb-4"></div>
+                  <p className="text-gray-400">Loading your reels...</p>
                 </div>
-                <h3 className="text-lg font-medium mb-2">No reels yet</h3>
-                <p className="text-gray-400 mb-4">
-                  {searchQuery || filterBy !== "all" 
-                    ? "No reels match your search or filter criteria." 
-                    : "Start creating your first reel to see it here!"}
-                </p>
-                <Button 
-                  className="bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors"
-                  data-testid="empty-state-create-button"
-                >
-                  Create Your First Reel
-                </Button>
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8" data-testid="reels-grid">
-              {sortedReels.map((reel) => (
-                <div 
-                  key={reel.id}
-                  className="bg-thoxt-dark rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-105 group"
-                  data-testid={`reel-card-${reel.id}`}
-                >
-                  {/* Video Thumbnail */}
-                  <div className="relative aspect-[9/16] bg-gray-800 overflow-hidden cursor-pointer"
-                       onClick={() => handleVideoPlay(reel.id)}>
-                    {reel.videoUrl ? (
-                      <video 
-                        ref={(el) => {
-                          if (el) {
-                            videoRefs.current[reel.id] = el;
-                          }
-                        }}
-                        className="w-full h-full object-cover"
-                        poster="/api/placeholder/320/568"
-                        loop
-                        muted
-                        playsInline
-                        onEnded={() => handleVideoEnded(reel.id)}
-                        data-testid={`reel-video-${reel.id}`}
-                      >
-                        <source src={reel.videoUrl} type="video/webm" />
-                        <source src={reel.videoUrl} type="video/mp4" />
-                      </video>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                        <Play className="w-16 h-16 text-gray-500" />
-                      </div>
-                    )}
-                    
-                    {/* Play/Pause Overlay */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                      {playingVideo === reel.id ? (
-                        <Pause className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            ) : error ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center text-red-400">
+                  <p>Failed to load reels. Please try again.</p>
+                </div>
+              </div>
+            ) : !sortedReels || sortedReels.length === 0 ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play className="w-12 h-12 text-gray-500" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No reels yet</h3>
+                  <p className="text-gray-400 mb-4">
+                    {searchQuery || filterBy !== "all" 
+                      ? "No reels match your search or filter criteria." 
+                      : "Start creating your first reel to see it here!"}
+                  </p>
+                  <Button 
+                    className="bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors"
+                    data-testid="empty-state-create-button"
+                  >
+                    Create Your First Reel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8" data-testid="reels-grid">
+                {sortedReels.map((reel) => (
+                  <div 
+                    key={reel.id}
+                    className="bg-thoxt-dark rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-105 group"
+                    data-testid={`reel-card-${reel.id}`}
+                  >
+                    {/* Video Thumbnail */}
+                    <div className="relative aspect-[9/16] bg-gray-800 overflow-hidden cursor-pointer"
+                         onClick={() => handleVideoPlay(reel.id)}>
+                      {reel.videoUrl ? (
+                        <video 
+                          ref={(el) => {
+                            if (el) {
+                              videoRefs.current[reel.id] = el;
+                            }
+                          }}
+                          className="w-full h-full object-cover"
+                          poster="/api/placeholder/320/568"
+                          loop
+                          muted
+                          playsInline
+                          onEnded={() => handleVideoEnded(reel.id)}
+                          data-testid={`reel-video-${reel.id}`}
+                        >
+                          <source src={reel.videoUrl} type="video/webm" />
+                          <source src={reel.videoUrl} type="video/mp4" />
+                        </video>
                       ) : (
-                        <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                          <Play className="w-16 h-16 text-gray-500" />
+                        </div>
+                      )}
+                      
+                      {/* Play/Pause Overlay */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
+                        {playingVideo === reel.id ? (
+                          <Pause className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                          <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </div>
+                      
+                      {/* Duration Badge */}
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
+                        {formatDuration(reel.duration)}
+                      </div>
+                      
+                      {/* Playing Indicator */}
+                      {playingVideo === reel.id && (
+                        <div className="absolute top-2 left-2 bg-thoxt-yellow text-black px-2 py-1 rounded-full text-xs font-semibold">
+                          Playing
+                        </div>
                       )}
                     </div>
-                    
-                    {/* Duration Badge */}
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
-                      {formatDuration(reel.duration)}
-                    </div>
-                    
-                    {/* Playing Indicator */}
-                    {playingVideo === reel.id && (
-                      <div className="absolute top-2 left-2 bg-thoxt-yellow text-black px-2 py-1 rounded-full text-xs font-semibold">
-                        Playing
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Content */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2" data-testid={`reel-title-${reel.id}`}>
-                      {reel.title}
-                    </h3>
-                    
-                    {reel.description && (
-                      <p className="text-gray-400 text-sm mb-3 line-clamp-2" data-testid={`reel-description-${reel.id}`}>
-                        {reel.description}
-                      </p>
-                    )}
-                    
-                    {/* Stats */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-1">
-                          <Eye className="w-3 h-3" />
-                          <span>{reel.views || 0}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formatDate(reel.createdAt)}</span>
+                    {/* Content */}
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-2" data-testid={`reel-title-${reel.id}`}>
+                        {reel.title}
+                      </h3>
+                      
+                      {reel.description && (
+                        <p className="text-gray-400 text-sm mb-3 line-clamp-2" data-testid={`reel-description-${reel.id}`}>
+                          {reel.description}
+                        </p>
+                      )}
+                      
+                      {/* Stats */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-1">
+                            <Eye className="w-3 h-3" />
+                            <span>{reel.views || 0}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>{formatDate(reel.createdAt)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="flex items-center justify-between">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-thoxt-yellow hover:bg-thoxt-yellow hover:text-black transition-colors"
-                        onClick={() => handleVideoPlay(reel.id)}
-                        data-testid={`play-button-${reel.id}`}
-                      >
-                        {playingVideo === reel.id ? (
-                          <>
-                            <Pause className="w-4 h-4 mr-1" />
-                            Pause
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-4 h-4 mr-1" />
-                            Play
-                          </>
-                        )}
-                      </Button>
                       
-                      <div className="flex space-x-1">
+                      {/* Actions */}
+                      <div className="flex items-center justify-between">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="text-gray-400 hover:text-white"
-                          data-testid={`share-button-${reel.id}`}
+                          size="sm"
+                          className="text-thoxt-yellow hover:bg-thoxt-yellow hover:text-black transition-colors"
+                          onClick={() => handleVideoPlay(reel.id)}
+                          data-testid={`play-button-${reel.id}`}
                         >
-                          <Share className="w-4 h-4" />
+                          {playingVideo === reel.id ? (
+                            <>
+                              <Pause className="w-4 h-4 mr-1" />
+                              Pause
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 mr-1" />
+                              Play
+                            </>
+                          )}
                         </Button>
                         
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-gray-400 hover:text-white"
-                          data-testid={`download-button-${reel.id}`}
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-gray-400 hover:text-red-400"
-                          data-testid={`delete-button-${reel.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-gray-400 hover:text-white"
+                            data-testid={`share-button-${reel.id}`}
+                          >
+                            <Share className="w-4 h-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-gray-400 hover:text-white"
+                            data-testid={`download-button-${reel.id}`}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-gray-400 hover:text-red-400"
+                            data-testid={`delete-button-${reel.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
