@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import SidebarNavigation from "@/components/ui/sidebar-navigation";
-import { Search, Play, Share, Download, Trash2, Eye, Calendar, Clock, Filter } from "lucide-react";
+import { Search, Play, Share, Download, Trash2, Eye, Calendar, Clock, Filter, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -22,6 +22,8 @@ export default function SavedReels() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [filterBy, setFilterBy] = useState("all");
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
   // Fetch saved reels
   const { data: reels, isLoading, error } = useQuery<SavedReel[]>({
@@ -69,6 +71,39 @@ export default function SavedReels() {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const handleVideoPlay = async (reelId: string) => {
+    const video = videoRefs.current[reelId];
+    if (!video) return;
+
+    // Pause any currently playing video
+    if (playingVideo && playingVideo !== reelId) {
+      const currentlyPlaying = videoRefs.current[playingVideo];
+      if (currentlyPlaying) {
+        currentlyPlaying.pause();
+      }
+    }
+
+    if (playingVideo === reelId) {
+      // Pause current video
+      video.pause();
+      setPlayingVideo(null);
+    } else {
+      // Play selected video
+      try {
+        await video.play();
+        setPlayingVideo(reelId);
+      } catch (error) {
+        console.error('Error playing video:', error);
+        // Handle invalid blob URLs
+        alert('This video is no longer available. It may have been recorded in a previous session.');
+      }
+    }
+  };
+
+  const handleVideoEnded = (reelId: string) => {
+    setPlayingVideo(null);
   };
 
   return (
@@ -148,7 +183,7 @@ export default function SavedReels() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto bg-thoxt-gray p-6" data-testid="reels-content">
+        <div className="flex-1 overflow-y-auto bg-thoxt-gray p-6 min-h-0" data-testid="reels-content">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -183,7 +218,7 @@ export default function SavedReels() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="reels-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8" data-testid="reels-grid">
               {sortedReels.map((reel) => (
                 <div 
                   key={reel.id}
@@ -191,14 +226,25 @@ export default function SavedReels() {
                   data-testid={`reel-card-${reel.id}`}
                 >
                   {/* Video Thumbnail */}
-                  <div className="relative aspect-[9/16] bg-gray-800 overflow-hidden">
+                  <div className="relative aspect-[9/16] bg-gray-800 overflow-hidden cursor-pointer"
+                       onClick={() => handleVideoPlay(reel.id)}>
                     {reel.videoUrl ? (
                       <video 
+                        ref={(el) => {
+                          if (el) {
+                            videoRefs.current[reel.id] = el;
+                          }
+                        }}
                         className="w-full h-full object-cover"
                         poster="/api/placeholder/320/568"
+                        loop
+                        muted
+                        playsInline
+                        onEnded={() => handleVideoEnded(reel.id)}
                         data-testid={`reel-video-${reel.id}`}
                       >
                         <source src={reel.videoUrl} type="video/webm" />
+                        <source src={reel.videoUrl} type="video/mp4" />
                       </video>
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
@@ -206,15 +252,26 @@ export default function SavedReels() {
                       </div>
                     )}
                     
-                    {/* Play Overlay */}
+                    {/* Play/Pause Overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                      <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {playingVideo === reel.id ? (
+                        <Pause className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      ) : (
+                        <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
                     </div>
                     
                     {/* Duration Badge */}
                     <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
                       {formatDuration(reel.duration)}
                     </div>
+                    
+                    {/* Playing Indicator */}
+                    {playingVideo === reel.id && (
+                      <div className="absolute top-2 left-2 bg-thoxt-yellow text-black px-2 py-1 rounded-full text-xs font-semibold">
+                        Playing
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
@@ -249,10 +306,20 @@ export default function SavedReels() {
                         variant="ghost"
                         size="sm"
                         className="text-thoxt-yellow hover:bg-thoxt-yellow hover:text-black transition-colors"
+                        onClick={() => handleVideoPlay(reel.id)}
                         data-testid={`play-button-${reel.id}`}
                       >
-                        <Play className="w-4 h-4 mr-1" />
-                        Play
+                        {playingVideo === reel.id ? (
+                          <>
+                            <Pause className="w-4 h-4 mr-1" />
+                            Pause
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-4 h-4 mr-1" />
+                            Play
+                          </>
+                        )}
                       </Button>
                       
                       <div className="flex space-x-1">
