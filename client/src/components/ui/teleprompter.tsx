@@ -1,0 +1,89 @@
+import { useEffect, useState } from "react";
+import { Button } from "./button";
+import { X, Edit3 } from "lucide-react";
+
+interface TeleprompterProps {
+  isVisible: boolean;
+  script: string;
+  onClose: () => void;
+}
+
+export default function Teleprompter({ isVisible, script, onClose }: TeleprompterProps) {
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  useEffect(() => {
+    if (!isVisible || !isScrolling) return;
+
+    const interval = setInterval(() => {
+      setScrollPosition(prev => prev + 1);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [isVisible, isScrolling]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="absolute inset-x-4 top-20 bg-black bg-opacity-70 rounded-lg p-4 z-10" data-testid="teleprompter-overlay">
+      <div className="text-white text-center space-y-2">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-lg font-medium" data-testid="teleprompter-title">AI Generated Script</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:text-thoxt-yellow w-6 h-6"
+            onClick={onClose}
+            data-testid="button-close-teleprompter"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <div 
+          className="text-sm leading-relaxed max-h-32 overflow-y-auto scrollbar-hide"
+          style={{ transform: `translateY(-${scrollPosition}px)` }}
+          data-testid="teleprompter-text"
+        >
+          {script ? (
+            <p>{script}</p>
+          ) : (
+            <p className="text-gray-400">Generate a script using the AI tools to see it here...</p>
+          )}
+        </div>
+        
+        <div className="flex justify-center space-x-2 mt-3" data-testid="teleprompter-controls">
+          <Button 
+            variant="ghost"
+            size="sm"
+            className="bg-thoxt-yellow text-black px-3 py-1 rounded text-xs hover:bg-yellow-400"
+            onClick={onClose}
+            data-testid="button-hide-teleprompter"
+          >
+            Hide
+          </Button>
+          
+          <Button 
+            variant="ghost"
+            size="sm"
+            className="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-500"
+            data-testid="button-edit-script"
+          >
+            <Edit3 className="w-3 h-3 mr-1" />
+            Edit
+          </Button>
+          
+          <Button 
+            variant="ghost"
+            size="sm"
+            className="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-500"
+            onClick={() => setIsScrolling(!isScrolling)}
+            data-testid="button-toggle-scroll"
+          >
+            {isScrolling ? 'Pause' : 'Scroll'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
