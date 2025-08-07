@@ -112,10 +112,11 @@ export default function VideoRecorder({
 
   // Show save modal when recording stops
   useEffect(() => {
-    if (recordedBlob && !isRecording) {
+    const currentBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
+    if (currentBlob && !isRecording) {
       setShowSaveModal(true);
     }
-  }, [recordedBlob, isRecording]);
+  }, [canvasRecordedBlob, basicRecordedBlob, isRecording, useCanvasMode]);
 
   // Save reel mutation
   const saveReelMutation = useMutation({
@@ -146,23 +147,33 @@ export default function VideoRecorder({
   });
 
   const handleSaveReel = (title: string, description?: string) => {
-    if (recordedBlob) {
+    const currentBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
+    const currentTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
+    
+    if (currentBlob && title && currentTime > 0) {
       // Create a blob URL for the video (in real app, you'd upload to cloud storage)
-      const videoUrl = URL.createObjectURL(recordedBlob);
+      const videoUrl = URL.createObjectURL(currentBlob);
       
       saveReelMutation.mutate({
         title,
         description,
         videoUrl,
-        duration: recordingTime,
+        duration: currentTime,
         script: currentScript,
+      });
+    } else {
+      toast({
+        title: "Save Failed",
+        description: "Missing required data: title, video, or duration.",
+        variant: "destructive",
       });
     }
   };
 
   const downloadVideo = () => {
-    if (recordedBlob) {
-      const url = URL.createObjectURL(recordedBlob);
+    const currentBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
+    if (currentBlob) {
+      const url = URL.createObjectURL(currentBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `thoxt-reel-${Date.now()}.webm`;

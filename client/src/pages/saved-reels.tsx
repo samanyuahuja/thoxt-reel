@@ -107,12 +107,12 @@ export default function SavedReels() {
   };
 
   return (
-    <div className="flex h-screen bg-thoxt-dark text-white overflow-hidden">
+    <div className="flex bg-thoxt-dark text-white" style={{ height: '100vh' }}>
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col" style={{ height: '100vh' }}>
         {/* Header */}
         <header className="bg-thoxt-dark border-b border-gray-800 p-4" data-testid="saved-reels-header">
           <div className="flex items-center justify-between">
@@ -183,8 +183,8 @@ export default function SavedReels() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-thoxt-gray overflow-hidden" data-testid="reels-content">
-          <div className="h-full overflow-y-auto p-6 pb-20">
+        <div className="flex-1 bg-thoxt-gray" data-testid="reels-content">
+          <div className="h-full overflow-y-auto p-6 pb-16" style={{ maxHeight: 'calc(100vh - 140px)' }}>
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
