@@ -93,10 +93,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new reel
   app.post("/api/reels", async (req, res) => {
     try {
-      const reelData = req.body;
+      const reelData = {
+        title: req.body.title || "Untitled Reel",
+        description: req.body.description || undefined,
+        videoUrl: req.body.videoUrl || "",
+        duration: req.body.duration || 1,
+        script: req.body.script || undefined
+      };
       
-      if (!reelData.title || !reelData.videoUrl || !reelData.duration) {
-        return res.status(400).json({ error: "Title, videoUrl, and duration are required" });
+      // Only require videoUrl to have some value
+      if (!reelData.videoUrl) {
+        return res.status(400).json({ error: "Video content is required" });
       }
 
       const reel = await storage.createReel(reelData);
