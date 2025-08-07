@@ -1,0 +1,79 @@
+That’s a powerful and unique feature idea — an AI-assisted video recording/editing tool designed specifically for journalists and bloggers, built into thoxt.com. This isn’t just a reel feature — it’s a creator studio for informational reels, and would be a great fit for your CS50 final project.
+
+⸻
+
+🔧 Overview: “Thoxt Reels” (AI Creator Studio)
+
+🎯 Target Users:
+	•	Journalists
+	•	Bloggers
+	•	Content creators who share information (news, blogs, explainers)
+
+⸻
+
+✅ Key Features (Grouped)
+
+1. AI Content Support
+	•	Article to Script Generator (via GPT)
+	•	Script Summarizer for long-form blog inputs
+	•	Tone Selector (formal, engaging, funny)
+	•	Teleprompter (scrolling script while recording)
+
+2. Video Recording Interface
+	•	Similar UI to Instagram Reels
+	•	Vertical or landscape orientation toggle
+	•	Record using webcam or upload
+	•	Script on screen during recording (teleprompter style)
+
+3. Smart AI Editing
+	•	Auto-cut silences
+	•	Remove “um”, “uh”, pauses
+	•	Background cleanup (blur/mute noises)
+	•	Auto-captioning
+	•	Suggested cuts/transitions
+	•	Resize for platforms (YouTube Shorts, Instagram, etc.)
+
+4. Manual Editing Options
+	•	Text overlay & highlights
+	•	Drag-and-drop clip timeline
+	•	Voice-over addition
+	•	Custom BGM selection
+
+5. Export & Integration
+	•	Export to mp4
+	•	Share to thoxt article or embed in blog
+	•	Download for social media use
+
+⸻
+
+🧪 MVP Plan for CS50 Final Project
+
+You can focus your MVP (Minimum Viable Product) on:
+
+Component	Stack or Tool
+UI for recording/editing	HTML + CSS + JS + Bootstrap
+AI Script Gen	GPT-4 API
+Teleprompter Overlay	JS + CSS (floating box)
+Video Recording	MediaRecorder API
+Auto Editing	Use ffmpeg or APIs like Descript (if available via API)
+Manual Editor	JS-based video editor like FFmpeg.wasm
+Hosting	Thoxt.com (Flask backend?)
+
+
+⸻
+
+💡 Bonus Features (if time permits)
+	•	AI Voice Cloning: Convert script to voice-over in your tone
+	•	Topic Recommender: Suggest reel topics from trending blogs
+	•	Multiple Language Subtitles
+
+⸻
+
+🔨 Want a Prototype?
+
+Would you like me to generate:
+	1.	The HTML/CSS/JS UI for the recording/editing interface?
+	2.	A sample script generator GPT prompt + Flask endpoint?
+	3.	A teleprompter overlay tool in JavaScript?
+
+Let me know which one you’d like to start with.
