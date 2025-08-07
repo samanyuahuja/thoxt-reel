@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Bot, Scissors, Captions, VolumeX, Download } from "lucide-react";
+import { Bot, Scissors, Captions, VolumeX, Download, BookOpen } from "lucide-react";
+import ScriptTranscriptModal from "./script-transcript-modal";
 import { Button } from "./button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [customTopic, setCustomTopic] = useState<string>("");
   const [generatedScript, setGeneratedScript] = useState<string>("");
+  const [showTranscript, setShowTranscript] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -219,23 +221,36 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           )}
         </div>
         
-        <div className="flex space-x-2" data-testid="script-actions">
-          <Button 
-            variant="outline"
-            className="flex-1 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 transition-colors text-sm"
-            disabled={!generatedScript}
-            data-testid="button-edit-script"
-          >
-            Edit Script
-          </Button>
+        <div className="space-y-2" data-testid="script-actions">
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline"
+              className="flex-1 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 transition-colors text-sm"
+              disabled={!generatedScript}
+              data-testid="button-edit-script"
+            >
+              Edit Script
+            </Button>
+            
+            <Button 
+              className="flex-1 bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors text-sm"
+              onClick={handleUseScript}
+              disabled={!generatedScript}
+              data-testid="button-use-script"
+            >
+              Use Script
+            </Button>
+          </div>
           
           <Button 
-            className="flex-1 bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors text-sm"
-            onClick={handleUseScript}
+            variant="outline"
+            className="w-full bg-gray-800 text-white border-gray-700 hover:bg-gray-700 transition-colors text-sm flex items-center justify-center"
+            onClick={() => setShowTranscript(true)}
             disabled={!generatedScript}
-            data-testid="button-use-script"
+            data-testid="button-open-transcript"
           >
-            Use Script
+            <BookOpen className="w-4 h-4 mr-2" />
+            Read Transcript
           </Button>
         </div>
       </div>
@@ -282,6 +297,13 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           </Button>
         </div>
       </div>
+      
+      {/* Script Transcript Modal */}
+      <ScriptTranscriptModal 
+        isOpen={showTranscript}
+        onClose={() => setShowTranscript(false)}
+        script={generatedScript}
+      />
     </div>
   );
 }

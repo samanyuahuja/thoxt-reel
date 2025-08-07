@@ -2,9 +2,9 @@ import { useState } from "react";
 import SidebarNavigation from "@/components/ui/sidebar-navigation";
 import VideoRecorder from "@/components/ui/video-recorder";
 import AIToolsSidebar from "@/components/ui/ai-tools-sidebar";
-import FiltersModal from "@/components/ui/filters-modal";
-import MusicModal from "@/components/ui/music-modal";
-import TextOverlayModal from "@/components/ui/text-overlay-modal";
+import TextOverlayModal, { type TextOverlay } from "@/components/ui/text-overlay-modal";
+import FiltersModal, { type VideoFilter } from "@/components/ui/filters-modal";
+import MusicModal, { type MusicTrack } from "@/components/ui/music-modal";
 import { Search } from "lucide-react";
 
 export default function ReelsCreator() {
@@ -12,6 +12,20 @@ export default function ReelsCreator() {
   const [showMusicModal, setShowMusicModal] = useState(false);
   const [showTextModal, setShowTextModal] = useState(false);
   const [currentScript, setCurrentScript] = useState("");
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
+  const [recordingStartTime, setRecordingStartTime] = useState(0);
+  const [currentFilter, setCurrentFilter] = useState<VideoFilter | undefined>();
+  const [currentMusic, setCurrentMusic] = useState<MusicTrack | undefined>();
+
+  const handleAddTextOverlay = (overlay: TextOverlay) => {
+    setTextOverlays(prev => [...prev, overlay]);
+  };
+
+  const getCurrentTime = () => {
+    // This would normally come from the video recorder's current recording time
+    // For now, we'll use a simple timestamp since recording start
+    return Date.now() - recordingStartTime;
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-thoxt-dark text-white">
@@ -71,6 +85,11 @@ export default function ReelsCreator() {
                 onOpenMusic={() => setShowMusicModal(true)}
                 onOpenText={() => setShowTextModal(true)}
                 currentScript={currentScript}
+                textOverlays={textOverlays}
+                onUpdateOverlays={setTextOverlays}
+                recordingStartTime={recordingStartTime}
+                currentFilter={currentFilter}
+                currentMusic={currentMusic}
               />
             </div>
           </div>
@@ -83,17 +102,23 @@ export default function ReelsCreator() {
       {/* Modal Overlays */}
       <FiltersModal 
         isOpen={showFiltersModal} 
-        onClose={() => setShowFiltersModal(false)} 
+        onClose={() => setShowFiltersModal(false)}
+        onApplyFilter={setCurrentFilter}
+        currentFilter={currentFilter}
       />
       
       <MusicModal 
         isOpen={showMusicModal} 
-        onClose={() => setShowMusicModal(false)} 
+        onClose={() => setShowMusicModal(false)}
+        onSelectTrack={setCurrentMusic}
+        currentTrack={currentMusic}
       />
       
       <TextOverlayModal 
         isOpen={showTextModal} 
-        onClose={() => setShowTextModal(false)} 
+        onClose={() => setShowTextModal(false)}
+        onAddOverlay={handleAddTextOverlay}
+        currentTime={getCurrentTime()}
       />
     </div>
   );

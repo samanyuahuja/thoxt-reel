@@ -7,19 +7,32 @@ import { Button } from "./button";
 import Teleprompter from "@/components/ui/teleprompter";
 import { useMediaRecorder } from "@/hooks/use-media-recorder";
 import { useCamera } from "@/hooks/use-camera";
+import type { TextOverlay } from "./text-overlay-modal";
+import type { VideoFilter } from "./filters-modal";
+import type { MusicTrack } from "./music-modal";
 
 interface VideoRecorderProps {
   onOpenFilters: () => void;
   onOpenMusic: () => void;
   onOpenText: () => void;
   currentScript: string;
+  textOverlays: TextOverlay[];
+  onUpdateOverlays: (overlays: TextOverlay[]) => void;
+  recordingStartTime: number;
+  currentFilter?: VideoFilter;
+  currentMusic?: MusicTrack;
 }
 
 export default function VideoRecorder({ 
   onOpenFilters, 
   onOpenMusic, 
   onOpenText,
-  currentScript 
+  currentScript,
+  textOverlays,
+  onUpdateOverlays,
+  recordingStartTime,
+  currentFilter,
+  currentMusic
 }: VideoRecorderProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [duration, setDuration] = useState<15 | 30 | 60>(15);
@@ -27,6 +40,7 @@ export default function VideoRecorder({
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [mirrorEnabled, setMirrorEnabled] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const backgroundAudioRef = useRef<HTMLAudioElement>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,8 +68,18 @@ export default function VideoRecorder({
   const handleRecordToggle = () => {
     if (isRecording) {
       stopRecording();
+      // Pause background music when stopping recording
+      if (backgroundAudioRef.current) {
+        backgroundAudioRef.current.pause();
+      }
     } else {
       startRecording();
+      // Start background music when starting recording
+      if (currentMusic && backgroundAudioRef.current) {
+        backgroundAudioRef.current.src = currentMusic.url;
+        backgroundAudioRef.current.volume = 0.3; // Lower volume for background
+        backgroundAudioRef.current.play().catch(console.error);
+      }
     }
   };
 
@@ -133,6 +157,23 @@ export default function VideoRecorder({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const getCurrentRecordingTime = () => {
+    return isRecording ? recordingTime : 0;
+  };
+
+  const getVisibleOverlays = () => {
+    const currentTime = getCurrentRecordingTime();
+    return textOverlays.filter(overlay => {
+      const overlayEndTime = overlay.startTime + overlay.duration;
+      return currentTime >= overlay.startTime && currentTime <= overlayEndTime;
+    });
+  };
+
+  const removeOverlay = (overlayId: string) => {
+    const updatedOverlays = textOverlays.filter(overlay => overlay.id !== overlayId);
+    onUpdateOverlays(updatedOverlays);
+  };
+
   return (
     <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio" style={{ width: '380px', height: '675px' }} data-testid="video-recorder">
       {/* Video Preview Area */}
@@ -144,6 +185,7 @@ export default function VideoRecorder({
             playsInline
             muted
             className={`w-full h-full object-cover ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
+            style={{ filter: currentFilter?.cssFilter || 'none' }}
             data-testid="video-preview"
           />
         ) : (
@@ -213,6 +255,52 @@ export default function VideoRecorder({
           script={currentScript}
           onClose={() => setShowTeleprompter(false)}
         />
+        
+        {/* Text Overlays */}
+        <div className="absolute inset-0 pointer-events-none" data-testid="text-overlays-container">
+          {getVisibleOverlays().map((overlay) => (
+            <div
+              key={overlay.id}
+              className="absolute pointer-events-auto group"
+              style={{
+                left: `${overlay.x}%`,
+                top: `${overlay.y}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 10
+              }}
+              data-testid={`text-overlay-${overlay.id}`}
+            >
+              <div
+                style={{
+                  fontSize: `${overlay.fontSize}px`,
+                  fontFamily: overlay.fontFamily,
+                  color: overlay.color,
+                  backgroundColor: overlay.backgroundColor,
+                  textAlign: overlay.alignment,
+                  opacity: overlay.opacity,
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  userSelect: 'none',
+                  maxWidth: '300px',
+                  wordWrap: 'break-word',
+                  whiteSpace: 'normal'
+                }}
+              >
+                {overlay.text}
+              </div>
+              
+              {/* Remove button (visible on hover) */}
+              <button
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => removeOverlay(overlay.id)}
+                data-testid={`remove-overlay-${overlay.id}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
 
         {/* Side Effects Panel */}
         <div className="absolute right-4 top-32 bottom-32 flex flex-col justify-center space-y-4" data-testid="effects-panel">

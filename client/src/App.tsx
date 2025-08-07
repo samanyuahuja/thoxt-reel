@@ -5,12 +5,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import ReelsCreator from "@/pages/reels-creator";
+import SavedReels from "@/pages/saved-reels";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={ReelsCreator} />
       <Route path="/reels" component={ReelsCreator} />
+      <Route path="/saved-reels" component={SavedReels} />
       <Route component={NotFound} />
     </Switch>
   );
