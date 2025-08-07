@@ -213,7 +213,7 @@ export default function VideoRecorder({
   };
 
   return (
-    <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio" style={{ width: '380px', height: '675px' }} data-testid="video-recorder">
+    <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio w-full max-w-sm mx-auto" style={{ aspectRatio: '9/16', maxHeight: 'calc(100vh - 200px)' }} data-testid="video-recorder">
       {/* Hidden Canvas for Recording */}
       <canvas
         ref={canvasRef}
@@ -243,7 +243,7 @@ export default function VideoRecorder({
         )}
 
         {/* Top Controls Overlay */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center" data-testid="top-controls">
+        <div className="absolute top-2 md:top-4 left-2 md:left-4 right-2 md:right-4 flex justify-between items-center" data-testid="top-controls">
           <div className="flex space-x-2">
             <Button
               variant="ghost" 
@@ -394,7 +394,7 @@ export default function VideoRecorder({
         </div>
 
         {/* Bottom Controls */}
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center space-x-8" data-testid="bottom-controls">
+        <div className="absolute bottom-4 md:bottom-6 left-0 right-0 flex justify-center items-center space-x-4 md:space-x-8" data-testid="bottom-controls">
           {/* Gallery/Upload */}
           <Button
             variant="ghost"
@@ -410,17 +410,17 @@ export default function VideoRecorder({
             <Button
               variant="ghost"
               size="icon"
-              className="w-20 h-20 bg-white rounded-full flex items-center justify-center p-0"
+              className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center p-0"
               onClick={handleRecordToggle}
               data-testid="button-record"
             >
-              <div className={`w-16 h-16 bg-red-500 rounded-full flex items-center justify-center ${
+              <div className={`w-12 h-12 md:w-16 md:h-16 bg-red-500 rounded-full flex items-center justify-center ${
                 isRecording ? 'recording-pulse' : ''
               }`}>
                 {isRecording ? (
-                  <Square className="text-white w-8 h-8" fill="currentColor" />
+                  <Square className="text-white w-6 h-6 md:w-8 md:h-8" fill="currentColor" />
                 ) : (
-                  <Circle className="text-white w-8 h-8" fill="currentColor" />
+                  <Circle className="text-white w-6 h-6 md:w-8 md:h-8" fill="currentColor" />
                 )}
               </div>
             </Button>
