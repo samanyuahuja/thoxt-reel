@@ -107,12 +107,12 @@ export default function SavedReels() {
   };
 
   return (
-    <div className="flex bg-thoxt-dark text-white" style={{ height: '100vh' }}>
+    <div className="flex h-screen bg-thoxt-dark text-white">
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col" style={{ height: '100vh' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="bg-thoxt-dark border-b border-gray-800 p-4" data-testid="saved-reels-header">
           <div className="flex items-center justify-between">
@@ -183,8 +183,8 @@ export default function SavedReels() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-thoxt-gray" data-testid="reels-content">
-          <div className="h-full overflow-y-auto p-6 pb-16" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+        <div className="flex-1 bg-thoxt-gray overflow-y-auto" data-testid="reels-content">
+          <div className="p-6 min-h-full">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
@@ -219,7 +219,7 @@ export default function SavedReels() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="reels-grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8" data-testid="reels-grid">
                 {sortedReels.map((reel) => (
                   <div 
                     key={reel.id}

@@ -150,21 +150,21 @@ export default function VideoRecorder({
     const currentBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
     const currentTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
     
-    if (currentBlob && title && currentTime > 0) {
+    if (currentBlob) {
       // Create a blob URL for the video (in real app, you'd upload to cloud storage)
       const videoUrl = URL.createObjectURL(currentBlob);
       
       saveReelMutation.mutate({
-        title,
+        title: title || "Untitled Reel",
         description,
         videoUrl,
-        duration: currentTime,
+        duration: currentTime || 1, // Default to 1 second if no duration
         script: currentScript,
       });
     } else {
       toast({
         title: "Save Failed",
-        description: "Missing required data: title, video, or duration.",
+        description: "No video recorded. Please record a video first.",
         variant: "destructive",
       });
     }
