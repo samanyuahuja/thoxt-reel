@@ -234,8 +234,7 @@ export default function SavedReels() {
   };
 
   return (
-    <>
-      <div className="flex h-screen bg-thoxt-dark text-white">
+    <div className="flex h-screen bg-thoxt-dark text-white">
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
@@ -550,6 +549,7 @@ export default function SavedReels() {
         </div>
       </div>
       
+      {/* Video Timeline Editor */}
       <VideoTimelineEditor
         isOpen={showTimelineEditor}
         onClose={() => {
@@ -584,6 +584,6 @@ export default function SavedReels() {
           setEditingReel(null);
         }}
       />
-    </>
+    </div>
   );
 }
