@@ -3,6 +3,7 @@ import { useState, useRef, useCallback } from "react";
 interface CanvasRecorderOptions {
   mirrorEnabled?: boolean;
   filter?: string;
+  aspectRatio?: '9:16' | '1:1' | '16:9';
 }
 
 export function useCanvasRecorder() {
@@ -21,8 +22,37 @@ export function useCanvasRecorder() {
     const canvas = canvasRef.current;
     if (!canvas) return null;
 
-    canvas.width = videoElement.videoWidth || 720;
-    canvas.height = videoElement.videoHeight || 1280;
+    // Calculate canvas dimensions based on aspect ratio
+    const getCanvasDimensions = () => {
+      const videoWidth = videoElement.videoWidth || 720;
+      const videoHeight = videoElement.videoHeight || 1280;
+      
+      switch (options.aspectRatio) {
+        case '1:1':
+          // Square format - use the smaller dimension
+          const squareSize = Math.min(videoWidth, videoHeight);
+          return { width: squareSize, height: squareSize };
+        case '16:9':
+          // Horizontal format
+          if (videoWidth > videoHeight) {
+            return { width: videoWidth, height: Math.round(videoWidth * 9 / 16) };
+          } else {
+            return { width: Math.round(videoHeight * 16 / 9), height: videoHeight };
+          }
+        case '9:16':
+        default:
+          // Vertical format (default)
+          if (videoHeight > videoWidth) {
+            return { width: videoWidth, height: Math.round(videoWidth * 16 / 9) };
+          } else {
+            return { width: Math.round(videoHeight * 9 / 16), height: videoHeight };
+          }
+      }
+    };
+    
+    const { width, height } = getCanvasDimensions();
+    canvas.width = width;
+    canvas.height = height;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;

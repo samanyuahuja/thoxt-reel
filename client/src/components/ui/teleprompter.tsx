@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "./button";
-import { X, Edit3 } from "lucide-react";
+import { X, Edit3, Play, Pause, RotateCcw, Minus, Plus } from "lucide-react";
+import { Slider } from "./slider";
 
 interface TeleprompterProps {
   isVisible: boolean;
@@ -8,13 +9,30 @@ interface TeleprompterProps {
   onClose: () => void;
   isRecording?: boolean;
   recordingTime?: number;
+  speed?: number;
+  fontSize?: number;
+  onSpeedChange?: (speed: number) => void;
+  onFontSizeChange?: (fontSize: number) => void;
 }
 
-export default function Teleprompter({ isVisible, script, onClose, isRecording = false, recordingTime = 0 }: TeleprompterProps) {
+export default function Teleprompter({ 
+  isVisible, 
+  script, 
+  onClose, 
+  isRecording = false, 
+  recordingTime = 0,
+  speed = 150,
+  fontSize = 24,
+  onSpeedChange,
+  onFontSizeChange
+}: TeleprompterProps) {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [words, setWords] = useState<string[]>([]);
+  const [localSpeed, setLocalSpeed] = useState(speed);
+  const [localFontSize, setLocalFontSize] = useState(fontSize);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (script) {

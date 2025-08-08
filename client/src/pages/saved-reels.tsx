@@ -1,34 +1,46 @@
-import { useState, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
 import SidebarNavigation from "@/components/ui/sidebar-navigation";
-import { Search, Play, Share, Download, Trash2, Eye, Calendar, Clock, Filter, Pause } from "lucide-react";
+import { Search, Play, Share, Download, Trash2, Eye, Calendar, Clock, Filter, Pause, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { browserStorage, type StoredReel } from "@/lib/browser-storage";
+import { useToast } from "@/hooks/use-toast";
+import VideoTimelineEditor from "@/components/ui/video-timeline-editor";
 
-interface SavedReel {
-  id: string;
-  title: string;
-  description?: string;
-  videoUrl: string;
-  duration: number;
-  script?: string;
-  createdAt: string;
-  views: number;
-  likes: number;
-  metadata?: any;
-}
 
 export default function SavedReels() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [filterBy, setFilterBy] = useState("all");
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [reels, setReels] = useState<StoredReel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
+  const videoUrls = useRef<{ [key: string]: string }>({});
+  const { toast } = useToast();
+  const [showTimelineEditor, setShowTimelineEditor] = useState(false);
+  const [editingReel, setEditingReel] = useState<StoredReel | null>(null);
 
-  // Fetch saved reels
-  const { data: reels, isLoading, error } = useQuery<SavedReel[]>({
-    queryKey: ["/api/reels"],
-  });
+  // Load saved reels from browser storage
+  useEffect(() => {
+    loadReels();
+  }, []);
+
+  const loadReels = async () => {
+    try {
+      setIsLoading(true);
+      await browserStorage.init();
+      const savedReels = await browserStorage.getAllReels();
+      setReels(savedReels);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to load reels:', err);
+      setError('Failed to load saved reels');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredReels = reels?.filter(reel => {
     const matchesSearch = reel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -45,9 +57,13 @@ export default function SavedReels() {
   const sortedReels = filteredReels?.sort((a, b) => {
     switch (sortBy) {
       case "recent":
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
       case "oldest":
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        const oldDateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const oldDateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return oldDateA - oldDateB;
       case "title":
         return a.title.localeCompare(b.title);
       case "duration":
@@ -65,13 +81,36 @@ export default function SavedReels() {
     return mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date | null) => {
+    if (!dateString) return 'Unknown';
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
   };
+
+  // Get or create video URL for a reel
+  const getVideoUrl = (reel: StoredReel): string | null => {
+    if (videoUrls.current[reel.id]) {
+      return videoUrls.current[reel.id];
+    }
+    
+    const url = browserStorage.getVideoUrl(reel);
+    if (url) {
+      videoUrls.current[reel.id] = url;
+    }
+    return url;
+  };
+
+  // Clean up video URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      Object.values(videoUrls.current).forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, []);
 
   const handleVideoPlay = async (reelId: string) => {
     const video = videoRefs.current[reelId];
@@ -94,10 +133,16 @@ export default function SavedReels() {
       try {
         await video.play();
         setPlayingVideo(reelId);
+        // Update view count
+        await browserStorage.updateReelViews(reelId);
+        loadReels(); // Refresh to show updated view count
       } catch (error) {
         console.error('Error playing video:', error);
-        // Handle invalid blob URLs
-        alert('This video is no longer available. It may have been recorded in a previous session.');
+        toast({
+          title: "Playback Error",
+          description: "Unable to play this video. It may be corrupted.",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -106,8 +151,91 @@ export default function SavedReels() {
     setPlayingVideo(null);
   };
 
+  const handleDeleteReel = async (reelId: string) => {
+    if (!confirm('Are you sure you want to delete this reel? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      // Clean up video URL
+      if (videoUrls.current[reelId]) {
+        URL.revokeObjectURL(videoUrls.current[reelId]);
+        delete videoUrls.current[reelId];
+      }
+      
+      await browserStorage.deleteReel(reelId);
+      loadReels(); // Refresh the list
+      
+      toast({
+        title: "Reel Deleted",
+        description: "Your reel has been successfully deleted."
+      });
+    } catch (error) {
+      console.error('Error deleting reel:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Unable to delete the reel. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownload = (reel: StoredReel) => {
+    const videoUrl = getVideoUrl(reel);
+    if (!videoUrl) {
+      toast({
+        title: "Download Failed",
+        description: "Unable to download this video.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const a = document.createElement('a');
+    a.href = videoUrl;
+    a.download = `${reel.title.replace(/[^a-zA-Z0-9]/g, '_')}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Download Started",
+      description: "Your video is being downloaded."
+    });
+  };
+
+  const handleShare = async (reel: StoredReel) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: reel.title,
+          text: reel.description || 'Check out this reel!',
+          url: window.location.href
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copy URL to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link Copied",
+          description: "Link copied to clipboard!"
+        });
+      } catch (error) {
+        toast({
+          title: "Share Failed",
+          description: "Unable to share this reel.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-thoxt-dark text-white">
+    <>
+      <div className="flex h-screen bg-thoxt-dark text-white">
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
@@ -263,29 +391,30 @@ export default function SavedReels() {
                     {/* Video Thumbnail */}
                     <div className="relative aspect-[9/16] bg-gray-800 overflow-hidden cursor-pointer"
                          onClick={() => handleVideoPlay(reel.id)}>
-                      {reel.videoUrl ? (
-                        <video 
-                          ref={(el) => {
-                            if (el) {
-                              videoRefs.current[reel.id] = el;
-                            }
-                          }}
-                          className="w-full h-full object-cover"
-                          poster="/api/placeholder/320/568"
-                          loop
-                          muted
-                          playsInline
-                          onEnded={() => handleVideoEnded(reel.id)}
-                          data-testid={`reel-video-${reel.id}`}
-                        >
-                          <source src={reel.videoUrl} type="video/webm" />
-                          <source src={reel.videoUrl} type="video/mp4" />
-                        </video>
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                          <Play className="w-16 h-16 text-gray-500" />
-                        </div>
-                      )}
+                      {(() => {
+                        const videoUrl = getVideoUrl(reel);
+                        return videoUrl ? (
+                          <video 
+                            ref={(el) => {
+                              if (el) {
+                                videoRefs.current[reel.id] = el;
+                              }
+                            }}
+                            className="w-full h-full object-cover"
+                            poster={reel.thumbnailData || undefined}
+                            loop
+                            muted
+                            playsInline
+                            onEnded={() => handleVideoEnded(reel.id)}
+                            data-testid={`reel-video-${reel.id}`}
+                            src={videoUrl}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                            <Play className="w-16 h-16 text-gray-500" />
+                          </div>
+                        );
+                      })()}
                       
                       {/* Play/Pause Overlay */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
@@ -362,6 +491,10 @@ export default function SavedReels() {
                             variant="ghost"
                             size="icon"
                             className="text-gray-400 hover:text-white w-6 h-6 md:w-8 md:h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(reel);
+                            }}
                             data-testid={`share-button-${reel.id}`}
                           >
                             <Share className="w-3 md:w-4 h-3 md:h-4" />
@@ -371,6 +504,10 @@ export default function SavedReels() {
                             variant="ghost"
                             size="icon"
                             className="text-gray-400 hover:text-white w-6 h-6 md:w-8 md:h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(reel);
+                            }}
                             data-testid={`download-button-${reel.id}`}
                           >
                             <Download className="w-3 md:w-4 h-3 md:h-4" />
@@ -379,7 +516,25 @@ export default function SavedReels() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="text-gray-400 hover:text-blue-400 w-6 h-6 md:w-8 md:h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingReel(reel);
+                              setShowTimelineEditor(true);
+                            }}
+                            data-testid={`edit-button-${reel.id}`}
+                          >
+                            <Edit3 className="w-3 md:w-4 h-3 md:h-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="text-gray-400 hover:text-red-400 w-6 h-6 md:w-8 md:h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteReel(reel.id);
+                            }}
                             data-testid={`delete-button-${reel.id}`}
                           >
                             <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
@@ -394,6 +549,41 @@ export default function SavedReels() {
           </div>
         </div>
       </div>
-    </div>
+      
+      <VideoTimelineEditor
+      isOpen={showTimelineEditor}
+      onClose={() => {
+        setShowTimelineEditor(false);
+        setEditingReel(null);
+      }}
+      initialVideo={editingReel ? browserStorage.getVideoBlob(editingReel) || undefined : undefined}
+      onExport={async (editedBlob) => {
+        if (editingReel) {
+          // Save the edited version as a new reel
+          await browserStorage.saveReel({
+            title: `${editingReel.title} (Edited)`,
+            description: editingReel.description,
+            duration: editingReel.duration,
+            script: editingReel.script,
+            videoBlob: editedBlob,
+            thumbnailUrl: null,
+            authorId: editingReel.authorId,
+            sourceArticleId: editingReel.sourceArticleId,
+            metadata: { ...editingReel.metadata, edited: true },
+            views: 0,
+            likes: 0
+          });
+          
+          fetchReels();
+          toast({
+            title: "Edited Video Saved",
+            description: "Your edited video has been saved as a new reel."
+          });
+        }
+        setShowTimelineEditor(false);
+        setEditingReel(null);
+      }}
+    />
+    </>
   );
 }

@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, RotateCcw, Images, Circle, Square, Zap, Sparkles, Music, Type, Scroll, X, FlipHorizontal, Download } from "lucide-react";
+import { Camera, RotateCcw, Images, Circle, Square, Zap, Sparkles, Music, Type, Scroll, X, FlipHorizontal, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { Button } from "./button";
-import Teleprompter from "@/components/ui/teleprompter";
+import EnhancedTeleprompter from "@/components/ui/enhanced-teleprompter";
 import { useMediaRecorder } from "@/hooks/use-media-recorder";
 import { useCanvasRecorder } from "@/hooks/use-canvas-recorder";
 import { useCamera } from "@/hooks/use-camera";
+import { browserStorage } from "@/lib/browser-storage";
+import VideoUploadModal from "@/components/ui/video-upload-modal";
+import VideoTimelineEditor from "@/components/ui/video-timeline-editor";
 import type { TextOverlay } from "./text-overlay-modal";
 import type { VideoFilter } from "./filters-modal";
 import type { MusicTrack } from "./music-modal";
@@ -24,6 +25,8 @@ interface VideoRecorderProps {
   currentMusic?: MusicTrack;
 }
 
+type AspectRatio = '9:16' | '1:1' | '16:9';
+
 export default function VideoRecorder({ 
   onOpenFilters, 
   onOpenMusic, 
@@ -37,14 +40,19 @@ export default function VideoRecorder({
 }: VideoRecorderProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [duration, setDuration] = useState<15 | 30 | 60>(15);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('9:16');
   const [showTeleprompter, setShowTeleprompter] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [teleprompterSpeed, setTeleprompterSpeed] = useState(150);
+  const [teleprompterFontSize, setTeleprompterFontSize] = useState(24);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [mirrorEnabled, setMirrorEnabled] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showTimelineEditor, setShowTimelineEditor] = useState(false);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
 
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const { stream, startCamera, switchCamera, stopCamera, facingMode } = useCamera();
   const { 
@@ -96,7 +104,8 @@ export default function VideoRecorder({
       if (useCanvasMode && videoRef.current) {
         startCanvasRecording(videoRef.current, {
           mirrorEnabled,
-          filter: currentFilter?.cssFilter
+          filter: currentFilter?.cssFilter,
+          aspectRatio
         });
       } else {
         startBasicRecording();
@@ -118,56 +127,65 @@ export default function VideoRecorder({
     }
   }, [canvasRecordedBlob, basicRecordedBlob, isRecording, useCanvasMode]);
 
-  // Save reel mutation
-  const saveReelMutation = useMutation({
-    mutationFn: async (reelData: {
-      title: string;
-      description?: string;
-      videoUrl: string;
-      duration: number;
-      script?: string;
-    }) => {
-      const response = await apiRequest("POST", "/api/reels", reelData);
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Reel Saved!",
-        description: "Your reel has been saved successfully.",
-      });
-      setShowSaveModal(false);
-    },
-    onError: () => {
-      toast({
-        title: "Save Failed",
-        description: "Failed to save your reel. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSaveReel = (title: string, description?: string) => {
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const saveReel = async (data: { 
+    title: string;
+    description?: string;
+    duration: number;
+    script?: string;
+  }) => {
     const currentBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
-    const currentTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
-    
-    if (currentBlob) {
-      // Create a blob URL for the video (in real app, you'd upload to cloud storage)
-      const videoUrl = URL.createObjectURL(currentBlob);
-      
-      saveReelMutation.mutate({
-        title: title || "Untitled Reel",
-        description,
-        videoUrl,
-        duration: currentTime || 1, // Default to 1 second if no duration
-        script: currentScript,
-      });
-    } else {
+    if (!currentBlob) {
       toast({
         title: "Save Failed",
         description: "No video recorded. Please record a video first.",
         variant: "destructive",
       });
+      return;
     }
+
+    setIsSaving(true);
+    try {
+      await browserStorage.saveReel({
+        ...data,
+        script: data.script || null,
+        description: data.description || null,
+        videoBlob: currentBlob,
+        thumbnailUrl: null,
+        authorId: null,
+        sourceArticleId: null,
+        metadata: { aspectRatio, filter: currentFilter?.name },
+        views: 0,
+        likes: 0
+      });
+      
+      setShowSaveModal(false);
+      toast({
+        title: "Reel Saved!",
+        description: "Your reel has been successfully saved to your browser.",
+      });
+    } catch (error) {
+      console.error('Error saving reel:', error);
+      toast({
+        title: "Save Failed",
+        description: "Unable to save your reel. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveReel = (title: string, description?: string) => {
+    const currentTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
+    
+    saveReel({
+      title: title || "Untitled Reel",
+      description,
+      duration: currentTime || 1, // Default to 1 second if no duration
+      script: currentScript,
+    });
   };
 
   const downloadVideo = () => {
@@ -212,8 +230,26 @@ export default function VideoRecorder({
     onUpdateOverlays(updatedOverlays);
   };
 
+  const getAspectRatioStyle = () => {
+    const ratios = {
+      '9:16': { aspectRatio: '9/16', maxWidth: '400px', maxHeight: 'calc(100vh - 200px)' },
+      '1:1': { aspectRatio: '1/1', maxWidth: '400px', maxHeight: '400px' },
+      '16:9': { aspectRatio: '16/9', maxWidth: '600px', maxHeight: '400px' }
+    };
+    return ratios[aspectRatio];
+  };
+
+  const getAspectRatioLabel = (ratio: AspectRatio) => {
+    const labels = {
+      '9:16': 'Vertical (Reels/TikTok)',
+      '1:1': 'Square (Instagram)',
+      '16:9': 'Horizontal (YouTube)'
+    };
+    return labels[ratio];
+  };
+
   return (
-    <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio w-full max-w-sm mx-auto" style={{ aspectRatio: '9/16', maxHeight: 'calc(100vh - 200px)' }} data-testid="video-recorder">
+    <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio w-full mx-auto transition-all duration-300" style={getAspectRatioStyle()} data-testid="video-recorder">
       {/* Hidden Canvas for Recording */}
       <canvas
         ref={canvasRef}
@@ -245,6 +281,19 @@ export default function VideoRecorder({
         {/* Top Controls Overlay */}
         <div className="absolute top-2 md:top-4 left-2 md:left-4 right-2 md:right-4 flex justify-between items-center" data-testid="top-controls">
           <div className="flex space-x-2">
+            {/* Aspect Ratio Selector */}
+            <div className="bg-black bg-opacity-50 rounded-lg p-1">
+              <select
+                value={aspectRatio}
+                onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
+                className="bg-transparent text-white text-xs md:text-sm border-none outline-none cursor-pointer"
+                data-testid="aspect-ratio-selector"
+              >
+                <option value="9:16" className="bg-gray-800">📱 9:16</option>
+                <option value="1:1" className="bg-gray-800">⬜ 1:1</option>
+                <option value="16:9" className="bg-gray-800">📺 16:9</option>
+              </select>
+            </div>
             <Button
               variant="ghost" 
               size="icon"
@@ -294,12 +343,16 @@ export default function VideoRecorder({
         </div>
 
         {/* Teleprompter Overlay */}
-        <Teleprompter 
+        <EnhancedTeleprompter 
           isVisible={showTeleprompter}
           script={currentScript}
           onClose={() => setShowTeleprompter(false)}
           isRecording={isRecording}
           recordingTime={recordingTime}
+          speed={teleprompterSpeed}
+          fontSize={teleprompterFontSize}
+          onSpeedChange={setTeleprompterSpeed}
+          onFontSizeChange={setTeleprompterFontSize}
         />
         
         {/* Text Overlays */}
@@ -400,9 +453,10 @@ export default function VideoRecorder({
             variant="ghost"
             size="icon"
             className="bg-gray-600 rounded-full w-12 h-12"
-            data-testid="button-gallery"
+            onClick={() => setShowUploadModal(true)}
+            data-testid="button-upload"
           >
-            <Images className="text-white w-6 h-6" />
+            <Upload className="text-white w-6 h-6" />
           </Button>
 
           {/* Record Button */}
@@ -445,6 +499,32 @@ export default function VideoRecorder({
           </Button>
         </div>
         
+        {/* Upload Modal */}
+        <VideoUploadModal
+          isOpen={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          onVideoUploaded={(blob) => {
+            toast({
+              title: "Video Uploaded!",
+              description: "Your video has been successfully uploaded and saved.",
+            });
+            setShowUploadModal(false);
+          }}
+        />
+        
+        <VideoTimelineEditor
+          isOpen={showTimelineEditor}
+          onClose={() => setShowTimelineEditor(false)}
+          initialVideo={recordedBlob}
+          onExport={(editedBlob) => {
+            toast({
+              title: "Export Complete!",
+              description: "Your edited video is ready for download.",
+            });
+            setShowTimelineEditor(false);
+          }}
+        />
+        
         {/* Save Modal */}
         {showSaveModal && recordedBlob && (
           <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
@@ -475,10 +555,10 @@ export default function VideoRecorder({
                       const description = (document.getElementById('reel-description') as HTMLTextAreaElement)?.value;
                       handleSaveReel(title, description);
                     }}
-                    disabled={saveReelMutation.isPending}
+                    disabled={isSaving}
                     data-testid="button-save-reel"
                   >
-                    {saveReelMutation.isPending ? 'Saving...' : 'Save Reel'}
+                    {isSaving ? 'Saving...' : 'Save Reel'}
                   </Button>
                   
                   <Button
@@ -488,6 +568,18 @@ export default function VideoRecorder({
                     data-testid="button-download-reel"
                   >
                     <Download className="w-4 h-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="bg-blue-600 text-white border-blue-600 hover:bg-blue-500"
+                    onClick={() => {
+                      setShowSaveModal(false);
+                      setShowTimelineEditor(true);
+                    }}
+                    data-testid="button-edit-reel"
+                  >
+                    Edit
                   </Button>
                   
                   <Button

@@ -133,8 +133,8 @@ export default function ReelsCreator() {
       <MusicModal
         isOpen={showMusicModal}
         onClose={() => setShowMusicModal(false)}
-        onSelectMusic={setCurrentMusic}
-        selectedMusic={currentMusic}
+        onSelectTrack={(track) => setCurrentMusic(track || undefined)}
+        currentTrack={currentMusic}
       />
 
       <TextOverlayModal
