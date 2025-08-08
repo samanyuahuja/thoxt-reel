@@ -551,39 +551,39 @@ export default function SavedReels() {
       </div>
       
       <VideoTimelineEditor
-      isOpen={showTimelineEditor}
-      onClose={() => {
-        setShowTimelineEditor(false);
-        setEditingReel(null);
-      }}
-      initialVideo={editingReel ? browserStorage.getVideoBlob(editingReel) || undefined : undefined}
-      onExport={async (editedBlob) => {
-        if (editingReel) {
-          // Save the edited version as a new reel
-          await browserStorage.saveReel({
-            title: `${editingReel.title} (Edited)`,
-            description: editingReel.description,
-            duration: editingReel.duration,
-            script: editingReel.script,
-            videoBlob: editedBlob,
-            thumbnailUrl: null,
-            authorId: editingReel.authorId,
-            sourceArticleId: editingReel.sourceArticleId,
-            metadata: { ...editingReel.metadata, edited: true },
-            views: 0,
-            likes: 0
-          });
-          
-          fetchReels();
-          toast({
-            title: "Edited Video Saved",
-            description: "Your edited video has been saved as a new reel."
-          });
-        }
-        setShowTimelineEditor(false);
-        setEditingReel(null);
-      }}
-    />
+        isOpen={showTimelineEditor}
+        onClose={() => {
+          setShowTimelineEditor(false);
+          setEditingReel(null);
+        }}
+        initialVideo={undefined} // TODO: Convert video data back to blob for editing
+        onExport={async (editedBlob) => {
+          if (editingReel) {
+            // Save the edited version as a new reel
+            await browserStorage.saveReel({
+              title: `${editingReel.title} (Edited)`,
+              description: editingReel.description,
+              duration: editingReel.duration,
+              script: editingReel.script,
+              videoBlob: editedBlob,
+              thumbnailUrl: null,
+              authorId: editingReel.authorId,
+              sourceArticleId: editingReel.sourceArticleId,
+              metadata: editingReel.metadata ? { ...editingReel.metadata, edited: true } : { edited: true },
+              views: 0,
+              likes: 0
+            });
+            
+            loadReels();
+            toast({
+              title: "Edited Video Saved",
+              description: "Your edited video has been saved as a new reel."
+            });
+          }
+          setShowTimelineEditor(false);
+          setEditingReel(null);
+        }}
+      />
     </>
   );
 }
