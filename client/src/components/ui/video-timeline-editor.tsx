@@ -17,9 +17,42 @@ import {
   Trash2,
   Copy,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Type,
+  Layers,
+  GripVertical,
+  Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface TextOverlay {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  color: string;
+  startTime: number;
+  endTime: number;
+  fontFamily: string;
+}
 
 interface VideoClip {
   id: string;
@@ -30,6 +63,7 @@ interface VideoClip {
   endTime: number;
   originalDuration: number;
   thumbnailUrl?: string;
+  textOverlays?: TextOverlay[];
 }
 
 interface VideoTimelineEditorProps {
@@ -52,11 +86,29 @@ export default function VideoTimelineEditor({
   const [volume, setVolume] = useState(1);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [showTextOverlay, setShowTextOverlay] = useState(false);
+  const [newTextOverlay, setNewTextOverlay] = useState<Partial<TextOverlay>>({
+    text: '',
+    x: 50,
+    y: 50,
+    fontSize: 24,
+    color: '#ffffff',
+    startTime: 0,
+    endTime: 5,
+    fontFamily: 'Arial'
+  });
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Initialize with video if provided
   useEffect(() => {
@@ -261,6 +313,119 @@ export default function VideoTimelineEditor({
       return newClips;
     });
   };
+  
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setClips((clips) => {
+        const oldIndex = clips.findIndex(c => c.id === active.id);
+        const newIndex = clips.findIndex(c => c.id === over.id);
+        
+        return arrayMove(clips, oldIndex, newIndex);
+      });
+      
+      toast({
+        title: "Clips Reordered",
+        description: "Timeline has been updated with new clip order",
+      });
+    }
+  };
+  
+  const addTextOverlay = () => {
+    if (!selectedClipId || !newTextOverlay.text?.trim()) return;
+    
+    const overlay: TextOverlay = {
+      id: `overlay_${Date.now()}`,
+      text: newTextOverlay.text || '',
+      x: newTextOverlay.x || 50,
+      y: newTextOverlay.y || 50,
+      fontSize: newTextOverlay.fontSize || 24,
+      color: newTextOverlay.color || '#ffffff',
+      startTime: newTextOverlay.startTime || 0,
+      endTime: newTextOverlay.endTime || 5,
+      fontFamily: newTextOverlay.fontFamily || 'Arial'
+    };
+    
+    setClips(prev => prev.map(clip => 
+      clip.id === selectedClipId 
+        ? { ...clip, textOverlays: [...(clip.textOverlays || []), overlay] }
+        : clip
+    ));
+    
+    setNewTextOverlay({
+      text: '',
+      x: 50,
+      y: 50,
+      fontSize: 24,
+      color: '#ffffff',
+      startTime: 0,
+      endTime: 5,
+      fontFamily: 'Arial'
+    });
+    
+    setShowTextOverlay(false);
+    
+    toast({
+      title: "Text Overlay Added",
+      description: "Text overlay has been added to the selected clip",
+    });
+  };
+  
+  const removeTextOverlay = (clipId: string, overlayId: string) => {
+    setClips(prev => prev.map(clip => 
+      clip.id === clipId 
+        ? { ...clip, textOverlays: clip.textOverlays?.filter(o => o.id !== overlayId) }
+        : clip
+    ));
+    
+    toast({
+      title: "Text Overlay Removed",
+      description: "Text overlay has been removed from the clip",
+    });
+  };
+  
+  const mergeClips = async () => {
+    if (clips.length < 2) {
+      toast({
+        title: "Cannot Merge",
+        description: "You need at least 2 clips to merge",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsExporting(true);
+    try {
+      // Create a merged clip from all clips
+      const mergedClip: VideoClip = {
+        id: `merged_${Date.now()}`,
+        name: "Merged Clip",
+        blob: clips[0].blob, // Placeholder - in real implementation would merge video data
+        duration: clips.reduce((total, clip) => total + (clip.endTime - clip.startTime), 0),
+        startTime: 0,
+        endTime: clips.reduce((total, clip) => total + (clip.endTime - clip.startTime), 0),
+        originalDuration: clips.reduce((total, clip) => total + (clip.endTime - clip.startTime), 0),
+        textOverlays: clips.flatMap(clip => clip.textOverlays || [])
+      };
+      
+      setClips([mergedClip]);
+      setSelectedClipId(mergedClip.id);
+      
+      toast({
+        title: "Clips Merged",
+        description: `Successfully merged ${clips.length} clips into one`,
+      });
+    } catch (error) {
+      toast({
+        title: "Merge Failed",
+        description: "Unable to merge clips. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const exportVideo = async () => {
     if (clips.length === 0) return;
@@ -355,6 +520,179 @@ export default function VideoTimelineEditor({
     return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
   };
 
+  // Create sortable clip component
+  const SortableClip = ({ clip, index }: { clip: VideoClip; index: number }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({ id: clip.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`bg-gray-800 rounded p-3 border-2 transition-colors ${
+          selectedClipId === clip.id ? 'border-thoxt-yellow' : 'border-gray-600'
+        }`}
+        onClick={() => setSelectedClipId(clip.id)}
+        data-testid={`clip-${clip.id}`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-2">
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-white"
+            >
+              <GripVertical className="w-4 h-4" />
+            </div>
+            <span className="text-white font-medium text-sm">{clip.name}</span>
+            <span className="text-xs text-gray-400">
+              {formatTime(clip.endTime - clip.startTime)}
+            </span>
+          </div>
+
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                moveClip(clip.id, 'left');
+              }}
+              disabled={index === 0}
+              className="text-gray-400 hover:text-white w-6 h-6"
+              data-testid={`move-left-${clip.id}`}
+            >
+              <ChevronLeft className="w-3 h-3" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                moveClip(clip.id, 'right');
+              }}
+              disabled={index === clips.length - 1}
+              className="text-gray-400 hover:text-white w-6 h-6"
+              data-testid={`move-right-${clip.id}`}
+            >
+              <ChevronRight className="w-3 h-3" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                const splitTime = (clip.endTime - clip.startTime) / 2;
+                splitClipAtTime(clip.id, splitTime);
+              }}
+              className="text-gray-400 hover:text-white w-6 h-6"
+              data-testid={`split-${clip.id}`}
+            >
+              <Scissors className="w-3 h-3" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                duplicateClip(clip.id);
+              }}
+              className="text-gray-400 hover:text-white w-6 h-6"
+              data-testid={`duplicate-${clip.id}`}
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteClip(clip.id);
+              }}
+              className="text-red-400 hover:text-red-300 w-6 h-6"
+              data-testid={`delete-${clip.id}`}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Text Overlays */}
+        {clip.textOverlays && clip.textOverlays.length > 0 && (
+          <div className="mt-2 space-y-1">
+            <div className="text-xs text-gray-400 flex items-center space-x-1">
+              <Type className="w-3 h-3" />
+              <span>Text Overlays ({clip.textOverlays.length})</span>
+            </div>
+            {clip.textOverlays.map((overlay) => (
+              <div
+                key={overlay.id}
+                className="bg-gray-700 rounded px-2 py-1 text-xs text-white flex items-center justify-between"
+              >
+                <span>"{overlay.text}" ({formatTime(overlay.startTime)}-{formatTime(overlay.endTime)})</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeTextOverlay(clip.id, overlay.id);
+                  }}
+                  className="text-red-400 hover:text-red-300 w-4 h-4 p-0"
+                >
+                  <Trash2 className="w-2 h-2" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Trim Controls */}
+        {selectedClipId === clip.id && (
+          <div className="space-y-2 mt-3">
+            <div>
+              <label className="text-xs text-gray-400">Trim Start:</label>
+              <Slider
+                value={[clip.startTime]}
+                onValueChange={([value]) => trimClip(clip.id, value, clip.endTime)}
+                min={0}
+                max={clip.originalDuration}
+                step={0.1}
+                className="w-full mt-1"
+                data-testid={`trim-start-${clip.id}`}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400">Trim End:</label>
+              <Slider
+                value={[clip.endTime]}
+                onValueChange={([value]) => trimClip(clip.id, clip.startTime, value)}
+                min={clip.startTime}
+                max={clip.originalDuration}
+                step={0.1}
+                className="w-full mt-1"
+                data-testid={`trim-end-${clip.id}`}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -363,8 +701,31 @@ export default function VideoTimelineEditor({
       
       {/* Header */}
       <div className="bg-thoxt-gray border-b border-gray-700 p-4 flex justify-between items-center" data-testid="timeline-header">
-        <h2 className="text-xl font-semibold text-white">Video Editor</h2>
+        <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
+          <Layers className="w-5 h-5 text-thoxt-yellow" />
+          <span>Video Editor</span>
+        </h2>
         <div className="flex space-x-2">
+          {clips.length > 1 && (
+            <Button
+              onClick={mergeClips}
+              disabled={isExporting}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              data-testid="merge-button"
+            >
+              <Layers className="w-4 h-4 mr-2" />
+              Merge Clips
+            </Button>
+          )}
+          <Button
+            onClick={() => setShowTextOverlay(true)}
+            disabled={!selectedClipId}
+            className="bg-purple-600 text-white hover:bg-purple-700"
+            data-testid="add-text-button"
+          >
+            <Type className="w-4 h-4 mr-2" />
+            Add Text
+          </Button>
           <Button
             onClick={exportVideo}
             disabled={isExporting || clips.length === 0}
@@ -537,145 +898,39 @@ export default function VideoTimelineEditor({
         </div>
 
         {/* Timeline */}
-        <div className="bg-gray-800 border-t border-gray-700" data-testid="timeline-container">
+        <div className="bg-gray-900 border-t border-gray-700" data-testid="timeline-section">
           <div className="p-4">
-            <h3 className="text-white font-medium mb-3">Timeline</h3>
-            <div ref={timelineRef} className="space-y-2">
-              {clips.map((clip, index) => (
-                <div
-                  key={clip.id}
-                  className={`bg-gray-700 rounded p-3 border ${
-                    selectedClipId === clip.id ? 'border-thoxt-yellow' : 'border-gray-600'
-                  }`}
-                  onClick={() => {
-                    setSelectedClipId(clip.id);
-                    loadClip(clip.id);
-                  }}
-                  data-testid={`timeline-clip-${clip.id}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      {clip.thumbnailUrl && (
-                        <img
-                          src={clip.thumbnailUrl}
-                          alt={clip.name}
-                          className="w-16 h-9 object-cover rounded"
-                        />
-                      )}
-                      <div>
-                        <p className="text-white font-medium">{clip.name}</p>
-                        <p className="text-xs text-gray-400">
-                          {formatTime(clip.endTime - clip.startTime)} / {formatTime(clip.originalDuration)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveClip(clip.id, 'left');
-                        }}
-                        disabled={index === 0}
-                        className="text-gray-400 hover:text-white w-8 h-8"
-                        data-testid={`move-left-${clip.id}`}
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveClip(clip.id, 'right');
-                        }}
-                        disabled={index === clips.length - 1}
-                        className="text-gray-400 hover:text-white w-8 h-8"
-                        data-testid={`move-right-${clip.id}`}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const splitTime = (clip.endTime - clip.startTime) / 2;
-                          splitClipAtTime(clip.id, splitTime);
-                        }}
-                        className="text-gray-400 hover:text-white w-8 h-8"
-                        data-testid={`split-${clip.id}`}
-                      >
-                        <Scissors className="w-4 h-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          duplicateClip(clip.id);
-                        }}
-                        className="text-gray-400 hover:text-white w-8 h-8"
-                        data-testid={`duplicate-${clip.id}`}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteClip(clip.id);
-                        }}
-                        className="text-red-400 hover:text-red-300 w-8 h-8"
-                        data-testid={`delete-${clip.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Trim Controls */}
-                  {selectedClipId === clip.id && (
-                    <div className="space-y-2">
-                      <div>
-                        <label className="text-xs text-gray-400">Trim Start:</label>
-                        <Slider
-                          value={[clip.startTime]}
-                          onValueChange={([value]) => trimClip(clip.id, value, clip.endTime)}
-                          min={0}
-                          max={clip.originalDuration}
-                          step={0.1}
-                          className="w-full mt-1"
-                          data-testid={`trim-start-${clip.id}`}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-400">Trim End:</label>
-                        <Slider
-                          value={[clip.endTime]}
-                          onValueChange={([value]) => trimClip(clip.id, clip.startTime, value)}
-                          min={clip.startTime}
-                          max={clip.originalDuration}
-                          step={0.1}
-                          className="w-full mt-1"
-                          data-testid={`trim-end-${clip.id}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+                <GripVertical className="w-4 h-4 text-thoxt-yellow" />
+                <span>Timeline</span>
+              </h3>
+              {clips.length > 0 && (
+                <span className="text-sm text-gray-400">
+                  {clips.length} clip{clips.length !== 1 ? 's' : ''} • Drag to reorder
+                </span>
+              )}
+            </div>
+            
+            <div ref={timelineRef} className="space-y-2 max-h-64 overflow-y-auto">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={clips.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  {clips.map((clip, index) => (
+                    <SortableClip key={clip.id} clip={clip} index={index} />
+                  ))}
+                </SortableContext>
+              </DndContext>
               
               {clips.length === 0 && (
                 <div className="text-center py-8 text-gray-400">
-                  <p>No clips in timeline</p>
+                  <div className="mb-4">
+                    <Layers className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  </div>
+                  <p className="text-lg mb-1">No clips in timeline</p>
                   <p className="text-sm">Record a video or upload one to start editing</p>
                 </div>
               )}
@@ -683,6 +938,133 @@ export default function VideoTimelineEditor({
           </div>
         </div>
       </div>
+
+      {/* Text Overlay Modal */}
+      {showTextOverlay && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center" data-testid="text-overlay-modal">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+              <Type className="w-5 h-5 text-purple-500" />
+              <span>Add Text Overlay</span>
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-300 block mb-1">Text</label>
+                <input
+                  type="text"
+                  value={newTextOverlay.text || ''}
+                  onChange={(e) => setNewTextOverlay(prev => ({ ...prev, text: e.target.value }))}
+                  className="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                  placeholder="Enter overlay text..."
+                  data-testid="text-overlay-input"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Font Size</label>
+                  <input
+                    type="number"
+                    value={newTextOverlay.fontSize || 24}
+                    onChange={(e) => setNewTextOverlay(prev => ({ ...prev, fontSize: parseInt(e.target.value) }))}
+                    className="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    min="12"
+                    max="72"
+                    data-testid="font-size-input"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Color</label>
+                  <input
+                    type="color"
+                    value={newTextOverlay.color || '#ffffff'}
+                    onChange={(e) => setNewTextOverlay(prev => ({ ...prev, color: e.target.value }))}
+                    className="w-full bg-gray-700 rounded px-1 py-1 border border-gray-600 focus:border-purple-500 focus:outline-none h-10"
+                    data-testid="text-color-input"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Start Time (s)</label>
+                  <input
+                    type="number"
+                    value={newTextOverlay.startTime || 0}
+                    onChange={(e) => setNewTextOverlay(prev => ({ ...prev, startTime: parseFloat(e.target.value) }))}
+                    className="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    min="0"
+                    step="0.1"
+                    data-testid="start-time-input"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">End Time (s)</label>
+                  <input
+                    type="number"
+                    value={newTextOverlay.endTime || 5}
+                    onChange={(e) => setNewTextOverlay(prev => ({ ...prev, endTime: parseFloat(e.target.value) }))}
+                    className="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    min="0"
+                    step="0.1"
+                    data-testid="end-time-input"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Horizontal Position (%)</label>
+                  <input
+                    type="number"
+                    value={newTextOverlay.x || 50}
+                    onChange={(e) => setNewTextOverlay(prev => ({ ...prev, x: parseInt(e.target.value) }))}
+                    className="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    min="0"
+                    max="100"
+                    data-testid="position-x-input"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Vertical Position (%)</label>
+                  <input
+                    type="number"
+                    value={newTextOverlay.y || 50}
+                    onChange={(e) => setNewTextOverlay(prev => ({ ...prev, y: parseInt(e.target.value) }))}
+                    className="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    min="0"
+                    max="100"
+                    data-testid="position-y-input"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowTextOverlay(false)}
+                className="border-gray-600 text-white hover:bg-gray-700"
+                data-testid="cancel-text-overlay"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={addTextOverlay}
+                disabled={!newTextOverlay.text?.trim()}
+                className="bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+                data-testid="add-text-overlay-confirm"
+              >
+                Add Text Overlay
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -34,6 +34,9 @@ export default function EnhancedTeleprompter({
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   useEffect(() => {
     if (script) {
@@ -110,10 +113,69 @@ export default function EnhancedTeleprompter({
   const resetTeleprompter = () => {
     setCurrentWordIndex(0);
     setIsPlaying(false);
+    setScrollOffset(0);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+  };
+
+  // Touch and mouse drag handlers
+  const handleDragStart = (clientY: number) => {
+    setIsDragging(true);
+    setDragStartY(clientY);
+    setIsPlaying(false); // Stop auto-scroll when manually dragging
+  };
+
+  const handleDragMove = (clientY: number) => {
+    if (!isDragging) return;
+    const deltaY = clientY - dragStartY;
+    setScrollOffset(prev => Math.max(-100, prev - deltaY * 2)); // Increased sensitivity
+    setDragStartY(clientY);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleDragStart(e.clientY);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      handleDragMove(e.clientY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    handleDragEnd();
+  };
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleDragStart(touch.clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    handleDragMove(touch.clientY);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
+  };
+
+  // Scroll wheel handler
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    setScrollOffset(prev => Math.max(-100, prev + e.deltaY));
+    setIsPlaying(false); // Stop auto-scroll when manually scrolling
   };
 
   const handleSpeakScript = () => {
@@ -308,16 +370,37 @@ export default function EnhancedTeleprompter({
         </div>
       </div>
 
+      {/* Manual Control Hint */}
+      {script && (
+        <div className="text-center text-xs text-gray-500 mb-2">
+          {isDragging ? (
+            <span className="text-thoxt-yellow">📱 Manual scroll active</span>
+          ) : (
+            <span>🖱️ Click & drag, scroll wheel, or touch to manually control</span>
+          )}
+        </div>
+      )}
+
       {/* Script Display */}
       <div 
         ref={scrollContainerRef}
-        className="bg-gray-900 rounded p-3 md:p-4 flex-1 overflow-y-auto leading-relaxed text-justify"
+        className="bg-gray-900 rounded p-3 md:p-4 flex-1 overflow-hidden leading-relaxed text-justify cursor-grab select-none"
         style={{ 
           fontSize: `${localFontSize}px`, 
           lineHeight: 1.6,
-          maxHeight: 'calc(80vh - 200px)'
+          maxHeight: 'calc(80vh - 200px)',
+          transform: `translateY(${scrollOffset}px)`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
         }}
         data-testid="script-display"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
       >
         {script ? (
           <div className="select-text">

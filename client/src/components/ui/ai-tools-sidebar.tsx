@@ -43,8 +43,8 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
       setGeneratedScript(data.script);
       onScriptGenerated(data.script);
       toast({
-        title: "Script Generated!",
-        description: "Your AI-generated script is ready for recording.",
+        title: "🤖 Script Generated!",
+        description: `AI created a ${data.estimatedDuration || selectedDuration}s ${selectedTone} script. Ready for recording!`,
       });
     },
     onError: (error) => {
@@ -55,8 +55,8 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
       onScriptGenerated(fallbackScript);
       
       toast({
-        title: "Using Demo Script",
-        description: "API unavailable. Generated a demo script for testing.",
+        title: "🎭 Demo Script Ready",
+        description: "API unavailable - using demo script for testing. Perfect for trying the teleprompter!",
         variant: "default",
       });
     },
@@ -115,18 +115,18 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
     if (generatedScript) {
       onScriptGenerated(generatedScript);
       toast({
-        title: "Script Applied",
-        description: "Script is now available in the teleprompter.",
+        title: "🎬 Script Applied!",
+        description: "Script is now available in the teleprompter and ready for recording.",
       });
     }
   };
 
   return (
-    <div className="w-80 bg-thoxt-dark border-l border-gray-800 flex flex-col" data-testid="ai-tools-sidebar">
+    <div className="w-80 bg-card border-l border-border flex flex-col" data-testid="ai-tools-sidebar">
       {/* AI Script Generator */}
-      <div className="p-4 border-b border-gray-800" data-testid="script-generator-section">
-        <h3 className="text-lg font-semibold mb-3 flex items-center">
-          <Bot className="text-thoxt-yellow mr-2 w-5 h-5" />
+      <div className="p-4 border-b border-border" data-testid="script-generator-section">
+        <h3 className="text-lg font-semibold mb-3 flex items-center text-card-foreground">
+          <Bot className="text-primary mr-2 w-5 h-5" />
           AI Script Generator
         </h3>
         
@@ -143,10 +143,10 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
               }}
               disabled={articlesLoading || !!customTopic}
             >
-              <SelectTrigger className="w-full bg-gray-800 text-white border-gray-700" data-testid="select-article">
+              <SelectTrigger className="w-full bg-input text-foreground border-border" data-testid="select-article">
                 <SelectValue placeholder="Select Article Source" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 text-white border-gray-700">
+              <SelectContent className="bg-popover text-popover-foreground border-border">
                 {articles?.map((article) => (
                   <SelectItem key={article.id} value={article.id} data-testid={`option-article-${article.id}`}>
                     {article.title}
@@ -155,7 +155,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
               </SelectContent>
             </Select>
 
-            <div className="text-center text-gray-400 text-sm">OR</div>
+            <div className="text-center text-muted-foreground text-sm">OR</div>
 
             <input
               type="text"
@@ -167,7 +167,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
                   setSelectedArticleId(""); // Clear article selection when custom topic is entered
                 }
               }}
-              className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow"
+              className="w-full bg-input text-foreground p-2 rounded border border-border focus:outline-none focus:ring-2 focus:ring-ring"
               disabled={!!selectedArticleId}
               data-testid="input-custom-topic"
             />
@@ -175,10 +175,10 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
 
           {/* Tone Selection */}
           <Select value={selectedTone} onValueChange={setSelectedTone}>
-            <SelectTrigger className="w-full bg-gray-800 text-white border-gray-700" data-testid="select-tone">
+            <SelectTrigger className="w-full bg-input text-foreground border-border" data-testid="select-tone">
               <SelectValue placeholder="Select Tone" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 text-white border-gray-700">
+            <SelectContent className="bg-popover text-popover-foreground border-border">
               <SelectItem value="engaging" data-testid="option-tone-engaging">Engaging</SelectItem>
               <SelectItem value="formal" data-testid="option-tone-formal">Formal</SelectItem>
               <SelectItem value="funny" data-testid="option-tone-funny">Funny</SelectItem>
@@ -188,10 +188,10 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
 
           {/* Duration Selection */}
           <Select value={selectedDuration.toString()} onValueChange={(value) => setSelectedDuration(parseInt(value))}>
-            <SelectTrigger className="w-full bg-gray-800 text-white border-gray-700" data-testid="select-duration">
+            <SelectTrigger className="w-full bg-input text-foreground border-border" data-testid="select-duration">
               <SelectValue placeholder="Select Duration" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 text-white border-gray-700">
+            <SelectContent className="bg-popover text-popover-foreground border-border">
               <SelectItem value="15" data-testid="option-duration-15">15 seconds</SelectItem>
               <SelectItem value="30" data-testid="option-duration-30">30 seconds</SelectItem>
               <SelectItem value="60" data-testid="option-duration-60">60 seconds</SelectItem>
@@ -199,7 +199,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           </Select>
 
           <Button 
-            className="w-full bg-thoxt-yellow text-black font-medium hover:bg-yellow-400 transition-colors"
+            className="w-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
             onClick={handleGenerateScript}
             disabled={generateScriptMutation.isPending}
             data-testid="button-generate-script"
@@ -210,14 +210,14 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
       </div>
 
       {/* Script Preview */}
-      <div className="p-4 border-b border-gray-800 flex-1 overflow-y-auto" data-testid="script-preview-section">
-        <h4 className="text-md font-medium mb-3" data-testid="script-preview-title">Generated Script</h4>
+      <div className="p-4 border-b border-border flex-1 overflow-y-auto" data-testid="script-preview-section">
+        <h4 className="text-md font-medium mb-3 text-card-foreground" data-testid="script-preview-title">Generated Script</h4>
         
-        <div className="bg-gray-800 p-3 rounded text-sm leading-relaxed max-h-40 overflow-y-auto mb-3" data-testid="script-preview-text">
+        <div className="bg-muted p-3 rounded text-sm leading-relaxed max-h-40 overflow-y-auto mb-3" data-testid="script-preview-text">
           {generatedScript ? (
             <p>{generatedScript}</p>
           ) : (
-            <p className="text-gray-400">Click "Generate Script" to create AI-powered content for your reel...</p>
+            <p className="text-muted-foreground">Click "Generate Script" to create AI-powered content for your reel...</p>
           )}
         </div>
         
@@ -225,7 +225,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           <div className="flex space-x-2">
             <Button 
               variant="outline"
-              className="flex-1 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 transition-colors text-sm"
+              className="flex-1 bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 transition-colors text-sm"
               disabled={!generatedScript}
               data-testid="button-edit-script"
             >
@@ -233,7 +233,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
             </Button>
             
             <Button 
-              className="flex-1 bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors text-sm"
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm"
               onClick={handleUseScript}
               disabled={!generatedScript}
               data-testid="button-use-script"
@@ -244,7 +244,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           
           <Button 
             variant="outline"
-            className="w-full bg-gray-800 text-white border-gray-700 hover:bg-gray-700 transition-colors text-sm flex items-center justify-center"
+            className="w-full bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 transition-colors text-sm flex items-center justify-center"
             onClick={() => setShowTranscript(true)}
             disabled={!generatedScript}
             data-testid="button-open-transcript"
@@ -257,42 +257,42 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
 
       {/* Quick Tools */}
       <div className="p-4" data-testid="quick-tools-section">
-        <h4 className="text-md font-medium mb-3" data-testid="quick-tools-title">Quick Tools</h4>
+        <h4 className="text-md font-medium mb-3 text-card-foreground" data-testid="quick-tools-title">Quick Tools</h4>
         
         <div className="grid grid-cols-2 gap-2" data-testid="quick-tools-grid">
           <Button 
             variant="outline"
-            className="bg-gray-800 border-gray-700 p-3 rounded text-center hover:bg-gray-700 transition-colors flex flex-col items-center"
+            className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
             data-testid="button-auto-edit"
           >
-            <Scissors className="text-thoxt-yellow mb-1 w-5 h-5" />
+            <Scissors className="text-primary mb-1 w-5 h-5" />
             <div className="text-xs">Auto Edit</div>
           </Button>
           
           <Button 
             variant="outline"
-            className="bg-gray-800 border-gray-700 p-3 rounded text-center hover:bg-gray-700 transition-colors flex flex-col items-center"
+            className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
             data-testid="button-captions"
           >
-            <Captions className="text-thoxt-yellow mb-1 w-5 h-5" />
+            <Captions className="text-primary mb-1 w-5 h-5" />
             <div className="text-xs">Captions</div>
           </Button>
           
           <Button 
             variant="outline"
-            className="bg-gray-800 border-gray-700 p-3 rounded text-center hover:bg-gray-700 transition-colors flex flex-col items-center"
+            className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
             data-testid="button-clean-audio"
           >
-            <VolumeX className="text-thoxt-yellow mb-1 w-5 h-5" />
+            <VolumeX className="text-primary mb-1 w-5 h-5" />
             <div className="text-xs">Clean Audio</div>
           </Button>
           
           <Button 
             variant="outline"
-            className="bg-gray-800 border-gray-700 p-3 rounded text-center hover:bg-gray-700 transition-colors flex flex-col items-center"
+            className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
             data-testid="button-export"
           >
-            <Download className="text-thoxt-yellow mb-1 w-5 h-5" />
+            <Download className="text-primary mb-1 w-5 h-5" />
             <div className="text-xs">Export</div>
           </Button>
         </div>

@@ -21,6 +21,8 @@ export default function SavedReels() {
   const { toast } = useToast();
   const [showTimelineEditor, setShowTimelineEditor] = useState(false);
   const [editingReel, setEditingReel] = useState<StoredReel | null>(null);
+  const [loadingVideos, setLoadingVideos] = useState<Set<string>>(new Set());
+  const [videoProgress, setVideoProgress] = useState<{ [key: string]: number }>({});
 
   // Load saved reels from browser storage
   useEffect(() => {
@@ -131,13 +133,50 @@ export default function SavedReels() {
     } else {
       // Play selected video
       try {
+        // Show loading state
+        setLoadingVideos(prev => {
+          const newSet = new Set(prev);
+          newSet.add(reelId);
+          return newSet;
+        });
+        
+        // Ensure video is loaded
+        if (video.readyState < 2) {
+          await new Promise((resolve, reject) => {
+            const onLoadedData = () => {
+              video.removeEventListener('loadeddata', onLoadedData);
+              video.removeEventListener('error', onError);
+              resolve(null);
+            };
+            const onError = (e: Event) => {
+              video.removeEventListener('loadeddata', onLoadedData);
+              video.removeEventListener('error', onError);
+              reject(e);
+            };
+            video.addEventListener('loadeddata', onLoadedData);
+            video.addEventListener('error', onError);
+            video.load();
+          });
+        }
+        
         await video.play();
         setPlayingVideo(reelId);
+        setLoadingVideos(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(reelId);
+          return newSet;
+        });
+        
         // Update view count
         await browserStorage.updateReelViews(reelId);
         loadReels(); // Refresh to show updated view count
       } catch (error) {
         console.error('Error playing video:', error);
+        setLoadingVideos(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(reelId);
+          return newSet;
+        });
         toast({
           title: "Playback Error",
           description: "Unable to play this video. It may be corrupted.",
@@ -149,6 +188,22 @@ export default function SavedReels() {
 
   const handleVideoEnded = (reelId: string) => {
     setPlayingVideo(null);
+    setVideoProgress(prev => ({ ...prev, [reelId]: 0 }));
+  };
+
+  const handleVideoProgress = (reelId: string) => {
+    const video = videoRefs.current[reelId];
+    if (video && video.duration) {
+      const progress = (video.currentTime / video.duration) * 100;
+      setVideoProgress(prev => ({ ...prev, [reelId]: progress }));
+    }
+  };
+
+  const handleVideoSeek = (reelId: string, progress: number) => {
+    const video = videoRefs.current[reelId];
+    if (video && video.duration) {
+      video.currentTime = (progress / 100) * video.duration;
+    }
   };
 
   const handleDeleteReel = async (reelId: string) => {
@@ -393,21 +448,54 @@ export default function SavedReels() {
                       {(() => {
                         const videoUrl = getVideoUrl(reel);
                         return videoUrl ? (
-                          <video 
-                            ref={(el) => {
-                              if (el) {
-                                videoRefs.current[reel.id] = el;
-                              }
-                            }}
-                            className="w-full h-full object-cover"
-                            poster={reel.thumbnailData || undefined}
-                            loop
-                            muted
-                            playsInline
-                            onEnded={() => handleVideoEnded(reel.id)}
-                            data-testid={`reel-video-${reel.id}`}
-                            src={videoUrl}
-                          />
+                          <>
+                            <video 
+                              ref={(el) => {
+                                if (el) {
+                                  videoRefs.current[reel.id] = el;
+                                }
+                              }}
+                              className="w-full h-full object-cover"
+                              poster={reel.thumbnailData || undefined}
+                              loop
+                              muted
+                              playsInline
+                              preload="metadata"
+                              onEnded={() => handleVideoEnded(reel.id)}
+                              onTimeUpdate={() => handleVideoProgress(reel.id)}
+                              onLoadStart={() => setLoadingVideos(prev => {
+                                const newSet = new Set(prev);
+                                newSet.add(reel.id);
+                                return newSet;
+                              })}
+                              onLoadedData={() => setLoadingVideos(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(reel.id);
+                                return newSet;
+                              })}
+                              data-testid={`reel-video-${reel.id}`}
+                              src={videoUrl}
+                            />
+                            
+                            {/* Video Progress Bar */}
+                            {playingVideo === reel.id && (
+                              <div className="absolute bottom-8 left-2 right-2">
+                                <div className="bg-black bg-opacity-50 rounded px-2 py-1">
+                                  <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={videoProgress[reel.id] || 0}
+                                    onChange={(e) => handleVideoSeek(reel.id, Number(e.target.value))}
+                                    className="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer slider"
+                                    style={{
+                                      background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${videoProgress[reel.id] || 0}%, #374151 ${videoProgress[reel.id] || 0}%, #374151 100%)`
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
                             <Play className="w-16 h-16 text-gray-500" />
@@ -417,7 +505,9 @@ export default function SavedReels() {
                       
                       {/* Play/Pause Overlay */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                        {playingVideo === reel.id ? (
+                        {loadingVideos.has(reel.id) ? (
+                          <div className="w-8 md:w-12 h-8 md:h-12 border-2 border-thoxt-yellow border-t-transparent rounded-full animate-spin" />
+                        ) : playingVideo === reel.id ? (
                           <Pause className="w-8 md:w-12 h-8 md:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                         ) : (
                           <Play className="w-8 md:w-12 h-8 md:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
