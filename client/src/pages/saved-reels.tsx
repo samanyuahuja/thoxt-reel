@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { browserStorage, type StoredReel } from "@/lib/browser-storage";
 import { useToast } from "@/hooks/use-toast";
 import VideoTimelineEditor from "@/components/ui/video-timeline-editor";
+import { createSampleReels } from "@/lib/sample-reels";
 
 
 export default function SavedReels() {
@@ -33,7 +34,14 @@ export default function SavedReels() {
     try {
       setIsLoading(true);
       await browserStorage.init();
-      const savedReels = await browserStorage.getAllReels();
+      let savedReels = await browserStorage.getAllReels();
+      
+      // If no reels exist, create sample reels for demo purposes
+      if (savedReels.length === 0) {
+        await createSampleReels();
+        savedReels = await browserStorage.getAllReels();
+      }
+      
       setReels(savedReels);
       setError(null);
     } catch (err) {
@@ -289,24 +297,24 @@ export default function SavedReels() {
   };
 
   return (
-    <div className="flex h-screen bg-thoxt-dark text-white">
+    <div className="flex h-screen bg-background text-foreground">
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-0 pt-16 md:pt-0">
         {/* Mobile Header */}
-        <div className="md:hidden bg-thoxt-dark border-b border-gray-800 p-4" data-testid="mobile-header">
+        <div className="md:hidden bg-background border-b border-border p-4" data-testid="mobile-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <h1 className="text-xl font-bold" data-testid="mobile-page-title">My Reels</h1>
-              <span className="text-thoxt-yellow text-xs bg-thoxt-gray px-2 py-1 rounded" data-testid="mobile-reels-count">
+              <span className="text-primary text-xs bg-secondary px-2 py-1 rounded" data-testid="mobile-reels-count">
                 {sortedReels?.length || 0}
               </span>
             </div>
             
             <Button 
-              className="bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors text-sm px-3 py-1"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm px-3 py-1"
               data-testid="mobile-create-new-reel"
             >
               + New
@@ -315,11 +323,11 @@ export default function SavedReels() {
         </div>
 
         {/* Desktop Header */}
-        <header className="hidden md:block bg-thoxt-dark border-b border-gray-800 p-4" data-testid="saved-reels-header">
+        <header className="hidden md:block bg-background border-b border-border p-4" data-testid="saved-reels-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold" data-testid="page-title">My Reels</h1>
-              <span className="text-thoxt-yellow text-sm bg-thoxt-gray px-2 py-1 rounded" data-testid="reels-count">
+              <span className="text-primary text-sm bg-secondary px-2 py-1 rounded" data-testid="reels-count">
                 {sortedReels?.length || 0} saved reels
               </span>
             </div>
@@ -332,41 +340,41 @@ export default function SavedReels() {
                   placeholder="Search your reels..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-full w-80 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow pr-10"
+                  className="bg-input text-foreground px-4 py-2 rounded-full w-80 focus:outline-none focus:ring-2 focus:ring-ring pr-10"
                   data-testid="search-input"
                 />
-                <Search className="absolute right-3 top-3 text-gray-400 w-4 h-4" />
+                <Search className="absolute right-3 top-3 text-muted-foreground w-4 h-4" />
               </div>
             </div>
           </div>
         </header>
 
         {/* Mobile Search */}
-        <div className="md:hidden bg-thoxt-dark border-b border-gray-800 px-4 pb-4" data-testid="mobile-search">
+        <div className="md:hidden bg-background border-b border-border px-4 pb-4" data-testid="mobile-search">
           <div className="relative">
             <input 
               type="text" 
               placeholder="Search reels..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-gray-800 text-white px-4 py-2 rounded-full w-full focus:outline-none focus:ring-2 focus:ring-thoxt-yellow pr-10 text-sm"
+              className="bg-input text-foreground px-4 py-2 rounded-full w-full focus:outline-none focus:ring-2 focus:ring-ring pr-10 text-sm"
               data-testid="mobile-search-input"
             />
-            <Search className="absolute right-3 top-2.5 text-gray-400 w-4 h-4" />
+            <Search className="absolute right-3 top-2.5 text-muted-foreground w-4 h-4" />
           </div>
         </div>
 
         {/* Filters and Sorting */}
-        <div className="bg-thoxt-dark border-b border-gray-800 px-4 py-3" data-testid="controls-section">
+        <div className="bg-background border-b border-border px-4 py-3" data-testid="controls-section">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="flex items-center space-x-1 md:space-x-2">
-                <Filter className="text-gray-400 w-4 h-4 hidden md:block" />
+                <Filter className="text-muted-foreground w-4 h-4 hidden md:block" />
                 <Select value={filterBy} onValueChange={setFilterBy}>
-                  <SelectTrigger className="bg-gray-800 text-white border-gray-700 w-24 md:w-40 text-xs md:text-sm" data-testid="filter-select">
+                  <SelectTrigger className="bg-input text-foreground border-border w-24 md:w-40 text-xs md:text-sm" data-testid="filter-select">
                     <SelectValue placeholder="Filter" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 text-white border-gray-700">
+                  <SelectContent className="bg-popover text-popover-foreground border-border">
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="short">Short (≤30s)</SelectItem>
                     <SelectItem value="medium">Medium (30-60s)</SelectItem>
@@ -376,10 +384,10 @@ export default function SavedReels() {
               </div>
               
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-gray-800 text-white border-gray-700 w-24 md:w-40 text-xs md:text-sm" data-testid="sort-select">
+                <SelectTrigger className="bg-input text-foreground border-border w-24 md:w-40 text-xs md:text-sm" data-testid="sort-select">
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 text-white border-gray-700">
+                <SelectContent className="bg-popover text-popover-foreground border-border">
                   <SelectItem value="recent">Recent</SelectItem>
                   <SelectItem value="oldest">Oldest</SelectItem>
                   <SelectItem value="title">Title</SelectItem>
@@ -390,7 +398,7 @@ export default function SavedReels() {
             </div>
             
             <Button 
-              className="hidden md:block bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors"
+              className="hidden md:block bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               data-testid="create-new-reel"
             >
               Create New Reel
@@ -399,35 +407,35 @@ export default function SavedReels() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-thoxt-gray overflow-y-auto" data-testid="reels-content">
+        <div className="flex-1 bg-muted overflow-y-auto" data-testid="reels-content">
           <div className="p-3 md:p-6 pb-20">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-thoxt-yellow mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading your reels...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading your reels...</p>
                 </div>
               </div>
             ) : error ? (
               <div className="flex items-center justify-center h-64">
-                <div className="text-center text-red-400">
+                <div className="text-center text-destructive">
                   <p>Failed to load reels. Please try again.</p>
                 </div>
               </div>
             ) : !sortedReels || sortedReels.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Play className="w-12 h-12 text-gray-500" />
+                  <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play className="w-12 h-12 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">No reels yet</h3>
-                  <p className="text-gray-400 mb-4 text-sm md:text-base">
+                  <p className="text-muted-foreground mb-4 text-sm md:text-base">
                     {searchQuery || filterBy !== "all" 
                       ? "No reels match your search or filter criteria." 
                       : "Start creating your first reel to see it here!"}
                   </p>
                   <Button 
-                    className="bg-thoxt-yellow text-black hover:bg-yellow-400 transition-colors"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     data-testid="empty-state-create-button"
                   >
                     Create Your First Reel
@@ -439,11 +447,11 @@ export default function SavedReels() {
                 {sortedReels.map((reel) => (
                   <div 
                     key={reel.id}
-                    className="bg-thoxt-dark rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all md:hover:scale-105 group"
+                    className="bg-card rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all md:hover:scale-105 group"
                     data-testid={`reel-card-${reel.id}`}
                   >
                     {/* Video Thumbnail */}
-                    <div className="relative aspect-[9/16] bg-gray-800 overflow-hidden cursor-pointer"
+                    <div className="relative aspect-[9/16] bg-secondary overflow-hidden cursor-pointer"
                          onClick={() => handleVideoPlay(reel.id)}>
                       {(() => {
                         const videoUrl = getVideoUrl(reel);
@@ -487,7 +495,7 @@ export default function SavedReels() {
                                     max="100"
                                     value={videoProgress[reel.id] || 0}
                                     onChange={(e) => handleVideoSeek(reel.id, Number(e.target.value))}
-                                    className="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer slider"
+                                    className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer slider"
                                     style={{
                                       background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${videoProgress[reel.id] || 0}%, #374151 ${videoProgress[reel.id] || 0}%, #374151 100%)`
                                     }}
@@ -497,8 +505,8 @@ export default function SavedReels() {
                             )}
                           </>
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                            <Play className="w-16 h-16 text-gray-500" />
+                          <div className="w-full h-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center">
+                            <Play className="w-16 h-16 text-muted-foreground" />
                           </div>
                         );
                       })()}
@@ -506,22 +514,22 @@ export default function SavedReels() {
                       {/* Play/Pause Overlay */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
                         {loadingVideos.has(reel.id) ? (
-                          <div className="w-8 md:w-12 h-8 md:h-12 border-2 border-thoxt-yellow border-t-transparent rounded-full animate-spin" />
+                          <div className="w-8 md:w-12 h-8 md:h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                         ) : playingVideo === reel.id ? (
-                          <Pause className="w-8 md:w-12 h-8 md:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <Pause className="w-8 md:w-12 h-8 md:h-12 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         ) : (
-                          <Play className="w-8 md:w-12 h-8 md:h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <Play className="w-8 md:w-12 h-8 md:h-12 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         )}
                       </div>
                       
                       {/* Duration Badge */}
-                      <div className="absolute bottom-1 md:bottom-2 right-1 md:right-2 bg-black bg-opacity-75 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
+                      <div className="absolute bottom-1 md:bottom-2 right-1 md:right-2 bg-black/75 text-primary-foreground px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
                         {formatDuration(reel.duration)}
                       </div>
                       
                       {/* Playing Indicator */}
                       {playingVideo === reel.id && (
-                        <div className="absolute top-1 md:top-2 left-1 md:left-2 bg-thoxt-yellow text-black px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs font-semibold">
+                        <div className="absolute top-1 md:top-2 left-1 md:left-2 bg-primary text-primary-foreground px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs font-semibold">
                           Playing
                         </div>
                       )}
@@ -534,13 +542,13 @@ export default function SavedReels() {
                       </h3>
                       
                       {reel.description && (
-                        <p className="text-gray-400 text-xs md:text-sm mb-2 md:mb-3 line-clamp-2 hidden md:block" data-testid={`reel-description-${reel.id}`}>
+                        <p className="text-muted-foreground text-xs md:text-sm mb-2 md:mb-3 line-clamp-2 hidden md:block" data-testid={`reel-description-${reel.id}`}>
                           {reel.description}
                         </p>
                       )}
                       
                       {/* Stats - Hidden on mobile */}
-                      <div className="hidden md:flex items-center justify-between text-xs text-gray-500 mb-3">
+                      <div className="hidden md:flex items-center justify-between text-xs text-muted-foreground mb-3">
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center space-x-1">
                             <Eye className="w-3 h-3" />
@@ -558,7 +566,7 @@ export default function SavedReels() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-thoxt-yellow hover:bg-thoxt-yellow hover:text-black transition-colors text-xs md:text-sm px-2 md:px-3"
+                          className="text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-xs md:text-sm px-2 md:px-3"
                           onClick={() => handleVideoPlay(reel.id)}
                           data-testid={`play-button-${reel.id}`}
                         >
@@ -579,7 +587,7 @@ export default function SavedReels() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-gray-400 hover:text-white w-6 h-6 md:w-8 md:h-8"
+                            className="text-muted-foreground hover:text-foreground w-6 h-6 md:w-8 md:h-8"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleShare(reel);
@@ -592,7 +600,7 @@ export default function SavedReels() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-gray-400 hover:text-white w-6 h-6 md:w-8 md:h-8"
+                            className="text-muted-foreground hover:text-foreground w-6 h-6 md:w-8 md:h-8"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDownload(reel);
@@ -605,7 +613,7 @@ export default function SavedReels() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-gray-400 hover:text-blue-400 w-6 h-6 md:w-8 md:h-8"
+                            className="text-muted-foreground hover:text-blue-400 w-6 h-6 md:w-8 md:h-8"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingReel(reel);
@@ -619,7 +627,7 @@ export default function SavedReels() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-gray-400 hover:text-red-400 w-6 h-6 md:w-8 md:h-8"
+                            className="text-muted-foreground hover:text-red-400 w-6 h-6 md:w-8 md:h-8"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteReel(reel.id);
