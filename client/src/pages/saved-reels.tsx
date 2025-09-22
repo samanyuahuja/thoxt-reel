@@ -38,8 +38,11 @@ export default function SavedReels() {
       
       // If no reels exist, create sample reels for demo purposes
       if (savedReels.length === 0) {
+        console.log('No reels found, creating sample reels...');
         await createSampleReels();
         savedReels = await browserStorage.getAllReels();
+      } else {
+        console.log(`Found ${savedReels.length} existing reels`);
       }
       
       setReels(savedReels);
@@ -124,13 +127,22 @@ export default function SavedReels() {
 
   const handleVideoPlay = async (reelId: string) => {
     const video = videoRefs.current[reelId];
-    if (!video) return;
+    if (!video) {
+      console.error(`Video element not found for reel ${reelId}`);
+      return;
+    }
+
+    console.log(`Playing video for reel: ${reelId}`);
+    console.log(`Video src: ${video.src}`);
+    console.log(`Video duration: ${video.duration}`);
+    console.log(`Video ready state: ${video.readyState}`);
 
     // Pause any currently playing video
     if (playingVideo && playingVideo !== reelId) {
       const currentlyPlaying = videoRefs.current[playingVideo];
       if (currentlyPlaying) {
         currentlyPlaying.pause();
+        console.log(`Paused previous video: ${playingVideo}`);
       }
     }
 
@@ -138,6 +150,7 @@ export default function SavedReels() {
       // Pause current video
       video.pause();
       setPlayingVideo(null);
+      console.log(`Paused video: ${reelId}`);
     } else {
       // Play selected video
       try {
@@ -150,15 +163,26 @@ export default function SavedReels() {
         
         // Ensure video is loaded
         if (video.readyState < 2) {
+          console.log(`Video not ready, loading... (readyState: ${video.readyState})`);
           await new Promise((resolve, reject) => {
-            const onLoadedData = () => {
+            const timeout = setTimeout(() => {
               video.removeEventListener('loadeddata', onLoadedData);
               video.removeEventListener('error', onError);
+              reject(new Error('Video loading timeout'));
+            }, 10000); // 10 second timeout
+
+            const onLoadedData = () => {
+              clearTimeout(timeout);
+              video.removeEventListener('loadeddata', onLoadedData);
+              video.removeEventListener('error', onError);
+              console.log(`Video loaded! Duration: ${video.duration}s, readyState: ${video.readyState}`);
               resolve(null);
             };
             const onError = (e: Event) => {
+              clearTimeout(timeout);
               video.removeEventListener('loadeddata', onLoadedData);
               video.removeEventListener('error', onError);
+              console.error('Video loading error:', e);
               reject(e);
             };
             video.addEventListener('loadeddata', onLoadedData);
@@ -167,7 +191,10 @@ export default function SavedReels() {
           });
         }
         
+        console.log(`Starting playback for video: ${reelId}`);
         await video.play();
+        console.log(`Video playing! Current time: ${video.currentTime}s / ${video.duration}s`);
+        
         setPlayingVideo(reelId);
         setLoadingVideos(prev => {
           const newSet = new Set(prev);
@@ -187,7 +214,7 @@ export default function SavedReels() {
         });
         toast({
           title: "Playback Error",
-          description: "Unable to play this video. It may be corrupted.",
+          description: "Unable to play this video. It may be corrupted or too short.",
           variant: "destructive"
         });
       }
