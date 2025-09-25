@@ -250,13 +250,11 @@ export const createSampleReels = async () => {
   try {
     await browserStorage.init();
     
-    // Clear existing reels to regenerate with proper video content
+    // Check if we already have reels (including your recorded ones) - DON'T delete them!
     const existingReels = await browserStorage.getAllReels();
     if (existingReels.length > 0) {
-      console.log(`Clearing ${existingReels.length} existing reels to regenerate with proper video content...`);
-      for (const reel of existingReels) {
-        await browserStorage.deleteReel(reel.id);
-      }
+      console.log('Found existing reels (including your recordings):', existingReels.length);
+      return; // Don't override your actual recorded videos!
     }
     
     console.log('Creating working sample reels with actual video content...');
