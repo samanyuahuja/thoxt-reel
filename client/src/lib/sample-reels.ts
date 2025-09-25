@@ -1,6 +1,151 @@
 // Sample reels data for testing saved reels functionality
 import { browserStorage } from './browser-storage';
 
+// Create actual video blob using MediaRecorder and Canvas
+const createActualVideoBlob = async (title: string, color: string): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    console.log(`Creating video for: ${title} with color: ${color}`);
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      reject(new Error('Canvas context not available'));
+      return;
+    }
+    
+    canvas.width = 320;
+    canvas.height = 180;
+    
+    // Check MediaRecorder support
+    if (typeof MediaRecorder === 'undefined' || !canvas.captureStream) {
+      reject(new Error('MediaRecorder not supported'));
+      return;
+    }
+    
+    const stream = canvas.captureStream(30); // 30 FPS
+    let recorder: MediaRecorder;
+    
+    try {
+      // Try different formats for better compatibility
+      const options = [
+        { mimeType: 'video/webm;codecs=vp9' },
+        { mimeType: 'video/webm;codecs=vp8' },
+        { mimeType: 'video/webm' },
+        { mimeType: 'video/mp4' }
+      ];
+      
+      let selectedOption = options[0];
+      for (const option of options) {
+        if (MediaRecorder.isTypeSupported(option.mimeType)) {
+          selectedOption = option;
+          break;
+        }
+      }
+      
+      recorder = new MediaRecorder(stream, selectedOption);
+    } catch (error) {
+      reject(new Error('Failed to create MediaRecorder'));
+      return;
+    }
+    
+    const chunks: Blob[] = [];
+    let isRecording = true;
+    
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    };
+    
+    recorder.onstop = () => {
+      const videoBlob = new Blob(chunks, { type: recorder.mimeType });
+      console.log(`Video created: ${videoBlob.size} bytes, type: ${videoBlob.type}`);
+      resolve(videoBlob);
+    };
+    
+    recorder.onerror = (error) => {
+      console.error('MediaRecorder error:', error);
+      reject(new Error('Recording failed'));
+    };
+    
+    // Start recording
+    recorder.start(200);
+    
+    // Create animated content
+    let frame = 0;
+    const totalFrames = 150; // 5 seconds at 30fps
+    
+    const animate = () => {
+      if (!isRecording) return;
+      
+      const progress = frame / totalFrames;
+      const time = frame / 30; // seconds
+      
+      // Clear with background color
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Animated elements
+      ctx.fillStyle = 'white';
+      
+      // Bouncing circle
+      ctx.beginPath();
+      ctx.arc(
+        canvas.width / 2 + Math.cos(time * 3) * 60,
+        canvas.height / 2 + Math.sin(time * 2) * 40,
+        20, 0, 2 * Math.PI
+      );
+      ctx.fill();
+      
+      // Rotating circles
+      for (let i = 0; i < 3; i++) {
+        const angle = (time * 2) + (i * Math.PI * 2 / 3);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + Math.sin(time + i) * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 + Math.cos(angle) * 40,
+          canvas.height / 2 + Math.sin(angle) * 40,
+          12, 0, 2 * Math.PI
+        );
+        ctx.fill();
+      }
+      
+      // Text
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, canvas.width / 2, 50);
+      
+      // Progress bar
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      const barWidth = canvas.width * 0.8;
+      ctx.fillRect((canvas.width - barWidth) / 2, canvas.height - 30, barWidth * progress, 4);
+      
+      frame++;
+      
+      if (frame < totalFrames) {
+        requestAnimationFrame(animate);
+      } else {
+        isRecording = false;
+        recorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+    
+    animate();
+    
+    // Safety timeout
+    setTimeout(() => {
+      if (isRecording) {
+        isRecording = false;
+        recorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }
+    }, 6000);
+  });
+};
+
 // Create a working video blob using a reliable method
 const createSampleVideoBlob = async (
   duration: number,
@@ -208,28 +353,44 @@ export const createSampleReels = async () => {
   try {
     await browserStorage.init();
     
-    // Check if we already have sample reels
+    // Clear existing reels to regenerate with proper video content
     const existingReels = await browserStorage.getAllReels();
     if (existingReels.length > 0) {
-      console.log('Sample reels already exist:', existingReels.length);
-      return;
+      console.log(`Clearing ${existingReels.length} existing reels to regenerate with proper video content...`);
+      for (const reel of existingReels) {
+        await browserStorage.deleteReel(reel.id);
+      }
     }
     
-    console.log('Creating working sample reels...');
+    console.log('Creating working sample reels with actual video content...');
     
-    // Create simple reels that will work without complex video generation
+    // Create reels with proper video content
     for (let i = 0; i < sampleReelsData.length; i++) {
       const reelData = sampleReelsData[i];
       console.log(`[${i + 1}/${sampleReelsData.length}] Creating: ${reelData.title}`);
       
-      const { color, ...reelDataForSave } = reelData;
-      await browserStorage.saveReel({
-        ...reelDataForSave,
-        duration: 10, // 10 second videos 
-        videoBlob: new Blob(['test video content'], { type: 'video/webm' })
-      });
-      
-      console.log(`✓ Created: ${reelData.title}`);
+      try {
+        const videoBlob = await createActualVideoBlob(
+          reelData.title.split(' ').slice(0, 2).join(' '), 
+          reelData.color
+        );
+        
+        const { color, ...reelDataForSave } = reelData;
+        await browserStorage.saveReel({
+          ...reelDataForSave,
+          duration: 5, // 5 second videos
+          videoBlob
+        });
+        
+        console.log(`✓ Created: ${reelData.title}`);
+      } catch (error) {
+        console.error(`Failed to create video for ${reelData.title}:`, error);
+        
+        // Fallback: save without video blob
+        const { color, ...reelDataForSave } = reelData;
+        await browserStorage.saveReel(reelDataForSave);
+        console.log(`✓ Created placeholder: ${reelData.title}`);
+      }
     }
     
     console.log('Sample reels creation completed!');

@@ -61,7 +61,7 @@ export default function SavedReels() {
     if (filterBy === "all") return matchesSearch;
     if (filterBy === "recent") {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      return matchesSearch && new Date(reel.createdAt) > weekAgo;
+      return matchesSearch && reel.createdAt && new Date(reel.createdAt) > weekAgo;
     }
     if (filterBy === "popular") {
       return matchesSearch && (reel.views || 0) > 10;
@@ -105,41 +105,96 @@ export default function SavedReels() {
   }, []);
 
   const handleVideoPlay = async (reelId: string) => {
-    console.log(`Toggle play for reel: ${reelId}`);
+    const video = videoRefs.current[reelId];
+    if (!video) {
+      console.error(`Video element not found for reel ${reelId}`);
+      return;
+    }
+
+    console.log(`Playing video for reel: ${reelId}`);
+    console.log(`Video src: ${video.src}`);
+    console.log(`Video duration: ${video.duration}`);
+    console.log(`Video ready state: ${video.readyState}`);
 
     // Pause any currently playing video
     if (playingVideo && playingVideo !== reelId) {
-      setPlayingVideo(null);
-      console.log(`Stopped previous video: ${playingVideo}`);
+      const currentlyPlaying = videoRefs.current[playingVideo];
+      if (currentlyPlaying) {
+        currentlyPlaying.pause();
+        console.log(`Paused previous video: ${playingVideo}`);
+      }
     }
 
     if (playingVideo === reelId) {
       // Pause current video
+      video.pause();
       setPlayingVideo(null);
       console.log(`Paused video: ${reelId}`);
     } else {
-      // Start playing selected video
-      console.log(`Starting playback for: ${reelId}`);
-      setPlayingVideo(reelId);
-      
-      // Simulate video duration and auto-end with proper state handling
-      setTimeout(() => {
-        setPlayingVideo(currentPlaying => {
-          if (currentPlaying === reelId) {
-            handleVideoEnded(reelId);
-            console.log(`Video ended: ${reelId}`);
-            return null;
-          }
-          return currentPlaying;
-        });
-      }, 10000); // 10 second duration
-      
-      // Update view count
+      // Play selected video
       try {
+        setLoadingVideos(prev => {
+          const newSet = new Set(prev);
+          newSet.add(reelId);
+          return newSet;
+        });
+        
+        // Ensure video is loaded
+        if (video.readyState < 2) {
+          console.log(`Video not ready, loading... (readyState: ${video.readyState})`);
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              video.removeEventListener('loadeddata', onLoadedData);
+              video.removeEventListener('error', onError);
+              reject(new Error('Video loading timeout'));
+            }, 5000);
+
+            const onLoadedData = () => {
+              clearTimeout(timeout);
+              video.removeEventListener('loadeddata', onLoadedData);
+              video.removeEventListener('error', onError);
+              console.log(`Video loaded! Duration: ${video.duration}s, readyState: ${video.readyState}`);
+              resolve(null);
+            };
+            const onError = (e: Event) => {
+              clearTimeout(timeout);
+              video.removeEventListener('loadeddata', onLoadedData);
+              video.removeEventListener('error', onError);
+              console.error('Video loading error:', e);
+              reject(e);
+            };
+            video.addEventListener('loadeddata', onLoadedData);
+            video.addEventListener('error', onError);
+            video.load();
+          });
+        }
+        
+        console.log(`Starting playback for video: ${reelId}`);
+        await video.play();
+        console.log(`Video playing! Current time: ${video.currentTime}s / ${video.duration}s`);
+        
+        setPlayingVideo(reelId);
+        setLoadingVideos(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(reelId);
+          return newSet;
+        });
+        
+        // Update view count
         await browserStorage.updateReelViews(reelId);
         loadReels(); // Refresh to show updated view count
       } catch (error) {
-        console.error('Error updating views:', error);
+        console.error('Error playing video:', error);
+        setLoadingVideos(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(reelId);
+          return newSet;
+        });
+        toast({
+          title: "Playback Error",
+          description: "Unable to play this video. It may be corrupted or not properly formatted.",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -305,65 +360,57 @@ export default function SavedReels() {
                     <div className="relative aspect-[9/16] bg-secondary overflow-hidden cursor-pointer group"
                          onClick={() => handleVideoPlay(reel.id)}>
                       
-                      {/* Working Video Placeholder */}
-                      <div className="w-full h-full relative bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        {/* Animated content when playing */}
-                        {playingVideo === reel.id && (
+                      {/* Actual Video Player */}
+                      {(() => {
+                        const videoUrl = getVideoUrl(reel);
+                        return videoUrl ? (
                           <>
-                            {/* Moving circles */}
-                            <div className="absolute inset-0 overflow-hidden">
-                              <div className="absolute w-16 h-16 bg-white/30 rounded-full animate-bounce" 
-                                   style={{
-                                     left: '20%', 
-                                     top: '30%',
-                                     animationDuration: '2s',
-                                     animationDelay: '0s'
-                                   }} />
-                              <div className="absolute w-12 h-12 bg-white/40 rounded-full animate-ping" 
-                                   style={{
-                                     right: '25%', 
-                                     top: '50%',
-                                     animationDuration: '3s',
-                                     animationDelay: '0.5s'
-                                   }} />
-                              <div className="absolute w-8 h-8 bg-white/50 rounded-full animate-pulse" 
-                                   style={{
-                                     left: '60%', 
-                                     bottom: '40%',
-                                     animationDuration: '1.5s',
-                                     animationDelay: '1s'
-                                   }} />
-                            </div>
-                            
-                            {/* Progress indicator */}
-                            <div className="absolute bottom-4 left-4 right-4 bg-black/50 rounded px-3 py-2">
-                              <div className="flex items-center space-x-2 text-white text-sm">
-                                <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></div>
-                                <span>Playing...</span>
-                              </div>
+                            <video 
+                              ref={(el) => {
+                                if (el) {
+                                  videoRefs.current[reel.id] = el;
+                                }
+                              }}
+                              className="w-full h-full object-cover"
+                              poster={reel.thumbnailData || undefined}
+                              loop
+                              muted
+                              playsInline
+                              preload="metadata"
+                              onLoadedData={() => setLoadingVideos(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(reel.id);
+                                return newSet;
+                              })}
+                              data-testid={`reel-video-${reel.id}`}
+                              src={videoUrl}
+                            />
+
+                            {/* Play/Pause Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-100 opacity-0 transition-opacity">
+                              {loadingVideos.has(reel.id) ? (
+                                <div className="w-8 md:w-12 h-8 md:h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                              ) : playingVideo === reel.id ? (
+                                <Pause className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
+                              ) : (
+                                <Play className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
+                              )}
                             </div>
                           </>
-                        )}
-                        
-                        {/* Static content when not playing */}
-                        {playingVideo !== reel.id && (
-                          <div className="text-white text-center">
-                            <div className="text-lg font-bold mb-2">{reel.title.split(' ').slice(0, 2).join(' ')}</div>
-                            <div className="text-sm opacity-80">Sample Video Content</div>
+                        ) : (
+                          /* Fallback for videos without data */
+                          <div className="w-full h-full relative bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <div className="text-white text-center">
+                              <div className="text-lg font-bold mb-2">{reel.title.split(' ').slice(0, 2).join(' ')}</div>
+                              <div className="text-sm opacity-80">Video not available</div>
+                            </div>
+                            
+                            <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-100 opacity-0 transition-opacity">
+                              <Play className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
+                            </div>
                           </div>
-                        )}
-                        
-                        {/* Play/Pause Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-100 opacity-0 transition-opacity">
-                          {loadingVideos.has(reel.id) ? (
-                            <div className="w-8 md:w-12 h-8 md:h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          ) : playingVideo === reel.id ? (
-                            <Pause className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
-                          ) : (
-                            <Play className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
-                          )}
-                        </div>
-                      </div>
+                        );
+                      })()}
                       
                       {/* Duration Badge */}
                       <div className="absolute bottom-1 md:bottom-2 right-1 md:right-2 bg-black/75 text-primary-foreground px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
@@ -399,7 +446,7 @@ export default function SavedReels() {
                           </div>
                           <div className="flex items-center space-x-1">
                             <Calendar className="w-3 h-3" />
-                            <span>{formatDate(reel.createdAt)}</span>
+                            <span>{reel.createdAt ? formatDate(reel.createdAt) : 'Unknown'}</span>
                           </div>
                         </div>
                       </div>
@@ -510,7 +557,9 @@ export default function SavedReels() {
               thumbnailUrl: null,
               authorId: editingReel.authorId,
               sourceArticleId: editingReel.sourceArticleId,
-              metadata: editingReel.metadata
+              metadata: editingReel.metadata,
+              views: 0,
+              likes: 0
             });
             
             await loadReels();
