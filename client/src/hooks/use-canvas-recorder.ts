@@ -17,6 +17,7 @@ export function useCanvasRecorder() {
   const animationFrameRef = useRef<number>();
   const timerRef = useRef<NodeJS.Timeout>();
   const streamRef = useRef<MediaStream | null>(null);
+  const recordingTimeRef = useRef<number>(0);
 
   const initializeCanvas = useCallback((videoElement: HTMLVideoElement, options: CanvasRecorderOptions) => {
     const canvas = canvasRef.current;
@@ -117,6 +118,7 @@ export function useCanvasRecorder() {
       const chunks: Blob[] = [];
       
       mediaRecorder.ondataavailable = (event) => {
+        console.log(`Canvas MediaRecorder data available: ${event.data.size} bytes`);
         if (event.data.size > 0) {
           chunks.push(event.data);
         }
@@ -124,9 +126,12 @@ export function useCanvasRecorder() {
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'video/webm' });
+        const finalDuration = recordingTimeRef.current;
+        console.log(`Canvas MediaRecorder stopped. Final blob size: ${blob.size} bytes`);
         setRecordedBlob(blob);
         setIsRecording(false);
-        setRecordingTime(0);
+        // DON'T reset recording time here! Keep it for saving!
+        console.log(`Canvas recording completed with duration: ${finalDuration} seconds`);
         
         // Clean up
         if (animationFrameRef.current) {
@@ -134,19 +139,27 @@ export function useCanvasRecorder() {
         }
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = undefined;
         }
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Record in 1-second chunks
       
       // Start drawing frames
       drawFrame();
       
       // Start timer
       setRecordingTime(0);
+      recordingTimeRef.current = 0;
+      console.log("Canvas recording started");
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          const newTime = prev + 1;
+          recordingTimeRef.current = newTime; // Keep ref in sync
+          console.log(`Canvas recording time: ${newTime} seconds`);
+          return newTime;
+        });
       }, 1000);
       
       setIsRecording(true);
@@ -158,6 +171,8 @@ export function useCanvasRecorder() {
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
+      const currentDuration = recordingTimeRef.current;
+      console.log(`Canvas recording stopped. Total duration: ${currentDuration} seconds`);
       mediaRecorderRef.current.stop();
       
       // Stop all tracks
