@@ -80,6 +80,7 @@ export function useCanvasRecorder() {
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
       }
 
+      // Continue animation loop while recording
       if (isRecording) {
         animationFrameRef.current = requestAnimationFrame(drawFrame);
       }
@@ -146,7 +147,8 @@ export function useCanvasRecorder() {
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start(1000); // Record in 1-second chunks
       
-      // Start drawing frames
+      // Start drawing frames continuously
+      setIsRecording(true);
       drawFrame();
       
       // Start timer
@@ -162,7 +164,7 @@ export function useCanvasRecorder() {
         });
       }, 1000);
       
-      setIsRecording(true);
+      // Already set above before drawFrame()
       
     } catch (error) {
       console.error('Failed to start canvas recording:', error);
@@ -173,6 +175,12 @@ export function useCanvasRecorder() {
     if (mediaRecorderRef.current && isRecording) {
       const currentDuration = recordingTimeRef.current;
       console.log(`Canvas recording stopped. Total duration: ${currentDuration} seconds`);
+      
+      // Stop animation loop first
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
       mediaRecorderRef.current.stop();
       
       // Stop all tracks
