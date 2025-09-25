@@ -24,6 +24,7 @@ export function useMediaRecorder(stream: MediaStream | null) {
       chunksRef.current = [];
 
       mediaRecorder.addEventListener('dataavailable', (event) => {
+        console.log(`MediaRecorder data available: ${event.data.size} bytes`);
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
@@ -31,17 +32,24 @@ export function useMediaRecorder(stream: MediaStream | null) {
 
       mediaRecorder.addEventListener('stop', () => {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+        console.log(`MediaRecorder stopped. Final blob size: ${blob.size} bytes`);
         setRecordedBlob(blob);
         chunksRef.current = [];
       });
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Record in 1-second chunks to ensure data is captured
       setIsRecording(true);
       setRecordingTime(0);
 
+      console.log("Recording started");
+
       // Start timer
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          const newTime = prev + 1;
+          console.log(`Recording time: ${newTime} seconds`);
+          return newTime;
+        });
       }, 1000);
 
     } catch (error) {
@@ -60,7 +68,10 @@ export function useMediaRecorder(stream: MediaStream | null) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+    
+    // Keep the recording time for saving - DON'T reset it here!
+    console.log(`Recording stopped. Total duration: ${recordingTime} seconds`);
+  }, [recordingTime]);
 
   return {
     isRecording,

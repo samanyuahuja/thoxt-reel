@@ -180,10 +180,18 @@ export default function VideoRecorder({
   const handleSaveReel = (title: string, description?: string) => {
     const currentTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
     
+    console.log(`Saving reel with duration: ${currentTime} seconds`);
+    console.log('Recording details:', {
+      useCanvasMode,
+      canvasRecordingTime,
+      basicRecordingTime,
+      isRecording
+    });
+    
     saveReel({
       title: title || "Untitled Reel",
       description,
-      duration: currentTime || 1, // Default to 1 second if no duration
+      duration: Math.max(currentTime || 1, 1), // Ensure at least 1 second but use actual recording time
       script: currentScript,
     });
   };
@@ -515,7 +523,7 @@ export default function VideoRecorder({
         <VideoTimelineEditor
           isOpen={showTimelineEditor}
           onClose={() => setShowTimelineEditor(false)}
-          initialVideo={recordedBlob}
+          initialVideo={recordedBlob || undefined}
           onExport={(editedBlob) => {
             toast({
               title: "Export Complete!",
