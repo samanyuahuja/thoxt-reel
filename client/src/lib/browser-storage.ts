@@ -49,28 +49,35 @@ class BrowserStorage {
     const id = `reel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const createdAt = new Date();
     
-    let videoData = '';
     let thumbnailData = '';
     
-    // Convert video blob to base64 for storage
+    // Generate thumbnail from video blob (but don't convert blob to base64)
     if (reel.videoBlob) {
-      videoData = await this.blobToBase64(reel.videoBlob);
-      // Generate thumbnail from video
       thumbnailData = await this.generateThumbnail(reel.videoBlob);
+      
+      // Store the raw blob separately in VIDEO_STORE_NAME
+      await new Promise<void>((resolve, reject) => {
+        const transaction = this.db!.transaction([VIDEO_STORE_NAME], "readwrite");
+        const store = transaction.objectStore(VIDEO_STORE_NAME);
+        const request = store.put({ id, blob: reel.videoBlob });
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
     }
     
     const storedReel: StoredReel = {
       ...reel,
       id,
       createdAt,
-      videoData,
       thumbnailData,
       views: 0,
       likes: 0
     };
     
-    // Remove videoBlob from the stored object
+    // Remove videoBlob and videoData from the stored object
     delete (storedReel as any).videoBlob;
+    delete (storedReel as any).videoData;
     
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([STORE_NAME], "readwrite");
@@ -120,13 +127,20 @@ class BrowserStorage {
   async deleteReel(id: string): Promise<void> {
     if (!this.db) await this.init();
     
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.delete(id);
+    // Delete from both stores
+    await new Promise<void>((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME, VIDEO_STORE_NAME], "readwrite");
       
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      // Delete reel metadata
+      const reelStore = transaction.objectStore(STORE_NAME);
+      reelStore.delete(id);
+      
+      // Delete video blob
+      const blobStore = transaction.objectStore(VIDEO_STORE_NAME);
+      blobStore.delete(id);
+      
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
     });
   }
 
@@ -148,24 +162,46 @@ class BrowserStorage {
     }
   }
 
-  // Convert video data back to blob URL for playback
-  getVideoUrl(reel: StoredReel): string | null {
-    if (!reel.videoData) return null;
+  // Get video blob URL for playback
+  async getVideoUrl(reel: StoredReel): Promise<string | null> {
+    if (!this.db) await this.init();
     
     try {
-      const byteString = atob(reel.videoData.split(',')[1]);
-      const mimeString = reel.videoData.split(',')[0].split(':')[1].split(';')[0];
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
+      // Try to get blob from VIDEO_STORE_NAME
+      const blob = await new Promise<Blob | null>((resolve, reject) => {
+        const transaction = this.db!.transaction([VIDEO_STORE_NAME], "readonly");
+        const store = transaction.objectStore(VIDEO_STORE_NAME);
+        const request = store.get(reel.id);
+        
+        request.onsuccess = () => {
+          const result = request.result;
+          resolve(result?.blob || null);
+        };
+        request.onerror = () => reject(request.error);
+      });
       
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
+      if (blob) {
+        return URL.createObjectURL(blob);
       }
       
-      const blob = new Blob([ab], { type: mimeString });
-      return URL.createObjectURL(blob);
+      // Fallback: if blob not found but videoData exists (old format), convert it
+      if (reel.videoData) {
+        const byteString = atob(reel.videoData.split(',')[1]);
+        const mimeString = reel.videoData.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        
+        const fallbackBlob = new Blob([ab], { type: mimeString });
+        return URL.createObjectURL(fallbackBlob);
+      }
+      
+      return null;
     } catch (error) {
-      console.error('Error converting video data to URL:', error);
+      console.error('Error getting video URL:', error);
       return null;
     }
   }

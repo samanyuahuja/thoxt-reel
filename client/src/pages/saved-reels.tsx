@@ -88,11 +88,16 @@ export default function SavedReels() {
       return videoUrls.current[reel.id];
     }
     
-    const url = browserStorage.getVideoUrl(reel);
-    if (url) {
-      videoUrls.current[reel.id] = url;
-    }
-    return url;
+    // Load URL asynchronously
+    browserStorage.getVideoUrl(reel).then(url => {
+      if (url) {
+        videoUrls.current[reel.id] = url;
+        // Force re-render to update video src
+        setReels(prev => prev ? [...prev] : null);
+      }
+    });
+    
+    return videoUrls.current[reel.id] || null;
   };
 
   // Clean up video URLs when component unmounts
