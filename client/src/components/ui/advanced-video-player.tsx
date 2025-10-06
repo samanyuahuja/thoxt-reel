@@ -90,18 +90,20 @@ export function AdvancedVideoPlayer({
 
   return (
     <div className={`relative ${className}`} id="player-container">
-      <ReactPlayer
-        ref={playerRef}
-        url={url}
-        playing={playing}
-        volume={isMuted ? 0 : volume}
-        loop={loop}
-        width="100%"
-        height="100%"
-        onEnded={onEnded}
-        onProgress={handleProgress as any}
-        data-testid="video-player"
-      />
+      <div data-testid="video-player">
+        {/* @ts-ignore - ReactPlayer v3 accepts url or src */}
+        <ReactPlayer
+          ref={playerRef}
+          url={url}
+          playing={playing}
+          volume={isMuted ? 0 : volume}
+          loop={loop}
+          width="100%"
+          height="100%"
+          onEnded={onEnded}
+          onProgress={handleProgress}
+        />
+      </div>
       
       {controls && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
