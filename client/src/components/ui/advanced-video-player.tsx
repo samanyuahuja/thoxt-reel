@@ -101,6 +101,7 @@ export function AdvancedVideoPlayer({
           width="100%"
           height="100%"
           onEnded={onEnded}
+          // @ts-ignore - ReactPlayer onProgress prop type mismatch
           onProgress={handleProgress}
         />
       </div>
