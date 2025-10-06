@@ -31,7 +31,7 @@ export function useMediaRecorder(stream: MediaStream | null) {
       });
 
       mediaRecorder.addEventListener('stop', () => {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+        const blob = new Blob(chunksRef.current, { type: 'video/webm;codecs=vp8,opus' });
         console.log(`MediaRecorder stopped. Final blob size: ${blob.size} bytes`);
         setRecordedBlob(blob);
         chunksRef.current = [];

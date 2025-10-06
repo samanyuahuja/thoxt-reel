@@ -126,7 +126,7 @@ export function useCanvasRecorder() {
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
+        const blob = new Blob(chunks, { type: 'video/webm;codecs=vp9' });
         const finalDuration = recordingTimeRef.current;
         console.log(`Canvas MediaRecorder stopped. Final blob size: ${blob.size} bytes`);
         setRecordedBlob(blob);
