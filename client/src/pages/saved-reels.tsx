@@ -387,10 +387,10 @@ export default function SavedReels() {
                               }}
                               className="w-full h-full object-cover"
                               poster={reel.thumbnailData || undefined}
+                              controls
                               loop
-                              muted
                               playsInline
-                              preload="metadata"
+                              preload="auto"
                               onLoadedData={() => {
                                 console.log(`Video loaded for ${reel.id}:`, {
                                   duration: videoRefs.current[reel.id]?.duration,
