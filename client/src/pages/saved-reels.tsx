@@ -370,8 +370,7 @@ export default function SavedReels() {
                 {filteredReels.map((reel) => (
                   <div key={reel.id} className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                     {/* Video Thumbnail */}
-                    <div className="relative aspect-[9/16] bg-secondary overflow-hidden cursor-pointer group"
-                         onClick={() => handleVideoPlay(reel.id)}>
+                    <div className="relative aspect-[9/16] bg-secondary overflow-hidden cursor-pointer group">
                       
                       {/* Your Actual Recorded Videos */}
                       {(() => {
@@ -389,8 +388,10 @@ export default function SavedReels() {
                               poster={reel.thumbnailData || undefined}
                               controls
                               loop
+                              muted
                               playsInline
                               preload="auto"
+                              autoPlay
                               onLoadedData={() => {
                                 console.log(`Video loaded for ${reel.id}:`, {
                                   duration: videoRefs.current[reel.id]?.duration,
