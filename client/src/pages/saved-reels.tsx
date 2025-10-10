@@ -263,67 +263,95 @@ export default function SavedReels() {
   };
 
   const handleDownload = async (reel: StoredReel) => {
-    const videoUrl = getVideoUrl(reel);
-    if (videoUrl) {
-      const a = document.createElement('a');
-      a.href = videoUrl;
-      a.download = `${reel.title}.webm`;
-      a.click();
-      
+    try {
+      const videoUrl = await browserStorage.getVideoUrl(reel);
+      if (videoUrl) {
+        // Fetch the blob and create a proper download
+        const response = await fetch(videoUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${reel.title.replace(/[^a-z0-9]/gi, '_')}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast({
+          title: "✅ Download Complete",
+          description: `${reel.title} has been downloaded successfully!`,
+        });
+      } else {
+        toast({
+          title: "Download Failed",
+          description: "Video not available for download.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Download Started",
-        description: "Your reel is being downloaded.",
+        title: "Download Error",
+        description: "Failed to download the video. Please try again.",
+        variant: "destructive"
       });
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex">
       <SidebarNavigation />
       
       <div className="flex-1 ml-64">
         <div className="p-4 md:p-8">
-          {/* Header */}
+          {/* Header with gradient */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">My Reels</h1>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                My Reels
+              </h1>
               {reels && (
-                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                  {filteredReels.length} saved reels
+                <span className="bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary px-4 py-1.5 rounded-full text-sm font-semibold border border-primary/20 backdrop-blur-sm">
+                  {filteredReels.length} reels
                 </span>
               )}
             </div>
             <Button 
-              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="bg-gradient-to-r from-primary to-purple-600 text-white hover:from-primary/90 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
               data-testid="create-new-reel-button"
             >
+              <Play className="w-4 h-4 mr-2" />
               Create New Reel
             </Button>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and Filters - Enhanced */}
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search your reels..."
+                placeholder="Search your amazing reels..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full pl-12 pr-4 py-3 bg-card/50 backdrop-blur-sm border border-primary/20 rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm"
                 data-testid="search-input"
               />
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4 text-muted-foreground" />
+              <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-4 py-2 rounded-xl border border-primary/20">
+                <Filter className="w-4 h-4 text-primary" />
                 <Select value={filterBy} onValueChange={setFilterBy}>
-                  <SelectTrigger className="w-32" data-testid="filter-select">
+                  <SelectTrigger className="w-32 border-0 focus:ring-0" data-testid="filter-select">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="all">All Reels</SelectItem>
                     <SelectItem value="recent">Recent</SelectItem>
                     <SelectItem value="popular">Popular</SelectItem>
                   </SelectContent>
@@ -366,11 +394,11 @@ export default function SavedReels() {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" data-testid="reels-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="reels-grid">
                 {filteredReels.map((reel) => (
-                  <div key={reel.id} className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div key={reel.id} className="group bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/10 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1">
                     {/* Video Thumbnail */}
-                    <div className="relative aspect-[9/16] bg-secondary overflow-hidden cursor-pointer group">
+                    <div className="relative aspect-[9/16] bg-gradient-to-br from-primary/5 to-purple-500/5 overflow-hidden cursor-pointer">
                       
                       {/* Your Actual Recorded Videos */}
                       {(() => {
@@ -410,14 +438,21 @@ export default function SavedReels() {
                               src={videoUrl}
                             />
 
+                            {/* Gradient Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            
                             {/* Play/Pause Overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-100 opacity-0 transition-opacity">
+                            <div className="absolute inset-0 flex items-center justify-center">
                               {loadingVideos.has(reel.id) ? (
-                                <div className="w-8 md:w-12 h-8 md:h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                <div className="w-12 md:w-16 h-12 md:h-16 border-3 border-primary border-t-transparent rounded-full animate-spin" />
                               ) : playingVideo === reel.id ? (
-                                <Pause className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Pause className="w-12 md:w-16 h-12 md:h-16 text-white bg-gradient-to-br from-primary to-purple-600 rounded-full p-3 shadow-xl" />
+                                </div>
                               ) : (
-                                <Play className="w-8 md:w-12 h-8 md:h-12 text-white/90 bg-black/50 rounded-full p-2" />
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Play className="w-12 md:w-16 h-12 md:h-16 text-white bg-gradient-to-br from-primary to-purple-600 rounded-full p-3 shadow-xl" />
+                                </div>
                               )}
                             </div>
                           </>
@@ -437,21 +472,23 @@ export default function SavedReels() {
                       })()}
                       
                       {/* Duration Badge */}
-                      <div className="absolute bottom-1 md:bottom-2 right-1 md:right-2 bg-black/75 text-primary-foreground px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs" data-testid={`duration-${reel.id}`}>
+                      <div className="absolute bottom-2 right-2 bg-gradient-to-r from-black/80 to-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/10" data-testid={`duration-${reel.id}`}>
+                        <Clock className="w-3 h-3 inline mr-1" />
                         {formatDuration(reel.duration)}
                       </div>
                       
                       {/* Playing Indicator */}
                       {playingVideo === reel.id && (
-                        <div className="absolute top-1 md:top-2 left-1 md:left-2 bg-primary text-primary-foreground px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs font-semibold">
+                        <div className="absolute top-2 left-2 bg-gradient-to-r from-primary to-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-1">
+                          <div className="w-2 h-2 bg-white rounded-full animate-ping" />
                           Playing
                         </div>
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="p-2 md:p-4">
-                      <h3 className="font-semibold text-sm md:text-lg mb-1 md:mb-2 line-clamp-2" data-testid={`reel-title-${reel.id}`}>
+                    <div className="p-4">
+                      <h3 className="font-bold text-base md:text-lg mb-2 line-clamp-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent" data-testid={`reel-title-${reel.id}`}>
                         {reel.title}
                       </h3>
                       
@@ -475,82 +512,79 @@ export default function SavedReels() {
                         </div>
                       </div>
                       
-                      {/* Actions */}
-                      <div className="flex items-center justify-between">
+                      {/* Actions - Enhanced */}
+                      <div className="flex items-center gap-2 mt-3">
                         <Button
-                          variant="ghost"
                           size="sm"
-                          className="text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-xs md:text-sm px-2 md:px-3"
+                          className="flex-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 text-white transition-all shadow-md hover:shadow-lg"
                           onClick={() => handleVideoPlay(reel.id)}
                           data-testid={`play-button-${reel.id}`}
                         >
                           {playingVideo === reel.id ? (
                             <>
-                              <Pause className="w-3 md:w-4 h-3 md:h-4 mr-1" />
-                              <span className="hidden md:inline">Pause</span>
+                              <Pause className="w-4 h-4 mr-1" />
+                              Pause
                             </>
                           ) : (
                             <>
-                              <Play className="w-3 md:w-4 h-3 md:h-4 mr-1" />
-                              <span className="hidden md:inline">Play</span>
+                              <Play className="w-4 h-4 mr-1" />
+                              Play
                             </>
                           )}
                         </Button>
                         
-                        <div className="flex space-x-0.5 md:space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-foreground w-6 h-6 md:w-8 md:h-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShare(reel);
-                            }}
-                            data-testid={`share-button-${reel.id}`}
-                          >
-                            <Share className="w-3 md:w-4 h-3 md:h-4" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-foreground w-6 h-6 md:w-8 md:h-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownload(reel);
-                            }}
-                            data-testid={`download-button-${reel.id}`}
-                          >
-                            <Download className="w-3 md:w-4 h-3 md:h-4" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-blue-400 w-6 h-6 md:w-8 md:h-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingReel(reel);
-                              setShowTimelineEditor(true);
-                            }}
-                            data-testid={`edit-button-${reel.id}`}
-                          >
-                            <Edit3 className="w-3 md:w-4 h-3 md:h-4" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-red-400 w-6 h-6 md:w-8 md:h-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteReel(reel.id);
-                            }}
-                            data-testid={`delete-button-${reel.id}`}
-                          >
-                            <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="border-primary/20 hover:bg-primary/10 hover:text-primary transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(reel);
+                          }}
+                          data-testid={`download-button-${reel.id}`}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="border-primary/20 hover:bg-blue-500/10 hover:text-blue-500 transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(reel);
+                          }}
+                          data-testid={`share-button-${reel.id}`}
+                        >
+                          <Share className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="border-primary/20 hover:bg-purple-500/10 hover:text-purple-500 transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingReel(reel);
+                            setShowTimelineEditor(true);
+                          }}
+                          data-testid={`edit-button-${reel.id}`}
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="border-primary/20 hover:bg-red-500/10 hover:text-red-500 transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteReel(reel.id);
+                          }}
+                          data-testid={`delete-button-${reel.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
