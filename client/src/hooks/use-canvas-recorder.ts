@@ -18,6 +18,7 @@ export function useCanvasRecorder() {
   const timerRef = useRef<NodeJS.Timeout>();
   const streamRef = useRef<MediaStream | null>(null);
   const recordingTimeRef = useRef<number>(0);
+  const isRecordingRef = useRef<boolean>(false);
 
   const initializeCanvas = useCallback((videoElement: HTMLVideoElement, options: CanvasRecorderOptions) => {
     const canvas = canvasRef.current;
@@ -81,7 +82,7 @@ export function useCanvasRecorder() {
       }
 
       // Continue animation loop while recording
-      if (isRecording) {
+      if (isRecordingRef.current) {
         animationFrameRef.current = requestAnimationFrame(drawFrame);
       }
     };
@@ -147,7 +148,8 @@ export function useCanvasRecorder() {
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start(1000); // Record in 1-second chunks
       
-      // Start drawing frames continuously
+      // Start drawing frames continuously - set ref BEFORE calling drawFrame
+      isRecordingRef.current = true;
       setIsRecording(true);
       drawFrame();
       
@@ -172,11 +174,12 @@ export function useCanvasRecorder() {
   }, [initializeCanvas]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && isRecordingRef.current) {
       const currentDuration = recordingTimeRef.current;
       console.log(`Canvas recording stopped. Total duration: ${currentDuration} seconds`);
       
       // Stop animation loop first
+      isRecordingRef.current = false;
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -188,7 +191,7 @@ export function useCanvasRecorder() {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     }
-  }, [isRecording]);
+  }, []);
 
   return {
     isRecording,
