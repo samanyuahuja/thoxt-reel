@@ -82,7 +82,7 @@ export default function ReelsCreator() {
         {/* Main Studio Area */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* Video Recording Area */}
-          <div className="flex-1 flex items-center justify-center bg-muted p-2 md:p-6" data-testid="video-area">
+          <div className="flex-1 flex items-center justify-center bg-muted p-2 md:p-6 overflow-y-auto" data-testid="video-area">
             <VideoRecorder
               onOpenFilters={() => setShowFiltersModal(true)}
               onOpenMusic={() => setShowMusicModal(true)}

@@ -77,7 +77,6 @@ body {
   html, body, #root {
     height: 100vh;
     height: 100dvh; /* Dynamic viewport height for mobile browsers */
-    overflow: hidden;
   }
   
   /* Touch-friendly button sizes */
@@ -87,7 +86,7 @@ body {
   }
   
   /* Better touch scrolling */
-  .overflow-y-auto, .overflow-auto {
+  .overflow-y-auto, .overflow-auto, .overflow-y-scroll {
     -webkit-overflow-scrolling: touch;
   }
   
