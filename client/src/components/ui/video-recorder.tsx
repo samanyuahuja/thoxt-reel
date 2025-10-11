@@ -12,8 +12,8 @@ import { usePinchZoom } from "@/hooks/use-pinch-zoom";
 import { browserStorage } from "@/lib/browser-storage";
 import VideoUploadModal from "@/components/ui/video-upload-modal";
 import VideoTimelineEditor from "@/components/ui/video-timeline-editor";
-import type { TextOverlay } from "./text-overlay-modal";
-import type { VideoFilter } from "./filters-modal";
+import type { TextOverlay } from "./professional-text-overlay-modal";
+import type { VideoFilter } from "./instagram-filters-modal";
 import type { MusicTrack } from "./music-modal";
 
 interface VideoRecorderProps {

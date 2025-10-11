@@ -2,8 +2,8 @@ import { useState } from "react";
 import SidebarNavigation from "@/components/ui/sidebar-navigation";
 import VideoRecorder from "@/components/ui/video-recorder";
 import AIToolsSidebar from "@/components/ui/ai-tools-sidebar";
-import TextOverlayModal, { type TextOverlay } from "@/components/ui/text-overlay-modal";
-import FiltersModal, { type VideoFilter } from "@/components/ui/filters-modal";
+import ProfessionalTextOverlayModal, { type TextOverlay } from "@/components/ui/professional-text-overlay-modal";
+import InstagramFiltersModal, { type VideoFilter } from "@/components/ui/instagram-filters-modal";
 import MusicModal, { type MusicTrack } from "@/components/ui/music-modal";
 import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -128,7 +128,7 @@ export default function ReelsCreator() {
       </div>
 
       {/* Modals */}
-      <FiltersModal
+      <InstagramFiltersModal
         isOpen={showFiltersModal}
         onClose={() => setShowFiltersModal(false)}
         onApplyFilter={setCurrentFilter}
@@ -142,7 +142,7 @@ export default function ReelsCreator() {
         currentTrack={currentMusic}
       />
 
-      <TextOverlayModal
+      <ProfessionalTextOverlayModal
         isOpen={showTextModal}
         onClose={() => setShowTextModal(false)}
         onAddOverlay={handleAddTextOverlay}
