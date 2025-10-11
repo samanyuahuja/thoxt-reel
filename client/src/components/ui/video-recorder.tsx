@@ -287,36 +287,30 @@ export default function VideoRecorder({
         ref={videoContainerRef}
         className="w-full h-full relative"
       >
-        {/* Scaled Wrapper - Contains video and overlays that should zoom together */}
-        <div 
-          className="w-full h-full absolute inset-0"
-          style={{ 
-            transform: `scale(${scale})`,
-            transformOrigin: 'center center',
-            transition: 'transform 0.2s ease'
-          }}
-        >
-          {stream ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`w-full h-full object-contain ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
-              style={{ 
-                filter: currentFilter?.cssFilter || 'none'
-              }}
-              data-testid="video-preview"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center" data-testid="video-placeholder">
-              <div className="text-gray-400 text-center">
-                <Camera className="w-16 h-16 mb-4 opacity-50 mx-auto" />
-                <p className="text-lg">Camera Preview</p>
-                <p className="text-sm">Starting camera...</p>
-              </div>
+        {stream ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`w-full h-full object-contain ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
+            style={{ 
+              filter: currentFilter?.cssFilter || 'none'
+            }}
+            data-testid="video-preview"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center" data-testid="video-placeholder">
+            <div className="text-gray-400 text-center">
+              <Camera className="w-16 h-16 mb-4 opacity-50 mx-auto" />
+              <p className="text-lg">Camera Preview</p>
+              <p className="text-sm">Starting camera...</p>
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Top Controls Overlay */}
+        <div className="absolute top-2 md:top-4 left-2 md:left-4 right-2 md:right-4 flex justify-between items-center" data-testid="top-controls">
           <div className="flex space-x-2">
             {/* Aspect Ratio Selector */}
             <div className="bg-black bg-opacity-50 rounded-lg p-1">
