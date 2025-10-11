@@ -258,9 +258,9 @@ export default function VideoRecorder({
 
   const getAspectRatioStyle = () => {
     const ratios = {
-      '9:16': { aspectRatio: '9/16', maxWidth: '400px', maxHeight: 'calc(100vh - 200px)' },
-      '1:1': { aspectRatio: '1/1', maxWidth: '400px', maxHeight: '400px' },
-      '16:9': { aspectRatio: '16/9', maxWidth: '600px', maxHeight: '400px' }
+      '9:16': { aspectRatio: '9/16', width: '100%', maxWidth: '400px', maxHeight: 'calc(100vh - 200px)' },
+      '1:1': { aspectRatio: '1/1', width: '100%', maxWidth: '500px', maxHeight: '500px' },
+      '16:9': { aspectRatio: '16/9', width: '100%', maxWidth: '800px', maxHeight: '450px' }
     };
     return ratios[aspectRatio];
   };
@@ -285,35 +285,38 @@ export default function VideoRecorder({
       {/* Video Preview Area */}
       <div 
         ref={videoContainerRef}
-        className="w-full h-full relative" 
-        style={{ 
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          transition: 'transform 0.2s ease'
-        }}
+        className="w-full h-full relative"
       >
-        {stream ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`w-full h-full object-cover ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
-            style={{ filter: currentFilter?.cssFilter || 'none' }}
-            data-testid="video-preview"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center" data-testid="video-placeholder">
-            <div className="text-gray-400 text-center">
-              <Camera className="w-16 h-16 mb-4 opacity-50 mx-auto" />
-              <p className="text-lg">Camera Preview</p>
-              <p className="text-sm">Starting camera...</p>
+        {/* Scaled Wrapper - Contains video and overlays that should zoom together */}
+        <div 
+          className="w-full h-full absolute inset-0"
+          style={{ 
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: 'transform 0.2s ease'
+          }}
+        >
+          {stream ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-contain ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
+              style={{ 
+                filter: currentFilter?.cssFilter || 'none'
+              }}
+              data-testid="video-preview"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center" data-testid="video-placeholder">
+              <div className="text-gray-400 text-center">
+                <Camera className="w-16 h-16 mb-4 opacity-50 mx-auto" />
+                <p className="text-lg">Camera Preview</p>
+                <p className="text-sm">Starting camera...</p>
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Top Controls Overlay */}
-        <div className="absolute top-2 md:top-4 left-2 md:left-4 right-2 md:right-4 flex justify-between items-center" data-testid="top-controls">
+          )}
           <div className="flex space-x-2">
             {/* Aspect Ratio Selector */}
             <div className="bg-black bg-opacity-50 rounded-lg p-1">
@@ -444,10 +447,9 @@ export default function VideoRecorder({
               style={{
                 left: `${sticker.x}%`,
                 top: `${sticker.y}%`,
-                transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${scale})`,
+                transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
                 fontSize: `${sticker.size}px`,
-                zIndex: 15,
-                transition: 'transform 0.2s ease'
+                zIndex: 15
               }}
               data-testid={`sticker-${sticker.id}`}
             >
