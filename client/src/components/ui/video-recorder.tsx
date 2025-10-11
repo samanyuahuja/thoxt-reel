@@ -57,6 +57,7 @@ export default function VideoRecorder({
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [showDrawingTool, setShowDrawingTool] = useState(false);
   const [stickers, setStickers] = useState<Sticker[]>([]);
+  const [drawingLayers, setDrawingLayers] = useState<Array<{ id: string; imageData: string; opacity?: number }>>([]);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
   
   // Pinch-to-zoom functionality
@@ -86,8 +87,8 @@ export default function VideoRecorder({
     canvasRef
   } = useCanvasRecorder();
   
-  // Use canvas recording when mirror or filters are enabled
-  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter;
+  // Use canvas recording when mirror, filters, overlays, stickers, or drawings are enabled
+  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter || textOverlays.length > 0 || stickers.length > 0 || drawingLayers.length > 0;
   const isRecording = useCanvasMode ? isCanvasRecording : isBasicRecording;
   const recordingTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
   const recordedBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
@@ -119,7 +120,10 @@ export default function VideoRecorder({
         startCanvasRecording(videoRef.current, {
           mirrorEnabled,
           filter: currentFilter?.cssFilter,
-          aspectRatio
+          aspectRatio,
+          textOverlays: textOverlays,
+          stickers: stickers,
+          drawingLayers: drawingLayers
         });
       } else {
         startBasicRecording();
@@ -216,15 +220,15 @@ export default function VideoRecorder({
       const url = URL.createObjectURL(currentBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `thoxt-reel-${Date.now()}.webm`;
+      a.download = `reel-${Date.now()}.webm`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
       toast({
-        title: "Download Started",
-        description: "Your video is being downloaded.",
+        title: "✅ Download Started",
+        description: "Video downloaded as WebM. Use online converters for MP4 if needed.",
       });
     }
   };
@@ -636,9 +640,14 @@ export default function VideoRecorder({
           onClose={() => setShowDrawingTool(false)}
           videoElement={videoRef.current || undefined}
           onSaveDrawing={(drawingDataUrl) => {
+            setDrawingLayers(prev => [...prev, {
+              id: `drawing-${Date.now()}`,
+              imageData: drawingDataUrl,
+              opacity: 1
+            }]);
             toast({
               title: "Drawing Saved!",
-              description: "Your drawing has been saved.",
+              description: "Your drawing has been added to the video.",
             });
           }}
         />

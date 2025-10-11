@@ -69,10 +69,13 @@ export default function VideoUploadModal({
     const files = Array.from(event.dataTransfer.files);
     const videoFile = files.find(file => file.type.startsWith('video/'));
     
-    if (videoFile) {
-      // Simulate file input change
+    if (videoFile && fileInputRef.current) {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(videoFile);
+      fileInputRef.current.files = dataTransfer.files;
+      
       const fakeEvent = {
-        target: { files: [videoFile] }
+        target: fileInputRef.current
       } as React.ChangeEvent<HTMLInputElement>;
       handleFileSelect(fakeEvent);
     }
@@ -108,7 +111,7 @@ export default function VideoUploadModal({
       // Save to browser storage
       await browserStorage.saveReel({
         title: title || "Uploaded Video",
-        description: description || undefined,
+        description: description || null,
         duration: Math.round(duration),
         script: null,
         videoBlob: selectedFile,

@@ -47,32 +47,39 @@ export default function DrawingToolModal({
     canvas.width = 800;
     canvas.height = 450;
 
-    // Draw video frame as background if available
-    if (videoElement) {
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-    } else {
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    // Clear canvas with transparent background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Redraw all strokes
+    // Redraw all strokes on transparent canvas
     strokes.forEach(stroke => drawStroke(stroke, ctx));
-  }, [isOpen, videoElement, strokes]);
+  }, [isOpen, strokes]);
 
   const drawStroke = (stroke: DrawingStroke, ctx: CanvasRenderingContext2D) => {
     if (stroke.points.length < 2) return;
 
-    ctx.beginPath();
-    ctx.strokeStyle = stroke.color;
+    ctx.save();
+    
+    // Use destination-out for eraser strokes (transparent color indicates eraser)
+    if (stroke.color === 'transparent') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = stroke.color;
+    }
+    
     ctx.lineWidth = stroke.width;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    ctx.beginPath();
     ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
     for (let i = 1; i < stroke.points.length; i++) {
       ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
     }
     ctx.stroke();
+    
+    ctx.restore();
   };
 
   const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -103,7 +110,7 @@ export default function DrawingToolModal({
     setIsDrawing(true);
     setCurrentStroke({
       points: [point],
-      color: tool === 'eraser' ? '#1a1a1a' : brushColor,
+      color: tool === 'eraser' ? 'transparent' : brushColor,
       width: tool === 'eraser' ? brushWidth * 3 : brushWidth
     });
     setRedoStack([]); // Clear redo stack on new action
@@ -154,12 +161,8 @@ export default function DrawingToolModal({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
-      if (videoElement) {
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-      } else {
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      // Clear to transparent
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   };
 
@@ -183,11 +186,20 @@ export default function DrawingToolModal({
         </DialogHeader>
         
         <div className="space-y-4 mt-4">
-          {/* Drawing Canvas */}
-          <div className="bg-black rounded-lg overflow-hidden flex items-center justify-center">
+          {/* Drawing Canvas with Video Background */}
+          <div className="bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
+            {/* Video preview as background (for visual reference while drawing) */}
+            {videoElement && (
+              <video
+                src={videoElement.src}
+                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                style={{ maxHeight: '500px' }}
+              />
+            )}
+            {/* Transparent canvas for drawing on top */}
             <canvas
               ref={canvasRef}
-              className="max-w-full max-h-[500px] cursor-crosshair touch-none"
+              className="relative max-w-full max-h-[500px] cursor-crosshair touch-none"
               onMouseDown={startDrawing}
               onMouseMove={draw}
               onMouseUp={stopDrawing}

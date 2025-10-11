@@ -1,9 +1,43 @@
 import { useState, useRef, useCallback } from "react";
 
+interface TextOverlay {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  fontFamily: string;
+  color: string;
+  backgroundColor: string;
+  opacity: number;
+  startTime: number;
+  duration: number;
+}
+
+interface Sticker {
+  id: string;
+  emoji: string;
+  x: number;
+  y: number;
+  size: number;
+  rotation: number;
+  startTime: number;
+  duration: number;
+}
+
+interface DrawingLayer {
+  id: string;
+  imageData: string; // data URL
+  opacity?: number;
+}
+
 interface CanvasRecorderOptions {
   mirrorEnabled?: boolean;
   filter?: string;
   aspectRatio?: '9:16' | '1:1' | '16:9';
+  textOverlays?: TextOverlay[];
+  stickers?: Sticker[];
+  drawingLayers?: DrawingLayer[];
 }
 
 export function useCanvasRecorder() {
@@ -19,10 +53,22 @@ export function useCanvasRecorder() {
   const streamRef = useRef<MediaStream | null>(null);
   const recordingTimeRef = useRef<number>(0);
   const isRecordingRef = useRef<boolean>(false);
+  const drawingImagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const initializeCanvas = useCallback((videoElement: HTMLVideoElement, options: CanvasRecorderOptions) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
+
+    // Pre-load drawing images
+    if (options.drawingLayers) {
+      options.drawingLayers.forEach(layer => {
+        if (!drawingImagesRef.current.has(layer.id)) {
+          const img = new Image();
+          img.src = layer.imageData;
+          drawingImagesRef.current.set(layer.id, img);
+        }
+      });
+    }
 
     // Calculate canvas dimensions based on aspect ratio
     const getCanvasDimensions = () => {
@@ -71,14 +117,89 @@ export function useCanvasRecorder() {
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
+      // Draw video
       if (options.mirrorEnabled) {
-        // Apply mirror transformation
         ctx.save();
         ctx.scale(-1, 1);
         ctx.drawImage(videoElement, -canvas.width, 0, canvas.width, canvas.height);
         ctx.restore();
       } else {
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      }
+
+      // Draw text overlays
+      if (options.textOverlays && options.textOverlays.length > 0) {
+        const currentTime = recordingTimeRef.current;
+        options.textOverlays.forEach(overlay => {
+          // Default to showing overlay for entire video if timing is not set
+          const startTime = overlay.startTime ?? 0;
+          const duration = overlay.duration ?? Infinity;
+          const overlayEndTime = startTime + duration;
+          
+          if (currentTime >= startTime && currentTime <= overlayEndTime) {
+            ctx.save();
+            ctx.globalAlpha = overlay.opacity ?? 1;
+            ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+            ctx.fillStyle = overlay.backgroundColor;
+            ctx.textAlign = 'center';
+            
+            const x = (overlay.x / 100) * canvas.width;
+            const y = (overlay.y / 100) * canvas.height;
+            
+            // Draw background
+            const textMetrics = ctx.measureText(overlay.text);
+            const padding = 12;
+            ctx.fillRect(
+              x - textMetrics.width / 2 - padding,
+              y - overlay.fontSize / 2 - padding,
+              textMetrics.width + padding * 2,
+              overlay.fontSize + padding * 2
+            );
+            
+            // Draw text
+            ctx.fillStyle = overlay.color;
+            ctx.fillText(overlay.text, x, y);
+            ctx.restore();
+          }
+        });
+      }
+
+      // Draw stickers
+      if (options.stickers && options.stickers.length > 0) {
+        const currentTime = recordingTimeRef.current;
+        options.stickers.forEach(sticker => {
+          // Default to showing sticker for entire video if timing is not set
+          const startTime = sticker.startTime ?? 0;
+          const duration = sticker.duration ?? Infinity;
+          const stickerEndTime = startTime + duration;
+          
+          if (currentTime >= startTime && currentTime <= stickerEndTime) {
+            ctx.save();
+            const x = (sticker.x / 100) * canvas.width;
+            const y = (sticker.y / 100) * canvas.height;
+            
+            ctx.translate(x, y);
+            ctx.rotate(((sticker.rotation ?? 0) * Math.PI) / 180);
+            ctx.font = `${sticker.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(sticker.emoji, 0, 0);
+            ctx.restore();
+          }
+        });
+      }
+
+      // Draw drawing layers
+      if (options.drawingLayers && options.drawingLayers.length > 0) {
+        options.drawingLayers.forEach(layer => {
+          const img = drawingImagesRef.current.get(layer.id);
+          if (img && img.complete && img.naturalHeight !== 0) {
+            ctx.save();
+            ctx.globalAlpha = layer.opacity ?? 1;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+          }
+        });
       }
 
       // Continue animation loop while recording
