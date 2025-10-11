@@ -18,6 +18,7 @@ function Router() {
     <Switch>
       <Route path="/" component={ReelsCreator} />
       <Route path="/reels" component={ReelsCreator} />
+      <Route path="/reels-creator" component={ReelsCreator} />
       <Route path="/saved-reels" component={SavedReels} />
       <Route path="/thots" component={Thots} />
       <Route path="/following" component={Following} />

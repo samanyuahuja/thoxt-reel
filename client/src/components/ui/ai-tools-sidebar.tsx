@@ -263,6 +263,12 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           <Button 
             variant="outline"
             className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
+            onClick={() => {
+              toast({
+                title: "🎬 Auto Edit",
+                description: "Auto Edit feature coming soon! AI will automatically edit your video with cuts, transitions, and effects.",
+              });
+            }}
             data-testid="button-auto-edit"
           >
             <Scissors className="text-primary mb-1 w-5 h-5" />
@@ -272,6 +278,12 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           <Button 
             variant="outline"
             className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
+            onClick={() => {
+              toast({
+                title: "📝 Auto Captions",
+                description: "Auto Captions feature coming soon! AI will generate accurate captions for your video.",
+              });
+            }}
             data-testid="button-captions"
           >
             <Captions className="text-primary mb-1 w-5 h-5" />
@@ -281,6 +293,12 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           <Button 
             variant="outline"
             className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
+            onClick={() => {
+              toast({
+                title: "🔊 Clean Audio",
+                description: "Clean Audio feature coming soon! AI will remove background noise and enhance your voice.",
+              });
+            }}
             data-testid="button-clean-audio"
           >
             <VolumeX className="text-primary mb-1 w-5 h-5" />
@@ -290,6 +308,12 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
           <Button 
             variant="outline"
             className="bg-secondary border-border p-3 rounded text-center hover:bg-secondary/80 transition-colors flex flex-col items-center"
+            onClick={() => {
+              toast({
+                title: "💾 Export",
+                description: "Export feature coming soon! Download your video in multiple formats and resolutions.",
+              });
+            }}
             data-testid="button-export"
           >
             <Download className="text-primary mb-1 w-5 h-5" />
