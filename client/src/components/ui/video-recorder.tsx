@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, RotateCcw, Images, Circle, Square, Zap, Sparkles, Music, Type, Scroll, X, FlipHorizontal, Download, Upload } from "lucide-react";
+import { Camera, RotateCcw, Images, Circle, Square, Zap, Sparkles, Music, Type, Scroll, X, FlipHorizontal, Download, Upload, Smile, Pencil, ZoomIn, ZoomOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./button";
 import EnhancedTeleprompter from "@/components/ui/enhanced-teleprompter";
+import StickerPickerModal, { type Sticker } from "@/components/ui/sticker-picker-modal";
+import DrawingToolModal from "@/components/ui/drawing-tool-modal";
 import { useMediaRecorder } from "@/hooks/use-media-recorder";
 import { useCanvasRecorder } from "@/hooks/use-canvas-recorder";
 import { useCamera } from "@/hooks/use-camera";
+import { usePinchZoom } from "@/hooks/use-pinch-zoom";
 import { browserStorage } from "@/lib/browser-storage";
 import VideoUploadModal from "@/components/ui/video-upload-modal";
 import VideoTimelineEditor from "@/components/ui/video-timeline-editor";
@@ -39,6 +42,7 @@ export default function VideoRecorder({
   currentMusic
 }: VideoRecorderProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState<15 | 30 | 60>(15);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('9:16');
   const [showTeleprompter, setShowTeleprompter] = useState(false);
@@ -50,7 +54,17 @@ export default function VideoRecorder({
   const [mirrorEnabled, setMirrorEnabled] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showTimelineEditor, setShowTimelineEditor] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
+  const [showDrawingTool, setShowDrawingTool] = useState(false);
+  const [stickers, setStickers] = useState<Sticker[]>([]);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
+  
+  // Pinch-to-zoom functionality
+  const { scale, resetZoom, isZoomed } = usePinchZoom(videoContainerRef, {
+    minZoom: 1,
+    maxZoom: 3,
+    zoomSpeed: 0.01
+  });
 
   const { toast } = useToast();
 
@@ -265,7 +279,15 @@ export default function VideoRecorder({
       />
       
       {/* Video Preview Area */}
-      <div className="w-full h-full relative">
+      <div 
+        ref={videoContainerRef}
+        className="w-full h-full relative" 
+        style={{ 
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          transition: 'transform 0.2s ease'
+        }}
+      >
         {stream ? (
           <video
             ref={videoRef}
@@ -409,6 +431,35 @@ export default function VideoRecorder({
           ))}
         </div>
 
+        {/* Stickers Overlay */}
+        <div className="absolute inset-0 pointer-events-none" data-testid="stickers-container">
+          {stickers.map((sticker) => (
+            <div
+              key={sticker.id}
+              className="absolute pointer-events-auto"
+              style={{
+                left: `${sticker.x}%`,
+                top: `${sticker.y}%`,
+                transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${scale})`,
+                fontSize: `${sticker.size}px`,
+                zIndex: 15,
+                transition: 'transform 0.2s ease'
+              }}
+              data-testid={`sticker-${sticker.id}`}
+            >
+              {sticker.emoji}
+            </div>
+          ))}
+        </div>
+
+        {/* Zoom Indicator */}
+        {isZoomed && (
+          <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2" data-testid="zoom-indicator">
+            <ZoomIn className="w-4 h-4" />
+            {scale.toFixed(1)}x
+          </div>
+        )}
+
         {/* Side Effects Panel */}
         <div className="absolute right-4 top-32 bottom-32 flex flex-col justify-center space-y-4" data-testid="effects-panel">
           <Button
@@ -444,6 +495,26 @@ export default function VideoRecorder({
           <Button
             variant="ghost"
             size="icon"
+            className="bg-black bg-opacity-50 text-white rounded-full hover:bg-thoxt-yellow hover:text-black transition-colors"
+            onClick={() => setShowStickerPicker(true)}
+            data-testid="button-stickers"
+          >
+            <Smile className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-black bg-opacity-50 text-white rounded-full hover:bg-thoxt-yellow hover:text-black transition-colors"
+            onClick={() => setShowDrawingTool(true)}
+            data-testid="button-drawing"
+          >
+            <Pencil className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
             className={`bg-black bg-opacity-50 text-white rounded-full hover:bg-thoxt-yellow hover:text-black transition-colors ${
               showTeleprompter ? 'bg-thoxt-yellow text-black' : ''
             }`}
@@ -452,6 +523,18 @@ export default function VideoRecorder({
           >
             <Scroll className="w-5 h-5" />
           </Button>
+          
+          {isZoomed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-black bg-opacity-50 text-white rounded-full hover:bg-red-500 hover:text-white transition-colors"
+              onClick={resetZoom}
+              data-testid="button-reset-zoom"
+            >
+              <ZoomOut className="w-5 h-5" />
+            </Button>
+          )}
         </div>
 
         {/* Bottom Controls */}
@@ -530,6 +613,33 @@ export default function VideoRecorder({
               description: "Your edited video is ready for download.",
             });
             setShowTimelineEditor(false);
+          }}
+        />
+        
+        {/* Sticker Picker Modal */}
+        <StickerPickerModal
+          isOpen={showStickerPicker}
+          onClose={() => setShowStickerPicker(false)}
+          onAddSticker={(sticker) => {
+            setStickers(prev => [...prev, sticker]);
+            toast({
+              title: "Sticker Added!",
+              description: "Your sticker has been added to the video.",
+            });
+          }}
+          currentTime={recordingTime}
+        />
+        
+        {/* Drawing Tool Modal */}
+        <DrawingToolModal
+          isOpen={showDrawingTool}
+          onClose={() => setShowDrawingTool(false)}
+          videoElement={videoRef.current || undefined}
+          onSaveDrawing={(drawingDataUrl) => {
+            toast({
+              title: "Drawing Saved!",
+              description: "Your drawing has been saved.",
+            });
           }}
         />
         
