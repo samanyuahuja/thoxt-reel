@@ -4,6 +4,15 @@ Thoxt Reels is an AI-powered video creation platform built as a full-stack web a
 
 The application provides a comprehensive suite of features including AI-assisted script generation from existing articles or custom topics, a professional video recording interface with teleprompter functionality, smart editing tools with auto-captioning and noise reduction, and seamless export options for social media platforms.
 
+## Recent Changes (October 2025)
+
+### Mobile Fullscreen Experience
+- **Mobile Recorder**: Implemented fullscreen video recorder on mobile devices (viewport width < 768px)
+- **Gesture Navigation**: Added swipe-down gesture (100px+) to exit recorder and return to home
+- **Exit Button**: Close button (X) in top-right navigates to home page on mobile
+- **Responsive Design**: Desktop layout remains unchanged with sidebar and header
+- **UX Improvements**: Eliminated scrolling issues on mobile by making recorder fixed to viewport
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
