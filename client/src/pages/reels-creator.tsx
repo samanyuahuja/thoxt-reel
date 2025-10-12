@@ -22,8 +22,8 @@ export default function ReelsCreator() {
   const [currentMusic, setCurrentMusic] = useState<MusicTrack | undefined>();
   const [showAITools, setShowAITools] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const touchStartRef = useRef(0);
-  const touchEndRef = useRef(0);
+  const touchStartRef = useRef<number>(0);
+  const touchEndRef = useRef<number>(0);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -83,7 +83,7 @@ export default function ReelsCreator() {
   if (isMobile) {
     return (
       <div 
-        className="fixed inset-0 bg-black z-50 transition-transform duration-300"
+        className="fixed inset-0 bg-black z-50"
         style={{
           transform: `translateX(${isExiting ? '100%' : swipeOffset > 0 ? swipeOffset : 0}px)`,
           transition: isExiting || swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
@@ -93,6 +93,26 @@ export default function ReelsCreator() {
         onTouchEnd={handleTouchEnd}
         data-testid="mobile-fullscreen-recorder"
       >
+        {/* Swipe Indicator - Shows when user starts swiping */}
+        {swipeOffset > 10 && !isExiting && (
+          <div 
+            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-50"
+            style={{
+              opacity: Math.min(swipeOffset / 100, 0.8),
+              transform: `translateY(-50%) translateX(${swipeOffset * 0.5}px)`
+            }}
+          >
+            <div className="bg-thoxt-yellow rounded-full p-3 shadow-2xl animate-pulse">
+              <svg className="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+            <div className="text-white text-sm font-semibold mt-2 whitespace-nowrap">
+              Swipe to exit
+            </div>
+          </div>
+        )}
+      
         <VideoRecorder
           onOpenFilters={() => setShowFiltersModal(true)}
           onOpenMusic={() => setShowMusicModal(true)}

@@ -276,8 +276,18 @@ export default function VideoRecorder({
     return labels[ratio];
   };
 
+  const [isMobileView, setIsMobileView] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className="relative bg-black md:rounded-xl overflow-hidden video-aspect-ratio w-full h-full md:h-auto mx-auto transition-all duration-300" style={window.innerWidth < 768 ? { width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none', aspectRatio: '9/16' } : getAspectRatioStyle()} data-testid="video-recorder">
+    <div className="relative bg-black md:rounded-xl overflow-hidden video-aspect-ratio w-full h-full md:h-auto mx-auto transition-all duration-300" style={isMobileView ? { width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none', aspectRatio: '9/16' } : getAspectRatioStyle()} data-testid="video-recorder">
       {/* Hidden Canvas for Recording */}
       <canvas
         ref={canvasRef}
@@ -295,7 +305,7 @@ export default function VideoRecorder({
             autoPlay
             playsInline
             muted
-            className={`w-full h-full ${window.innerWidth < 768 ? 'object-cover' : 'object-contain'} ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
+            className={`w-full h-full ${isMobileView ? 'object-contain' : 'object-cover'} ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
             style={{ 
               filter: currentFilter?.cssFilter || 'none'
             }}
