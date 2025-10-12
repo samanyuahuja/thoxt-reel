@@ -6,23 +6,29 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Mobile Fullscreen Experience (Latest)
-- **Portrait Camera Mode**: Camera fills fullscreen on mobile with portrait aspect ratio (9:16) using object-cover for optimal framing
-- **Mobile Recorder**: Implemented fullscreen video recorder on mobile devices (viewport width < 768px)
-- **Gesture Navigation**: Swipe-right gesture (100px+) exits recorder with smooth animation
-  - Live translation feedback during swipe
-  - Snap-back animation if swipe < 100px
-  - 300ms slide-out animation when exiting to options menu
-- **Beautiful Reel Options Menu**: Redesigned gradient interface with:
-  - Black-to-gray gradient background
-  - Yellow "thoxt" branding header
-  - 3 gradient buttons with icons, descriptions, and hover/active animations
-  - Options: Saved Reels (/my-reels), Create Reel (/reels-creator), AI Teleprompter
-- **Exit Button**: Close button (X) in top-right navigates to reel options on mobile
-- **Gesture Implementation**: Uses refs to prevent false triggers from partial swipes or taps
-- **Responsive Design**: Desktop layout remains unchanged with sidebar and header
-- **UX Improvements**: Eliminated scrolling issues on mobile by making recorder fixed to viewport
-- **Reel Saving**: Confirmed working - saves to IndexedDB with video blobs, metadata, and thumbnails
+### Mobile UX Improvements (Latest - Professional Polish)
+- **Camera Display Fix**: 
+  - Desktop: uses object-cover for full-frame preview (original behavior maintained)
+  - Mobile: uses object-contain to show complete camera view without zoom/crop
+  - Mobile enforces 9:16 aspect ratio with resize listener for orientation changes
+- **Enhanced Swipe Gesture**:
+  - Visible yellow pulsing indicator appears when swiping right (>10px)
+  - Shows animated arrow icon and "Swipe to exit" text
+  - Indicator opacity and position scale dynamically with swipe distance
+  - Exits to options menu at 100px+ swipe with 300ms slide-out animation
+  - Snap-back animation if swipe insufficient
+- **Professional Options Menu**:
+  - Clean black background with minimal design
+  - Card-based options with colored borders (purple/yellow/blue)
+  - Icon backgrounds with 20% opacity and matching theme colors
+  - Colored chevron arrows for navigation clarity
+  - Touch feedback with active scale animation (0.96)
+  - Options: My Reels, Create New Reel, AI Teleprompter
+- **Fullscreen Mobile Recorder**: 
+  - Fills viewport on devices <768px width
+  - Exit button (X) navigates to options menu
+  - Fixed positioning eliminates scrolling issues
+- **Reel Persistence**: IndexedDB storage with video blobs, metadata, and auto-generated thumbnails
 
 # User Preferences
 
