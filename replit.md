@@ -6,17 +6,23 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Mobile Fullscreen Experience
+### Mobile Fullscreen Experience (Latest)
+- **Portrait Camera Mode**: Camera fills fullscreen on mobile with portrait aspect ratio (9:16) using object-cover for optimal framing
 - **Mobile Recorder**: Implemented fullscreen video recorder on mobile devices (viewport width < 768px)
-- **Gesture Navigation**: Swipe-right gesture (100px+) exits recorder to reel options menu
-- **Reel Options Menu**: After exiting recorder, users see 3 options:
-  - Saved Reels (navigates to /my-reels)
-  - Create Reel (returns to /reels-creator)
-  - AI Teleprompter (opens /reels-creator with teleprompter)
+- **Gesture Navigation**: Swipe-right gesture (100px+) exits recorder with smooth animation
+  - Live translation feedback during swipe
+  - Snap-back animation if swipe < 100px
+  - 300ms slide-out animation when exiting to options menu
+- **Beautiful Reel Options Menu**: Redesigned gradient interface with:
+  - Black-to-gray gradient background
+  - Yellow "thoxt" branding header
+  - 3 gradient buttons with icons, descriptions, and hover/active animations
+  - Options: Saved Reels (/my-reels), Create Reel (/reels-creator), AI Teleprompter
 - **Exit Button**: Close button (X) in top-right navigates to reel options on mobile
 - **Gesture Implementation**: Uses refs to prevent false triggers from partial swipes or taps
 - **Responsive Design**: Desktop layout remains unchanged with sidebar and header
 - **UX Improvements**: Eliminated scrolling issues on mobile by making recorder fixed to viewport
+- **Reel Saving**: Confirmed working - saves to IndexedDB with video blobs, metadata, and thumbnails
 
 # User Preferences
 
