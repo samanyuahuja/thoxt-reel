@@ -24,6 +24,8 @@ export default function ReelsCreator() {
   const [isMobile, setIsMobile] = useState(false);
   const touchStartRef = useRef(0);
   const touchEndRef = useRef(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isExiting, setIsExiting] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -39,16 +41,28 @@ export default function ReelsCreator() {
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.touches[0].clientX;
     touchEndRef.current = e.touches[0].clientX; // Reset end to start position
+    setSwipeOffset(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndRef.current = e.touches[0].clientX;
+    const distance = touchEndRef.current - touchStartRef.current;
+    // Only show animation for rightward swipes
+    if (distance > 0) {
+      setSwipeOffset(distance);
+    }
   };
 
   const handleTouchEnd = () => {
     const swipeDistance = touchEndRef.current - touchStartRef.current;
     if (swipeDistance > 100) { // Swiped right at least 100px
-      setLocation('/reel-options');
+      setIsExiting(true);
+      setTimeout(() => {
+        setLocation('/reel-options');
+      }, 300); // Match animation duration
+    } else {
+      // Snap back if not enough distance
+      setSwipeOffset(0);
     }
     // Reset refs
     touchStartRef.current = 0;
@@ -69,7 +83,11 @@ export default function ReelsCreator() {
   if (isMobile) {
     return (
       <div 
-        className="fixed inset-0 bg-black z-50"
+        className="fixed inset-0 bg-black z-50 transition-transform duration-300"
+        style={{
+          transform: `translateX(${isExiting ? '100%' : swipeOffset > 0 ? swipeOffset : 0}px)`,
+          transition: isExiting || swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
+        }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

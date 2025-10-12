@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Video, Scroll, Save } from "lucide-react";
+import { Video, Scroll, Save, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ReelOptions() {
@@ -12,7 +12,7 @@ export default function ReelOptions() {
       description: "View your saved reels",
       icon: Save,
       action: () => setLocation('/my-reels'),
-      bgColor: "bg-gradient-to-br from-purple-500 to-pink-500"
+      gradient: "from-purple-600 via-pink-600 to-purple-700"
     },
     {
       id: "create-reel",
@@ -20,7 +20,7 @@ export default function ReelOptions() {
       description: "Record a new reel",
       icon: Video,
       action: () => setLocation('/reels-creator'),
-      bgColor: "bg-gradient-to-br from-thoxt-yellow to-orange-500"
+      gradient: "from-thoxt-yellow via-orange-500 to-red-500"
     },
     {
       id: "ai-teleprompter",
@@ -31,40 +31,52 @@ export default function ReelOptions() {
         setLocation('/reels-creator');
         // Could pass a flag to open teleprompter automatically
       },
-      bgColor: "bg-gradient-to-br from-blue-500 to-cyan-500"
+      gradient: "from-blue-600 via-cyan-500 to-teal-600"
     }
   ];
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center p-6" data-testid="reel-options-page">
-      <h2 className="text-white text-2xl font-bold mb-8 text-center">What would you like to do?</h2>
+    <div className="fixed inset-0 bg-gradient-to-b from-black via-gray-900 to-black flex flex-col items-center justify-center p-6" data-testid="reel-options-page">
+      {/* Header */}
+      <div className="mb-12 text-center">
+        <h1 className="text-thoxt-yellow text-4xl font-bold mb-2">thoxt</h1>
+        <p className="text-gray-400 text-sm">What would you like to do?</p>
+      </div>
       
-      <div className="flex flex-col gap-4 w-full max-w-sm">
+      {/* Options Grid */}
+      <div className="flex flex-col gap-5 w-full max-w-md px-4">
         {options.map((option) => {
           const Icon = option.icon;
           return (
-            <Button
+            <button
               key={option.id}
               onClick={option.action}
-              className={`${option.bgColor} h-24 flex flex-col items-center justify-center text-white hover:opacity-90 transition-opacity`}
+              className={`bg-gradient-to-br ${option.gradient} rounded-2xl p-6 shadow-xl transform transition-all duration-300 hover:scale-105 active:scale-95`}
               data-testid={`button-${option.id}`}
             >
-              <Icon className="w-8 h-8 mb-2" />
-              <span className="text-lg font-semibold">{option.title}</span>
-              <span className="text-xs opacity-80">{option.description}</span>
-            </Button>
+              <div className="flex items-center gap-4">
+                <div className="bg-white bg-opacity-20 rounded-full p-3">
+                  <Icon className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="text-white text-xl font-bold">{option.title}</h3>
+                  <p className="text-white text-sm opacity-80">{option.description}</p>
+                </div>
+              </div>
+            </button>
           );
         })}
       </div>
 
-      <Button
-        variant="ghost"
-        className="mt-8 text-white"
+      {/* Home Button */}
+      <button
+        className="mt-12 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
         onClick={() => setLocation('/')}
         data-testid="button-home"
       >
-        Go to Home
-      </Button>
+        <Home className="w-5 h-5" />
+        <span>Back to Home</span>
+      </button>
     </div>
   );
 }
