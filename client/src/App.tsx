@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import ReelsCreator from "@/pages/reels-creator";
+import ReelOptions from "@/pages/reel-options";
 import SavedReels from "@/pages/saved-reels";
 import Thots from "@/pages/thots";
 import Following from "@/pages/following";
@@ -19,7 +20,9 @@ function Router() {
       <Route path="/" component={ReelsCreator} />
       <Route path="/reels" component={ReelsCreator} />
       <Route path="/reels-creator" component={ReelsCreator} />
+      <Route path="/reel-options" component={ReelOptions} />
       <Route path="/saved-reels" component={SavedReels} />
+      <Route path="/my-reels" component={SavedReels} />
       <Route path="/thots" component={Thots} />
       <Route path="/following" component={Following} />
       <Route path="/genres" component={Genres} />

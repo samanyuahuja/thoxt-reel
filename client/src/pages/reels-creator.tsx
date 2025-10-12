@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import SidebarNavigation from "@/components/ui/sidebar-navigation";
 import VideoRecorder from "@/components/ui/video-recorder";
@@ -22,8 +22,8 @@ export default function ReelsCreator() {
   const [currentMusic, setCurrentMusic] = useState<MusicTrack | undefined>();
   const [showAITools, setShowAITools] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const touchStartRef = useRef(0);
+  const touchEndRef = useRef(0);
 
   // Detect mobile device
   useEffect(() => {
@@ -35,19 +35,24 @@ export default function ReelsCreator() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Handle swipe down to exit
+  // Handle swipe right to exit
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientY);
+    touchStartRef.current = e.touches[0].clientX;
+    touchEndRef.current = e.touches[0].clientX; // Reset end to start position
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.touches[0].clientY);
+    touchEndRef.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
-    if (touchStart - touchEnd < -100) { // Swiped down at least 100px
-      setLocation('/');
+    const swipeDistance = touchEndRef.current - touchStartRef.current;
+    if (swipeDistance > 100) { // Swiped right at least 100px
+      setLocation('/reel-options');
     }
+    // Reset refs
+    touchStartRef.current = 0;
+    touchEndRef.current = 0;
   };
 
   const handleAddTextOverlay = (overlay: TextOverlay) => {
@@ -70,17 +75,11 @@ export default function ReelsCreator() {
         onTouchEnd={handleTouchEnd}
         data-testid="mobile-fullscreen-recorder"
       >
-        {/* Swipe indicator */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center" data-testid="swipe-indicator">
-          <ChevronDown className="w-8 h-8 text-white opacity-50 animate-bounce" />
-          <span className="text-white text-xs opacity-50">Swipe down to exit</span>
-        </div>
-
         <VideoRecorder
           onOpenFilters={() => setShowFiltersModal(true)}
           onOpenMusic={() => setShowMusicModal(true)}
           onOpenText={() => setShowTextModal(true)}
-          onClose={() => setLocation('/')}
+          onClose={() => setLocation('/reel-options')}
           currentScript={currentScript}
           textOverlays={textOverlays}
           onUpdateOverlays={setTextOverlays}
