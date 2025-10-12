@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import SidebarNavigation from "@/components/ui/sidebar-navigation";
 import VideoRecorder from "@/components/ui/video-recorder";
 import AIToolsSidebar from "@/components/ui/ai-tools-sidebar";
 import ProfessionalTextOverlayModal, { type TextOverlay } from "@/components/ui/professional-text-overlay-modal";
 import InstagramFiltersModal, { type VideoFilter } from "@/components/ui/instagram-filters-modal";
 import MusicModal, { type MusicTrack } from "@/components/ui/music-modal";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function ReelsCreator() {
+  const [, setLocation] = useLocation();
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showMusicModal, setShowMusicModal] = useState(false);
   const [showTextModal, setShowTextModal] = useState(false);
@@ -19,6 +21,34 @@ export default function ReelsCreator() {
   const [currentFilter, setCurrentFilter] = useState<VideoFilter | undefined>();
   const [currentMusic, setCurrentMusic] = useState<MusicTrack | undefined>();
   const [showAITools, setShowAITools] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle swipe down to exit
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart - touchEnd < -100) { // Swiped down at least 100px
+      setLocation('/');
+    }
+  };
 
   const handleAddTextOverlay = (overlay: TextOverlay) => {
     setTextOverlays(prev => [...prev, overlay]);
@@ -30,33 +60,92 @@ export default function ReelsCreator() {
     return Date.now() - recordingStartTime;
   };
 
+  // Mobile fullscreen mode
+  if (isMobile) {
+    return (
+      <div 
+        className="fixed inset-0 bg-black z-50"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        data-testid="mobile-fullscreen-recorder"
+      >
+        {/* Swipe indicator */}
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center" data-testid="swipe-indicator">
+          <ChevronDown className="w-8 h-8 text-white opacity-50 animate-bounce" />
+          <span className="text-white text-xs opacity-50">Swipe down to exit</span>
+        </div>
+
+        <VideoRecorder
+          onOpenFilters={() => setShowFiltersModal(true)}
+          onOpenMusic={() => setShowMusicModal(true)}
+          onOpenText={() => setShowTextModal(true)}
+          onClose={() => setLocation('/')}
+          currentScript={currentScript}
+          textOverlays={textOverlays}
+          onUpdateOverlays={setTextOverlays}
+          recordingStartTime={recordingStartTime}
+          currentFilter={currentFilter}
+          currentMusic={currentMusic}
+        />
+
+        {/* Mobile AI Tools - Bottom Sheet */}
+        {showAITools && (
+          <div className="fixed inset-x-0 bottom-0 top-1/3 bg-background border-t border-border z-50 overflow-y-auto rounded-t-3xl">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">AI Tools</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAITools(false)}
+                  className="text-muted-foreground"
+                >
+                  Close
+                </Button>
+              </div>
+              <AIToolsSidebar
+                onScriptGenerated={setCurrentScript}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Modals */}
+        <InstagramFiltersModal
+          isOpen={showFiltersModal}
+          onClose={() => setShowFiltersModal(false)}
+          onApplyFilter={setCurrentFilter}
+          currentFilter={currentFilter}
+        />
+
+        <MusicModal
+          isOpen={showMusicModal}
+          onClose={() => setShowMusicModal(false)}
+          onSelectTrack={(track) => setCurrentMusic(track || undefined)}
+          currentTrack={currentMusic}
+        />
+
+        <ProfessionalTextOverlayModal
+          isOpen={showTextModal}
+          onClose={() => setShowTextModal(false)}
+          onAddOverlay={handleAddTextOverlay}
+          currentTime={getCurrentTime()}
+        />
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Left Sidebar Navigation */}
       <SidebarNavigation />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col pt-16 md:pt-0">
-        {/* Mobile Header */}
-        <div className="md:hidden bg-background border-b border-border p-4 flex items-center justify-between" data-testid="mobile-header">
-          <h2 className="text-xl font-bold text-foreground" data-testid="mobile-title">Thoxt Reels</h2>
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary"
-              onClick={() => setShowAITools(!showAITools)}
-              data-testid="mobile-ai-tools-toggle"
-            >
-              <Menu className="w-5 h-5 mr-1" />
-              AI Tools
-            </Button>
-          </div>
-        </div>
-
+      <div className="flex-1 flex flex-col">
         {/* Desktop Header */}
-        <header className="hidden md:block bg-background border-b border-border p-4" data-testid="header">
+        <header className="bg-background border-b border-border p-4" data-testid="header">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h2 className="text-2xl font-bold text-foreground" data-testid="title">Thoxt Reels</h2>
@@ -80,9 +169,9 @@ export default function ReelsCreator() {
         </header>
 
         {/* Main Studio Area */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex overflow-hidden">
           {/* Video Recording Area */}
-          <div className="flex-1 flex items-center justify-center bg-muted p-2 md:p-6 overflow-y-auto" data-testid="video-area">
+          <div className="flex-1 flex items-center justify-center bg-muted p-6" data-testid="video-area">
             <VideoRecorder
               onOpenFilters={() => setShowFiltersModal(true)}
               onOpenMusic={() => setShowMusicModal(true)}
@@ -97,33 +186,11 @@ export default function ReelsCreator() {
           </div>
 
           {/* Desktop AI Tools Sidebar */}
-          <div className="hidden md:block">
+          <div>
             <AIToolsSidebar
               onScriptGenerated={setCurrentScript}
             />
           </div>
-
-          {/* Mobile AI Tools - Collapsible */}
-          {showAITools && (
-            <div className="md:hidden fixed inset-x-0 bottom-0 top-24 bg-background border-t border-border z-30 overflow-y-auto">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">AI Tools</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowAITools(false)}
-                    className="text-muted-foreground"
-                  >
-                    Close
-                  </Button>
-                </div>
-                <AIToolsSidebar
-                  onScriptGenerated={setCurrentScript}
-                />
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

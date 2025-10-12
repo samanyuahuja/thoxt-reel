@@ -20,6 +20,7 @@ interface VideoRecorderProps {
   onOpenFilters: () => void;
   onOpenMusic: () => void;
   onOpenText: () => void;
+  onClose?: () => void;
   currentScript: string;
   textOverlays: TextOverlay[];
   onUpdateOverlays: (overlays: TextOverlay[]) => void;
@@ -34,6 +35,7 @@ export default function VideoRecorder({
   onOpenFilters, 
   onOpenMusic, 
   onOpenText,
+  onClose,
   currentScript,
   textOverlays,
   onUpdateOverlays,
@@ -275,7 +277,7 @@ export default function VideoRecorder({
   };
 
   return (
-    <div className="relative bg-black rounded-xl overflow-hidden video-aspect-ratio w-full mx-auto transition-all duration-300" style={getAspectRatioStyle()} data-testid="video-recorder">
+    <div className="relative bg-black md:rounded-xl overflow-hidden video-aspect-ratio w-full h-full md:h-auto mx-auto transition-all duration-300" style={window.innerWidth < 768 ? { width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none' } : getAspectRatioStyle()} data-testid="video-recorder">
       {/* Hidden Canvas for Recording */}
       <canvas
         ref={canvasRef}
@@ -367,6 +369,7 @@ export default function VideoRecorder({
             variant="ghost"
             size="icon" 
             className="bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70"
+            onClick={onClose}
             data-testid="button-close"
           >
             <X className="w-5 h-5" />
