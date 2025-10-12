@@ -8,8 +8,13 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ### Mobile Fullscreen Experience
 - **Mobile Recorder**: Implemented fullscreen video recorder on mobile devices (viewport width < 768px)
-- **Gesture Navigation**: Added swipe-down gesture (100px+) to exit recorder and return to home
-- **Exit Button**: Close button (X) in top-right navigates to home page on mobile
+- **Gesture Navigation**: Swipe-right gesture (100px+) exits recorder to reel options menu
+- **Reel Options Menu**: After exiting recorder, users see 3 options:
+  - Saved Reels (navigates to /my-reels)
+  - Create Reel (returns to /reels-creator)
+  - AI Teleprompter (opens /reels-creator with teleprompter)
+- **Exit Button**: Close button (X) in top-right navigates to reel options on mobile
+- **Gesture Implementation**: Uses refs to prevent false triggers from partial swipes or taps
 - **Responsive Design**: Desktop layout remains unchanged with sidebar and header
 - **UX Improvements**: Eliminated scrolling issues on mobile by making recorder fixed to viewport
 
