@@ -306,22 +306,22 @@ export default function SavedReels() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex">
       <SidebarNavigation />
       
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         <div className="p-4 md:p-8">
           {/* Header with gradient */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 md:mb-8 gap-4">
+            <div className="flex items-center space-x-3 md:space-x-4">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
                 My Reels
               </h1>
               {reels && (
-                <span className="bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary px-4 py-1.5 rounded-full text-sm font-semibold border border-primary/20 backdrop-blur-sm">
-                  {filteredReels.length} reels
+                <span className="bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary px-3 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-semibold border border-primary/20 backdrop-blur-sm">
+                  {filteredReels.length}
                 </span>
               )}
             </div>
             <Button 
-              className="bg-gradient-to-r from-primary to-purple-600 text-white hover:from-primary/90 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="bg-gradient-to-r from-primary to-purple-600 text-white hover:from-primary/90 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 w-full md:w-auto"
               data-testid="create-new-reel-button"
             >
               <Play className="w-4 h-4 mr-2" />
@@ -416,10 +416,8 @@ export default function SavedReels() {
                               poster={reel.thumbnailData || undefined}
                               controls
                               loop
-                              muted
                               playsInline
                               preload="auto"
-                              autoPlay
                               onLoadedData={() => {
                                 console.log(`Video loaded for ${reel.id}:`, {
                                   duration: videoRefs.current[reel.id]?.duration,

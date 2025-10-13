@@ -62,5 +62,13 @@ externalPort = 3002
 localPort = 41925
 externalPort = 3000
 
+[[ports]]
+localPort = 43433
+externalPort = 5173
+
+[[ports]]
+localPort = 44819
+externalPort = 6000
+
 [agent]
 integrations = ["javascript_mem_db==1.0.0"]

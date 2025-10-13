@@ -19,8 +19,9 @@ export function useCamera() {
       const constraints: MediaStreamConstraints = {
         video: {
           facingMode: preferredFacingMode || facingMode,
-          width: { ideal: 720 },
-          height: { ideal: 1280 }, // 9:16 aspect ratio
+          width: { ideal: 1080 },
+          height: { ideal: 1920 }, // 9:16 portrait aspect ratio
+          aspectRatio: { ideal: 9/16 }
         },
         audio: true
       };
@@ -42,8 +43,9 @@ export function useCamera() {
       try {
         const fallbackConstraints: MediaStreamConstraints = {
           video: {
-            width: { ideal: 720 },
-            height: { ideal: 1280 }
+            width: { ideal: 1080 },
+            height: { ideal: 1920 },
+            aspectRatio: { ideal: 9/16 }
           },
           audio: true
         };
@@ -60,8 +62,8 @@ export function useCamera() {
         try {
           console.log("Creating test video stream for development...");
           const canvas = document.createElement('canvas');
-          canvas.width = 720;
-          canvas.height = 1280;
+          canvas.width = 1080;
+          canvas.height = 1920;
           const ctx = canvas.getContext('2d')!;
           
           // Create a simple animated test pattern
