@@ -6,28 +6,34 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Mobile UX Improvements (Latest - Professional Polish)
-- **Camera Display Fix**: 
-  - Desktop: uses object-cover for full-frame preview (original behavior maintained)
-  - Mobile: uses object-contain to show complete camera view without zoom/crop
-  - Mobile enforces 9:16 aspect ratio with resize listener for orientation changes
+### Mobile UX Improvements & Critical Fixes (Latest)
+- **Camera Portrait Orientation Fix**: 
+  - Camera now captures in true portrait mode (1080x1920, 9:16 aspect ratio)
+  - Explicit aspectRatio constraint ensures vertical orientation like Instagram
+  - Works correctly on both desktop and mobile devices
+  - Higher quality video capture (1080p instead of 720p)
+- **Audio Playback Fix**:
+  - Saved reels now play with audio (removed muted attribute)
+  - User-controlled playback (no autoplay)
+  - Full sound support for recorded videos
+- **Mobile-Responsive Saved Reels Page**:
+  - Fully adaptive layout for mobile devices
+  - No sidebar overlap on mobile (md:ml-64 instead of ml-64)
+  - Responsive header with flex-col on mobile
+  - Full-width buttons on mobile, auto-width on desktop
+  - Responsive text sizing across all screen sizes
 - **Enhanced Swipe Gesture**:
   - Visible yellow pulsing indicator appears when swiping right (>10px)
   - Shows animated arrow icon and "Swipe to exit" text
-  - Indicator opacity and position scale dynamically with swipe distance
   - Exits to options menu at 100px+ swipe with 300ms slide-out animation
-  - Snap-back animation if swipe insufficient
 - **Professional Options Menu**:
   - Clean black background with minimal design
   - Card-based options with colored borders (purple/yellow/blue)
-  - Icon backgrounds with 20% opacity and matching theme colors
-  - Colored chevron arrows for navigation clarity
-  - Touch feedback with active scale animation (0.96)
+  - Touch feedback with active scale animation
   - Options: My Reels, Create New Reel, AI Teleprompter
 - **Fullscreen Mobile Recorder**: 
   - Fills viewport on devices <768px width
   - Exit button (X) navigates to options menu
-  - Fixed positioning eliminates scrolling issues
 - **Reel Persistence**: IndexedDB storage with video blobs, metadata, and auto-generated thumbnails
 
 # User Preferences
