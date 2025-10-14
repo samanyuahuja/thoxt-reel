@@ -194,7 +194,6 @@ export default function SavedReels() {
         
         // Update view count
         await browserStorage.updateReelViews(reelId);
-        loadReels(); // Refresh to show updated view count
         
       } catch (error) {
         console.error('Error playing your recorded video:', error);
@@ -427,7 +426,7 @@ export default function SavedReels() {
                               }}
                               onPlay={() => {
                                 setPlayingVideo(reel.id);
-                                browserStorage.updateReelViews(reel.id).then(() => loadReels());
+                                browserStorage.updateReelViews(reel.id);
                               }}
                               onPause={() => {
                                 if (playingVideo === reel.id) {
