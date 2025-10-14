@@ -62,9 +62,8 @@ export default function VideoRecorder({
   const [drawingLayers, setDrawingLayers] = useState<Array<{ id: string; imageData: string; opacity?: number }>>([]);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
   
-  // Mobile detection and video rotation state
+  // Mobile detection
   const [isMobileView, setIsMobileView] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  const [videoNeedsRotation, setVideoNeedsRotation] = useState(false);
 
   // Handle window resize for mobile detection
   useEffect(() => {
@@ -102,8 +101,8 @@ export default function VideoRecorder({
     canvasRef
   } = useCanvasRecorder();
   
-  // Use canvas recording when mirror, filters, overlays, stickers, drawings are enabled OR when video needs rotation on mobile
-  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter || textOverlays.length > 0 || stickers.length > 0 || drawingLayers.length > 0 || (isMobileView && videoNeedsRotation);
+  // Use canvas recording when mirror, filters, overlays, stickers, or drawings are enabled
+  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter || textOverlays.length > 0 || stickers.length > 0 || drawingLayers.length > 0;
   const isRecording = useCanvasMode ? isCanvasRecording : isBasicRecording;
   const recordingTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
   const recordedBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
@@ -118,24 +117,6 @@ export default function VideoRecorder({
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
-
-  // Check if video is landscape and needs rotation on mobile
-  useEffect(() => {
-    if (videoRef.current && stream && isMobileView) {
-      const video = videoRef.current;
-      const checkOrientation = () => {
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
-          const isLandscape = video.videoWidth > video.videoHeight;
-          setVideoNeedsRotation(isLandscape);
-        }
-      };
-      
-      video.addEventListener('loadedmetadata', checkOrientation);
-      checkOrientation();
-      
-      return () => video.removeEventListener('loadedmetadata', checkOrientation);
-    }
-  }, [stream, isMobileView]);
 
   const handleRecordToggle = () => {
     if (isRecording) {
@@ -156,8 +137,7 @@ export default function VideoRecorder({
           aspectRatio,
           textOverlays: textOverlays,
           stickers: stickers,
-          drawingLayers: drawingLayers,
-          rotateVideo: videoNeedsRotation // Pass rotation flag to canvas recorder
+          drawingLayers: drawingLayers
         });
       } else {
         startBasicRecording();
@@ -327,10 +307,9 @@ export default function VideoRecorder({
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover ${mirrorEnabled && !videoNeedsRotation ? 'scale-x-[-1]' : ''}`}
+            className={`w-full h-full object-cover ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
             style={{ 
-              filter: currentFilter?.cssFilter || 'none',
-              transform: `${videoNeedsRotation && isMobileView ? 'rotate(90deg)' : ''} ${mirrorEnabled ? 'scaleX(-1)' : ''}`.trim()
+              filter: currentFilter?.cssFilter || 'none'
             }}
             data-testid="video-preview"
           />

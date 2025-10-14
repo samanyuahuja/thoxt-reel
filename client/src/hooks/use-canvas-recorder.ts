@@ -38,7 +38,6 @@ interface CanvasRecorderOptions {
   textOverlays?: TextOverlay[];
   stickers?: Sticker[];
   drawingLayers?: DrawingLayer[];
-  rotateVideo?: boolean; // New option to rotate video 90 degrees for portrait
 }
 
 export function useCanvasRecorder() {
@@ -118,22 +117,10 @@ export function useCanvasRecorder() {
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Draw video with optional rotation for portrait mode
+      // Draw video with optional mirroring
       ctx.save();
       
-      if (options.rotateVideo) {
-        // Rotate 90 degrees clockwise for landscape-to-portrait conversion
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(Math.PI / 2);
-        ctx.translate(-canvas.height / 2, -canvas.width / 2);
-        
-        if (options.mirrorEnabled) {
-          ctx.scale(-1, 1);
-          ctx.drawImage(videoElement, -canvas.height, 0, canvas.height, canvas.width);
-        } else {
-          ctx.drawImage(videoElement, 0, 0, canvas.height, canvas.width);
-        }
-      } else if (options.mirrorEnabled) {
+      if (options.mirrorEnabled) {
         ctx.scale(-1, 1);
         ctx.drawImage(videoElement, -canvas.width, 0, canvas.width, canvas.height);
       } else {
