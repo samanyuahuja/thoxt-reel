@@ -16,20 +16,10 @@ export function useCamera() {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
 
-      // Request portrait mode on mobile with flexible constraints
-      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      
+      // Simple camera constraints - let the camera use its natural settings
       const constraints: MediaStreamConstraints = {
-        video: isMobile ? {
+        video: {
           facingMode: preferredFacingMode || facingMode,
-          width: { ideal: 1080 },
-          height: { ideal: 1920 }, // Prefer portrait but don't require it
-          aspectRatio: { ideal: 9/16 }
-        } : {
-          facingMode: preferredFacingMode || facingMode,
-          width: { ideal: 1080 },
-          height: { ideal: 1920 },
-          aspectRatio: { ideal: 9/16 }
         },
         audio: true
       };
@@ -47,14 +37,10 @@ export function useCamera() {
       console.error("Failed to access camera:", err);
       setError(err instanceof Error ? err.message : "Failed to access camera");
       
-      // Fallback: try without facingMode constraint
+      // Fallback: try with minimal constraints
       try {
         const fallbackConstraints: MediaStreamConstraints = {
-          video: {
-            width: { ideal: 1080 },
-            height: { ideal: 1920 },
-            aspectRatio: { ideal: 9/16 }
-          },
+          video: true,
           audio: true
         };
         

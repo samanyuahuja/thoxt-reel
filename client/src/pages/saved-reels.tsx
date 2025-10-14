@@ -417,7 +417,8 @@ export default function SavedReels() {
                               controls
                               loop
                               playsInline
-                              preload="auto"
+                              preload="metadata"
+                              controlsList="nodownload"
                               onLoadedData={() => {
                                 console.log(`Video loaded for ${reel.id}:`, {
                                   duration: videoRefs.current[reel.id]?.duration,
@@ -429,8 +430,20 @@ export default function SavedReels() {
                                   return newSet;
                                 })
                               }}
+                              onPlay={() => {
+                                setPlayingVideo(reel.id);
+                                browserStorage.updateReelViews(reel.id).then(() => loadReels());
+                              }}
+                              onPause={() => {
+                                if (playingVideo === reel.id) {
+                                  setPlayingVideo(null);
+                                }
+                              }}
+                              onEnded={() => {
+                                handleVideoEnded(reel.id);
+                              }}
                               onError={(e) => {
-                                console.error(`Video error for ${reel.id}:`, e);
+                                console.error(`Video error for ${reel.id}:`, e, videoRefs.current[reel.id]?.error);
                               }}
                               data-testid={`reel-video-${reel.id}`}
                               src={videoUrl}
