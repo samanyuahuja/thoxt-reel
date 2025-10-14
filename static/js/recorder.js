@@ -33,14 +33,12 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 // Initialize camera
 async function initCamera() {
     try {
-        // Check if mobile device
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
+        // ALWAYS use portrait mode (vertical video like Instagram/TikTok)
         const constraints = {
             video: {
-                width: { ideal: isMobile ? 1080 : 1920 },
-                height: { ideal: isMobile ? 1920 : 1080 },
-                aspectRatio: { ideal: isMobile ? 9/16 : 16/9 },
+                width: { ideal: 1080 },
+                height: { ideal: 1920 },
+                aspectRatio: { ideal: 9/16 },
                 facingMode: 'user'
             },
             audio: true
@@ -84,6 +82,10 @@ async function startRecording() {
             // Setup canvas for recording
             recordingCanvas.width = videoPreview.videoWidth || 1080;
             recordingCanvas.height = videoPreview.videoHeight || 1920;
+            
+            console.log('Canvas recording mode activated');
+            console.log('Canvas size:', recordingCanvas.width, 'x', recordingCanvas.height);
+            console.log('Overlay items:', overlayItems.length);
             
             // Start drawing video to canvas with transformations
             canvasRecordingInterval = setInterval(() => {
@@ -135,6 +137,7 @@ async function startRecording() {
                 // Draw overlays (text and stickers) on TOP of video
                 canvasContext.save();
                 overlayItems.forEach(item => {
+                    console.log('Drawing overlay:', item.type, 'at', item.x, item.y, 'content:', item.content);
                     if (item.type === 'text') {
                         canvasContext.font = `${item.size}px ${item.font}`;
                         canvasContext.fillStyle = item.color;
@@ -415,6 +418,8 @@ function addTextOverlay(text, font, size, color) {
             element: overlay
         };
         
+        console.log('Text overlay created:', overlayData.content, 'at position', overlayData.x, overlayData.y);
+        
         overlayItems.push(overlayData);
         makeDraggable(overlay, overlayData);
     }, 0);
@@ -455,6 +460,8 @@ function addStickerOverlay(sticker, size) {
             y: y,
             element: overlay
         };
+        
+        console.log('Sticker overlay created:', overlayData.content, 'at position', overlayData.x, overlayData.y);
         
         overlayItems.push(overlayData);
         makeDraggable(overlay, overlayData);
