@@ -411,7 +411,7 @@ export default function SavedReels() {
                                   videoRefs.current[reel.id] = el;
                                 }
                               }}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain bg-black"
                               poster={reel.thumbnailData || undefined}
                               controls
                               loop
