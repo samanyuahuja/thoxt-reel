@@ -62,6 +62,19 @@ export default function VideoRecorder({
   const [drawingLayers, setDrawingLayers] = useState<Array<{ id: string; imageData: string; opacity?: number }>>([]);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
   
+  // Mobile detection and video rotation state
+  const [isMobileView, setIsMobileView] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  const [videoNeedsRotation, setVideoNeedsRotation] = useState(false);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Pinch-to-zoom functionality
   const { scale, resetZoom, isZoomed } = usePinchZoom(videoContainerRef, {
     minZoom: 1,
@@ -89,8 +102,8 @@ export default function VideoRecorder({
     canvasRef
   } = useCanvasRecorder();
   
-  // Use canvas recording when mirror, filters, overlays, stickers, or drawings are enabled
-  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter || textOverlays.length > 0 || stickers.length > 0 || drawingLayers.length > 0;
+  // Use canvas recording when mirror, filters, overlays, stickers, drawings are enabled OR when video needs rotation on mobile
+  const useCanvasMode = mirrorEnabled || currentFilter?.cssFilter || textOverlays.length > 0 || stickers.length > 0 || drawingLayers.length > 0 || (isMobileView && videoNeedsRotation);
   const isRecording = useCanvasMode ? isCanvasRecording : isBasicRecording;
   const recordingTime = useCanvasMode ? canvasRecordingTime : basicRecordingTime;
   const recordedBlob = useCanvasMode ? canvasRecordedBlob : basicRecordedBlob;
@@ -105,6 +118,24 @@ export default function VideoRecorder({
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
+
+  // Check if video is landscape and needs rotation on mobile
+  useEffect(() => {
+    if (videoRef.current && stream && isMobileView) {
+      const video = videoRef.current;
+      const checkOrientation = () => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          const isLandscape = video.videoWidth > video.videoHeight;
+          setVideoNeedsRotation(isLandscape);
+        }
+      };
+      
+      video.addEventListener('loadedmetadata', checkOrientation);
+      checkOrientation();
+      
+      return () => video.removeEventListener('loadedmetadata', checkOrientation);
+    }
+  }, [stream, isMobileView]);
 
   const handleRecordToggle = () => {
     if (isRecording) {
@@ -125,7 +156,8 @@ export default function VideoRecorder({
           aspectRatio,
           textOverlays: textOverlays,
           stickers: stickers,
-          drawingLayers: drawingLayers
+          drawingLayers: drawingLayers,
+          rotateVideo: videoNeedsRotation // Pass rotation flag to canvas recorder
         });
       } else {
         startBasicRecording();
@@ -276,16 +308,6 @@ export default function VideoRecorder({
     return labels[ratio];
   };
 
-  const [isMobileView, setIsMobileView] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
     <div className="relative bg-black md:rounded-xl overflow-hidden video-aspect-ratio w-full h-full md:h-auto mx-auto transition-all duration-300" style={isMobileView ? { width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none', aspectRatio: '9/16' } : getAspectRatioStyle()} data-testid="video-recorder">
       {/* Hidden Canvas for Recording */}
@@ -305,9 +327,10 @@ export default function VideoRecorder({
             autoPlay
             playsInline
             muted
-            className={`w-full h-full ${isMobileView ? 'object-contain' : 'object-cover'} ${mirrorEnabled ? 'scale-x-[-1]' : ''}`}
+            className={`w-full h-full object-cover ${mirrorEnabled && !videoNeedsRotation ? 'scale-x-[-1]' : ''}`}
             style={{ 
-              filter: currentFilter?.cssFilter || 'none'
+              filter: currentFilter?.cssFilter || 'none',
+              transform: `${videoNeedsRotation && isMobileView ? 'rotate(90deg)' : ''} ${mirrorEnabled ? 'scaleX(-1)' : ''}`.trim()
             }}
             data-testid="video-preview"
           />
@@ -661,31 +684,31 @@ export default function VideoRecorder({
           }}
         />
         
-        {/* Save Modal */}
+        {/* Save Modal - Fixed for mobile */}
         {showSaveModal && recordedBlob && (
-          <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
-            <div className="bg-thoxt-gray p-6 rounded-lg w-80 mx-4">
-              <h3 className="text-lg font-semibold mb-4 text-white">Save Your Reel</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999] p-4">
+            <div className="bg-zinc-900 p-6 rounded-2xl w-full max-w-md border border-zinc-800">
+              <h3 className="text-xl font-bold mb-4 text-white">Save Your Reel</h3>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Enter reel title..."
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow"
+                  className="w-full bg-zinc-800 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow text-base"
                   id="reel-title"
                   data-testid="input-reel-title"
                 />
                 
                 <textarea
                   placeholder="Add description (optional)..."
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow h-20 resize-none"
+                  className="w-full bg-zinc-800 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-thoxt-yellow h-24 resize-none text-base"
                   id="reel-description"
                   data-testid="textarea-reel-description"
                 />
                 
-                <div className="flex space-x-2">
+                <div className="flex flex-col space-y-2">
                   <Button
-                    className="flex-1 bg-thoxt-yellow text-black font-medium hover:bg-yellow-400"
+                    className="w-full bg-thoxt-yellow text-black font-bold hover:bg-yellow-400 py-6 text-lg"
                     onClick={() => {
                       const title = (document.getElementById('reel-title') as HTMLInputElement)?.value || 'Untitled Reel';
                       const description = (document.getElementById('reel-description') as HTMLTextAreaElement)?.value;
@@ -697,35 +720,37 @@ export default function VideoRecorder({
                     {isSaving ? 'Saving...' : 'Save Reel'}
                   </Button>
                   
-                  <Button
-                    variant="outline"
-                    className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
-                    onClick={downloadVideo}
-                    data-testid="button-download-reel"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="bg-blue-600 text-white border-blue-600 hover:bg-blue-500"
-                    onClick={() => {
-                      setShowSaveModal(false);
-                      setShowTimelineEditor(true);
-                    }}
-                    data-testid="button-edit-reel"
-                  >
-                    Edit
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
-                    onClick={() => setShowSaveModal(false)}
-                    data-testid="button-cancel-save"
-                  >
-                    Cancel
-                  </Button>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      className="bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700"
+                      onClick={downloadVideo}
+                      data-testid="button-download-reel"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700"
+                      onClick={() => {
+                        setShowSaveModal(false);
+                        setShowTimelineEditor(true);
+                      }}
+                      data-testid="button-edit-reel"
+                    >
+                      Edit
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700"
+                      onClick={() => setShowSaveModal(false)}
+                      data-testid="button-cancel-save"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

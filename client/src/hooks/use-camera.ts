@@ -16,11 +16,19 @@ export function useCamera() {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
 
+      // Request portrait mode on mobile with flexible constraints
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      
       const constraints: MediaStreamConstraints = {
-        video: {
+        video: isMobile ? {
           facingMode: preferredFacingMode || facingMode,
           width: { ideal: 1080 },
-          height: { ideal: 1920 }, // 9:16 portrait aspect ratio
+          height: { ideal: 1920 }, // Prefer portrait but don't require it
+          aspectRatio: { ideal: 9/16 }
+        } : {
+          facingMode: preferredFacingMode || facingMode,
+          width: { ideal: 1080 },
+          height: { ideal: 1920 },
           aspectRatio: { ideal: 9/16 }
         },
         audio: true
