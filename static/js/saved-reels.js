@@ -73,6 +73,9 @@ function createReelCard(reel) {
                 <span data-testid="text-duration-${reel.id}">${reel.duration}s</span>
             </div>
             <div class="reel-actions">
+                <button class="action-btn edit" onclick="editReel('${reel.id}')" data-testid="button-edit-${reel.id}">
+                    ✎ Edit
+                </button>
                 <button class="action-btn download" onclick="downloadReel('${reel.id}')" data-testid="button-download-${reel.id}">
                     ↓ Download
                 </button>
@@ -88,6 +91,11 @@ function createReelCard(reel) {
     video.addEventListener('play', () => updateViews(reel.id));
     
     return card;
+}
+
+// Edit reel
+function editReel(reelId) {
+    window.location.href = `/editor?id=${reelId}`;
 }
 
 // Update views

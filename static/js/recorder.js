@@ -371,20 +371,29 @@ function addTextOverlay(text, font, size, color) {
     overlay.style.top = '30%';
     overlay.style.transform = 'translate(-50%, -50%)';
     
-    const overlayData = {
-        type: 'text',
-        content: text,
-        font: font,
-        size: size,
-        color: color,
-        x: 0,
-        y: 0,
-        element: overlay
-    };
-    
-    overlayItems.push(overlayData);
     overlayContainer.appendChild(overlay);
-    makeDraggable(overlay, overlayData);
+    
+    // Calculate actual position after adding to DOM
+    setTimeout(() => {
+        const rect = overlay.getBoundingClientRect();
+        const containerRect = overlayContainer.getBoundingClientRect();
+        const x = rect.left - containerRect.left;
+        const y = rect.top - containerRect.top + size; // Add size for baseline
+        
+        const overlayData = {
+            type: 'text',
+            content: text,
+            font: font,
+            size: size,
+            color: color,
+            x: x,
+            y: y,
+            element: overlay
+        };
+        
+        overlayItems.push(overlayData);
+        makeDraggable(overlay, overlayData);
+    }, 0);
 }
 
 // Sticker functionality
@@ -405,18 +414,27 @@ function addStickerOverlay(sticker, size) {
     overlay.style.top = '50%';
     overlay.style.transform = 'translate(-50%, -50%)';
     
-    const overlayData = {
-        type: 'sticker',
-        content: sticker,
-        size: size,
-        x: 0,
-        y: 0,
-        element: overlay
-    };
-    
-    overlayItems.push(overlayData);
     overlayContainer.appendChild(overlay);
-    makeDraggable(overlay, overlayData);
+    
+    // Calculate actual position after adding to DOM
+    setTimeout(() => {
+        const rect = overlay.getBoundingClientRect();
+        const containerRect = overlayContainer.getBoundingClientRect();
+        const x = rect.left - containerRect.left;
+        const y = rect.top - containerRect.top + size; // Add size for baseline
+        
+        const overlayData = {
+            type: 'sticker',
+            content: sticker,
+            size: size,
+            x: x,
+            y: y,
+            element: overlay
+        };
+        
+        overlayItems.push(overlayData);
+        makeDraggable(overlay, overlayData);
+    }, 0);
 }
 
 // Make overlay draggable
@@ -445,8 +463,9 @@ function makeDraggable(element, data) {
             element.style.top = y + 'px';
             element.style.transform = 'none';
             
+            // Update data coordinates (add size for text baseline)
             data.x = x;
-            data.y = y;
+            data.y = y + data.size;
         }
     });
     
@@ -509,8 +528,9 @@ function makeDraggable(element, data) {
                 element.style.top = y + 'px';
                 element.style.transform = 'none';
                 
+                // Update data coordinates (add size for text baseline)
                 data.x = x;
-                data.y = y;
+                data.y = y + data.size;
             }
         }
         e.preventDefault();
@@ -585,8 +605,8 @@ async function saveReel() {
         
         hideSaveModal();
         
-        // Redirect to editor to apply effects
-        window.location.href = `/editor?id=${reelId}`;
+        // Redirect to saved reels page
+        window.location.href = '/saved-reels';
         
     } catch (error) {
         console.error('Error saving reel:', error);

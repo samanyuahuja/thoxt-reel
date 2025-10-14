@@ -1614,3 +1614,14 @@ button:disabled {
 .filter-thumbnail.blackwhite {
     filter: grayscale(100%);
 }
+
+/* Edit button styling */
+.action-btn.edit {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.action-btn.edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
