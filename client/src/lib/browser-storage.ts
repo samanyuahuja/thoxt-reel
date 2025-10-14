@@ -218,13 +218,26 @@ class BrowserStorage {
 
   // Generate thumbnail from video blob
   private async generateThumbnail(videoBlob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const video = document.createElement('video');
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        console.warn('Thumbnail generation timed out');
+        URL.revokeObjectURL(video.src);
+        resolve(''); // Return empty string on timeout
+      }, 5000); // 5 second timeout
+      
+      const cleanup = (result: string) => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(video.src);
+        resolve(result);
+      };
+      
       if (!ctx) {
-        resolve(''); // Return empty string if canvas not available
+        cleanup(''); // Return empty string if canvas not available
         return;
       }
 
@@ -241,13 +254,12 @@ class BrowserStorage {
       video.onseeked = () => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(thumbnailDataUrl);
-        URL.revokeObjectURL(video.src);
+        cleanup(thumbnailDataUrl);
       };
 
       video.onerror = () => {
-        resolve(''); // Return empty string on error
-        URL.revokeObjectURL(video.src);
+        console.error('Error generating thumbnail');
+        cleanup(''); // Return empty string on error
       };
 
       video.src = URL.createObjectURL(videoBlob);
