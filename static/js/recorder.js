@@ -33,10 +33,14 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 // Initialize camera
 async function initCamera() {
     try {
+        // Check if mobile device
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
         const constraints = {
             video: {
-                width: { ideal: 1080 },
-                height: { ideal: 1920 },
+                width: { ideal: isMobile ? 1080 : 1920 },
+                height: { ideal: isMobile ? 1920 : 1080 },
+                aspectRatio: { ideal: isMobile ? 9/16 : 16/9 },
                 facingMode: 'user'
             },
             audio: true
@@ -45,7 +49,16 @@ async function initCamera() {
         mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoPreview.srcObject = mediaStream;
         
+        // Wait for video metadata to load
+        await new Promise(resolve => {
+            videoPreview.onloadedmetadata = () => {
+                videoPreview.play();
+                resolve();
+            };
+        });
+        
         console.log('Camera initialized successfully');
+        console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Could not access camera. Please check permissions.');
@@ -112,7 +125,15 @@ async function startRecording() {
                     }
                 }
                 
-                // Draw overlays (text and stickers) on canvas
+                // Draw video frame FIRST
+                canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
+                
+                // Reset filter for overlays
+                canvasContext.filter = 'none';
+                canvasContext.restore();
+                
+                // Draw overlays (text and stickers) on TOP of video
+                canvasContext.save();
                 overlayItems.forEach(item => {
                     if (item.type === 'text') {
                         canvasContext.font = `${item.size}px ${item.font}`;
@@ -123,9 +144,6 @@ async function startRecording() {
                         canvasContext.fillText(item.content, item.x, item.y);
                     }
                 });
-                
-                // Draw video frame
-                canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
                 canvasContext.restore();
             }, 1000 / 30); // 30 fps
             
