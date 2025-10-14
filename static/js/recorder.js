@@ -136,6 +136,8 @@ async function startRecording() {
                 
                 // Draw overlays (text and stickers) on TOP of video
                 canvasContext.save();
+                canvasContext.textAlign = 'center';
+                canvasContext.textBaseline = 'middle';
                 overlayItems.forEach(item => {
                     console.log('Drawing overlay:', item.type, 'at', item.x, item.y, 'content:', item.content);
                     if (item.type === 'text') {
@@ -404,8 +406,20 @@ function addTextOverlay(text, font, size, color) {
     setTimeout(() => {
         const rect = overlay.getBoundingClientRect();
         const containerRect = overlayContainer.getBoundingClientRect();
-        const x = rect.left - containerRect.left;
-        const y = rect.top - containerRect.top + size; // Add size for baseline
+        
+        // Calculate canvas coordinates scaled to video dimensions
+        const videoWidth = videoPreview.videoWidth || 1080;
+        const videoHeight = videoPreview.videoHeight || 1920;
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        // Position in container (pixels)
+        const xInContainer = rect.left - containerRect.left + rect.width / 2;  // Center of text
+        const yInContainer = rect.top - containerRect.top + rect.height / 2;   // Center of text
+        
+        // Scale to canvas/video dimensions
+        const x = (xInContainer / containerWidth) * videoWidth;
+        const y = (yInContainer / containerHeight) * videoHeight;
         
         const overlayData = {
             type: 'text',
@@ -418,7 +432,7 @@ function addTextOverlay(text, font, size, color) {
             element: overlay
         };
         
-        console.log('Text overlay created:', overlayData.content, 'at position', overlayData.x, overlayData.y);
+        console.log('Text overlay created:', overlayData.content, 'at canvas position', overlayData.x, overlayData.y, 'canvas size:', videoWidth, 'x', videoHeight);
         
         overlayItems.push(overlayData);
         makeDraggable(overlay, overlayData);
@@ -449,8 +463,20 @@ function addStickerOverlay(sticker, size) {
     setTimeout(() => {
         const rect = overlay.getBoundingClientRect();
         const containerRect = overlayContainer.getBoundingClientRect();
-        const x = rect.left - containerRect.left;
-        const y = rect.top - containerRect.top + size; // Add size for baseline
+        
+        // Calculate canvas coordinates scaled to video dimensions
+        const videoWidth = videoPreview.videoWidth || 1080;
+        const videoHeight = videoPreview.videoHeight || 1920;
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        // Position in container (pixels)
+        const xInContainer = rect.left - containerRect.left + rect.width / 2;  // Center of sticker
+        const yInContainer = rect.top - containerRect.top + rect.height / 2;   // Center of sticker
+        
+        // Scale to canvas/video dimensions
+        const x = (xInContainer / containerWidth) * videoWidth;
+        const y = (yInContainer / containerHeight) * videoHeight;
         
         const overlayData = {
             type: 'sticker',
@@ -461,7 +487,7 @@ function addStickerOverlay(sticker, size) {
             element: overlay
         };
         
-        console.log('Sticker overlay created:', overlayData.content, 'at position', overlayData.x, overlayData.y);
+        console.log('Sticker overlay created:', overlayData.content, 'at canvas position', overlayData.x, overlayData.y, 'canvas size:', videoWidth, 'x', videoHeight);
         
         overlayItems.push(overlayData);
         makeDraggable(overlay, overlayData);
@@ -494,9 +520,15 @@ function makeDraggable(element, data) {
             element.style.top = y + 'px';
             element.style.transform = 'none';
             
-            // Update data coordinates (add size for text baseline)
-            data.x = x;
-            data.y = y + data.size;
+            // Scale to canvas coordinates
+            const videoWidth = videoPreview.videoWidth || 1080;
+            const videoHeight = videoPreview.videoHeight || 1920;
+            const elementRect = element.getBoundingClientRect();
+            const xInContainer = elementRect.left - containerRect.left + elementRect.width / 2;
+            const yInContainer = elementRect.top - containerRect.top + elementRect.height / 2;
+            
+            data.x = (xInContainer / containerRect.width) * videoWidth;
+            data.y = (yInContainer / containerRect.height) * videoHeight;
         }
     });
     
@@ -559,9 +591,15 @@ function makeDraggable(element, data) {
                 element.style.top = y + 'px';
                 element.style.transform = 'none';
                 
-                // Update data coordinates (add size for text baseline)
-                data.x = x;
-                data.y = y + data.size;
+                // Scale to canvas coordinates
+                const videoWidth = videoPreview.videoWidth || 1080;
+                const videoHeight = videoPreview.videoHeight || 1920;
+                const elementRect = element.getBoundingClientRect();
+                const xInContainer = elementRect.left - containerRect.left + elementRect.width / 2;
+                const yInContainer = elementRect.top - containerRect.top + elementRect.height / 2;
+                
+                data.x = (xInContainer / containerRect.width) * videoWidth;
+                data.y = (yInContainer / containerRect.height) * videoHeight;
             }
         }
         e.preventDefault();
