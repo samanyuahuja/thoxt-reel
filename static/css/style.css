@@ -1243,3 +1243,111 @@ button:disabled {
         font-size: 1.2rem;
     }
 }
+
+/* Filters Sidebar (Instagram-style) */
+.filters-sidebar {
+    position: absolute;
+    bottom: 100px;
+    left: 0;
+    right: 0;
+    padding: 10px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+    z-index: 50;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.filters-list {
+    display: flex;
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.filter-item:hover {
+    transform: scale(1.05);
+}
+
+.filter-item.active .filter-thumbnail {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.filter-thumbnail {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    overflow: hidden;
+    transition: all 0.3s;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-preview-thumb {
+    width: 100%;
+    height: 100%;
+    background: inherit;
+}
+
+/* Instagram filter styles for thumbnails */
+.filter-thumbnail.valencia {
+    filter: contrast(1.08) brightness(1.08) sepia(0.08);
+}
+
+.filter-thumbnail.nashville {
+    filter: sepia(0.2) contrast(1.2) brightness(1.05) saturate(1.2);
+}
+
+.filter-thumbnail.toaster {
+    filter: contrast(1.5) brightness(0.9) sepia(0.1);
+}
+
+.filter-thumbnail.walden {
+    filter: brightness(1.1) hue-rotate(-10deg) sepia(0.3) saturate(1.6);
+}
+
+.filter-thumbnail.lofi {
+    filter: saturate(1.1) contrast(1.5);
+}
+
+.filter-thumbnail.clarendon {
+    filter: contrast(1.2) saturate(1.35);
+}
+
+.filter-thumbnail.gingham {
+    filter: brightness(1.05) hue-rotate(-10deg);
+}
+
+.filter-item span {
+    color: #fff;
+    font-size: 0.85rem;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+@media (max-width: 768px) {
+    .filters-sidebar {
+        bottom: 80px;
+    }
+    
+    .filter-thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .filter-item span {
+        font-size: 0.75rem;
+    }
+}

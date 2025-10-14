@@ -22,6 +22,7 @@ The application provides a comprehensive suite of features including AI-assisted
 - **Core Features**:
   - Video recording with MediaRecorder API
   - Canvas-based recording for mirror mode and filter effects
+  - **Instagram-style live filters** - 8 professional filters on recording page sidebar (Valencia, Nashville, Toaster, Walden, Lo-Fi, Clarendon, Gingham)
   - **Video upload support** - Import videos (MP4, WebM, MOV) with drag-and-drop or file browser
   - Teleprompter with script display
   - Professional UI with symbolic icons (no emojis)

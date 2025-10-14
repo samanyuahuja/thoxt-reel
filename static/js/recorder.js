@@ -75,14 +75,26 @@ async function startRecording() {
                 // Apply filter if needed
                 if (currentFilter !== 'none') {
                     switch (currentFilter) {
-                        case 'grayscale':
-                            canvasContext.filter = 'grayscale(100%)';
+                        case 'valencia':
+                            canvasContext.filter = 'contrast(1.08) brightness(1.08) sepia(0.08)';
                             break;
-                        case 'sepia':
-                            canvasContext.filter = 'sepia(100%)';
+                        case 'nashville':
+                            canvasContext.filter = 'sepia(0.2) contrast(1.2) brightness(1.05) saturate(1.2)';
                             break;
-                        case 'invert':
-                            canvasContext.filter = 'invert(100%)';
+                        case 'toaster':
+                            canvasContext.filter = 'contrast(1.5) brightness(0.9) sepia(0.1)';
+                            break;
+                        case 'walden':
+                            canvasContext.filter = 'brightness(1.1) hue-rotate(-10deg) sepia(0.3) saturate(1.6)';
+                            break;
+                        case 'lofi':
+                            canvasContext.filter = 'saturate(1.1) contrast(1.5)';
+                            break;
+                        case 'clarendon':
+                            canvasContext.filter = 'contrast(1.2) saturate(1.35)';
+                            break;
+                        case 'gingham':
+                            canvasContext.filter = 'brightness(1.05) hue-rotate(-10deg)';
                             break;
                     }
                 }
@@ -186,34 +198,55 @@ function toggleTeleprompter() {
     teleprompterBtn.classList.toggle('active', showTeleprompter);
 }
 
-// Filter toggle (cycle through filters)
-function toggleFilter() {
-    const filters = ['none', 'grayscale', 'sepia', 'invert'];
-    const currentIndex = filters.indexOf(currentFilter);
-    currentFilter = filters[(currentIndex + 1) % filters.length];
-    
-    applyFilter();
-    filterBtn.classList.toggle('active', currentFilter !== 'none');
-    filterBtn.textContent = currentFilter === 'none' ? '◐ Filter' : `◐ ${currentFilter}`;
-}
-
-function applyFilter() {
+// Instagram-style filters
+function applyFilter(filterName) {
+    currentFilter = filterName;
     let filterValue = 'none';
     
-    switch (currentFilter) {
-        case 'grayscale':
-            filterValue = 'grayscale(100%)';
+    switch (filterName) {
+        case 'valencia':
+            filterValue = 'contrast(1.08) brightness(1.08) sepia(0.08)';
             break;
-        case 'sepia':
-            filterValue = 'sepia(100%)';
+        case 'nashville':
+            filterValue = 'sepia(0.2) contrast(1.2) brightness(1.05) saturate(1.2)';
             break;
-        case 'invert':
-            filterValue = 'invert(100%)';
+        case 'toaster':
+            filterValue = 'contrast(1.5) brightness(0.9) sepia(0.1)';
+            break;
+        case 'walden':
+            filterValue = 'brightness(1.1) hue-rotate(-10deg) sepia(0.3) saturate(1.6)';
+            break;
+        case 'lofi':
+            filterValue = 'saturate(1.1) contrast(1.5)';
+            break;
+        case 'clarendon':
+            filterValue = 'contrast(1.2) saturate(1.35)';
+            break;
+        case 'gingham':
+            filterValue = 'brightness(1.05) hue-rotate(-10deg)';
+            break;
+        case 'none':
+        default:
+            filterValue = 'none';
             break;
     }
     
     videoPreview.style.filter = filterValue;
 }
+
+// Filter item click handlers
+document.querySelectorAll('.filter-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const filterName = item.dataset.filter;
+        
+        // Update active state
+        document.querySelectorAll('.filter-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        
+        // Apply filter
+        applyFilter(filterName);
+    });
+});
 
 // Save modal
 function showSaveModal() {
@@ -302,7 +335,6 @@ recordBtn.addEventListener('click', startRecording);
 stopBtn.addEventListener('click', stopRecording);
 mirrorBtn.addEventListener('click', toggleMirror);
 teleprompterBtn.addEventListener('click', toggleTeleprompter);
-filterBtn.addEventListener('click', toggleFilter);
 saveReelBtn.addEventListener('click', saveReel);
 cancelSaveBtn.addEventListener('click', () => {
     hideSaveModal();
