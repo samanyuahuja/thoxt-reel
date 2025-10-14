@@ -23,7 +23,7 @@ The application provides a comprehensive suite of features including AI-assisted
   - Video recording with MediaRecorder API
   - Canvas-based recording for mirror mode and filter effects
   - **Instagram-style vertical sidebar** - Right-side sidebar with 5 sections (TEXT, STICKER, FILTER, MUSIC, MIRROR)
-  - **Instagram-style live filters** - 8 professional filters (Valencia, Nashville, Toaster, Walden, Lo-Fi, Clarendon, Gingham)
+  - **Instagram-style live filters** - 9 professional filters (Valencia, Nashville, Toaster, Walden, Lo-Fi, Clarendon, Gingham, Black & White)
   - **Video upload support** - Import videos (MP4, WebM, MOV) with drag-and-drop or file browser
   - Teleprompter with script display
   - Professional UI with symbolic icons (no emojis)
@@ -37,15 +37,21 @@ The application provides a comprehensive suite of features including AI-assisted
   - Only one panel open at a time
   - Active section highlighted with yellow background
 - **5 Sections**:
-  1. **TEXT** - Add text overlays (size, color controls)
-  2. **STICKER** - Add emoji stickers (8 options)
-  3. **FILTER** - Apply Instagram filters (8 professional filters)
+  1. **TEXT** - Draggable text overlays with font selection (Arial, Impact, Georgia, Comic Sans, Courier), size slider (20-120px), color picker
+  2. **STICKER** - Draggable emoji stickers (8 options) with size slider (30-150px)
+  3. **FILTER** - Apply Instagram filters (9 professional filters including B&W)
   4. **MUSIC** - Background music (placeholder)
   5. **MIRROR** - Toggle mirror mode with status indicator
 - **Panel Behavior**:
   - Slides up from bottom with animation
   - Close button (✕) dismisses panel
   - Clicking new section auto-closes previous panel
+- **Draggable Overlays** ✅:
+  - Text and stickers can be repositioned by clicking and dragging
+  - Desktop: Click and drag with mouse
+  - Mobile: Single touch to drag, two-finger pinch to zoom/resize
+  - Selected overlays show yellow dashed outline
+  - All overlays baked into recorded video
   
 ### Advanced Video Editor Implementation (October 14, 2025)
 - **Professional Editor Interface** ✅:
