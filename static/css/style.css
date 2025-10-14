@@ -1550,3 +1550,67 @@ button:disabled {
         font-size: 32px;
     }
 }
+
+/* Overlay Container for Text and Stickers */
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.overlay-item {
+    position: absolute;
+    cursor: move;
+    pointer-events: auto;
+    user-select: none;
+    touch-action: none;
+}
+
+.overlay-item.selected {
+    outline: 2px dashed #ffd700;
+}
+
+.overlay-text {
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    white-space: nowrap;
+}
+
+.overlay-sticker {
+    font-size: 60px;
+}
+
+/* Text and Sticker Controls */
+.text-controls, .sticker-size-control {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.text-controls label, .sticker-size-control label {
+    color: #888;
+    font-size: 14px;
+}
+
+#text-font, #text-size-display, #sticker-size-display {
+    color: #fff;
+}
+
+#text-font {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 8px;
+    color: #fff;
+}
+
+.filter-thumbnail.blackwhite {
+    filter: grayscale(100%);
+}

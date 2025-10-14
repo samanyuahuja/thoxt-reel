@@ -11,6 +11,7 @@
     <div class="video-wrapper">
         <video id="video-preview" autoplay playsinline muted data-testid="video-preview"></video>
         <canvas id="recording-canvas" style="display: none;"></canvas>
+        <div id="overlay-container" class="overlay-container" data-testid="overlay-container"></div>
     </div>
     
     <!-- Teleprompter Overlay -->
@@ -62,8 +63,17 @@
         <div class="panel-content">
             <input type="text" id="text-input" placeholder="Enter text..." data-testid="input-text">
             <div class="text-controls">
+                <label>Font:</label>
+                <select id="text-font" data-testid="select-text-font">
+                    <option value="Arial">Arial</option>
+                    <option value="Impact">Impact</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="'Comic Sans MS'">Comic Sans</option>
+                    <option value="'Courier New'">Courier</option>
+                </select>
                 <label>Size:</label>
-                <input type="range" id="text-size" min="20" max="80" value="40" data-testid="slider-text-size">
+                <input type="range" id="text-size" min="20" max="120" value="40" data-testid="slider-text-size">
+                <span id="text-size-display">40px</span>
                 <label>Color:</label>
                 <input type="color" id="text-color" value="#ffffff" data-testid="input-text-color">
             </div>
@@ -77,6 +87,11 @@
             <button class="panel-close" data-testid="button-close-sticker">✕</button>
         </div>
         <div class="panel-content">
+            <div class="sticker-size-control">
+                <label>Sticker Size:</label>
+                <input type="range" id="sticker-size" min="30" max="150" value="60" data-testid="slider-sticker-size">
+                <span id="sticker-size-display">60px</span>
+            </div>
             <div class="sticker-grid">
                 <button class="sticker-btn" data-sticker="😀" data-testid="sticker-smile">😀</button>
                 <button class="sticker-btn" data-sticker="❤️" data-testid="sticker-heart">❤️</button>
@@ -144,6 +159,12 @@
                         <div class="filter-preview-thumb"></div>
                     </div>
                     <span>Gingham</span>
+                </div>
+                <div class="filter-item" data-filter="blackwhite" data-testid="filter-blackwhite">
+                    <div class="filter-thumbnail blackwhite">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>B&W</span>
                 </div>
             </div>
         </div>

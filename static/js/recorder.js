@@ -9,6 +9,10 @@ let showTeleprompter = false;
 let currentFilter = 'none';
 let recordedBlob = null;
 let canvasRecordingInterval = null;
+let overlayItems = [];
+let selectedOverlay = null;
+let dragOffset = { x: 0, y: 0 };
+let touchStartDistance = 0;
 
 // DOM elements
 const videoPreview = document.getElementById('video-preview');
@@ -56,8 +60,8 @@ async function startRecording() {
     try {
         let streamToRecord;
         
-        // Use canvas recording if mirror mode or filters are active
-        if (isMirrored || currentFilter !== 'none') {
+        // Use canvas recording if mirror mode, filters, or overlays are active
+        if (isMirrored || currentFilter !== 'none' || overlayItems.length > 0) {
             // Setup canvas for recording
             recordingCanvas.width = videoPreview.videoWidth || 1080;
             recordingCanvas.height = videoPreview.videoHeight || 1920;
@@ -96,8 +100,23 @@ async function startRecording() {
                         case 'gingham':
                             canvasContext.filter = 'brightness(1.05) hue-rotate(-10deg)';
                             break;
+                        case 'blackwhite':
+                            canvasContext.filter = 'grayscale(100%)';
+                            break;
                     }
                 }
+                
+                // Draw overlays (text and stickers) on canvas
+                overlayItems.forEach(item => {
+                    if (item.type === 'text') {
+                        canvasContext.font = `${item.size}px ${item.font}`;
+                        canvasContext.fillStyle = item.color;
+                        canvasContext.fillText(item.content, item.x, item.y);
+                    } else if (item.type === 'sticker') {
+                        canvasContext.font = `${item.size}px Arial`;
+                        canvasContext.fillText(item.content, item.x, item.y);
+                    }
+                });
                 
                 // Draw video frame
                 canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
@@ -225,6 +244,9 @@ function applyFilter(filterName) {
         case 'gingham':
             filterValue = 'brightness(1.05) hue-rotate(-10deg)';
             break;
+        case 'blackwhite':
+            filterValue = 'grayscale(100%)';
+            break;
         case 'none':
         default:
             filterValue = 'none';
@@ -303,27 +325,208 @@ document.querySelectorAll('.filter-item').forEach(item => {
     });
 });
 
-// Text overlay functionality (placeholder)
+// Text overlay functionality
 const addTextBtn = document.getElementById('add-text-btn');
+const textInput = document.getElementById('text-input');
+const textFont = document.getElementById('text-font');
+const textSize = document.getElementById('text-size');
+const textSizeDisplay = document.getElementById('text-size-display');
+const textColor = document.getElementById('text-color');
+const overlayContainer = document.getElementById('overlay-container');
+
+// Update size display
+if (textSize && textSizeDisplay) {
+    textSize.addEventListener('input', () => {
+        textSizeDisplay.textContent = textSize.value + 'px';
+    });
+}
+
+const stickerSize = document.getElementById('sticker-size');
+const stickerSizeDisplay = document.getElementById('sticker-size-display');
+
+if (stickerSize && stickerSizeDisplay) {
+    stickerSize.addEventListener('input', () => {
+        stickerSizeDisplay.textContent = stickerSize.value + 'px';
+    });
+}
+
 if (addTextBtn) {
     addTextBtn.addEventListener('click', () => {
-        const text = document.getElementById('text-input').value;
+        const text = textInput.value.trim();
         if (text) {
-            // This would add text overlay to video - for now just log
-            console.log('Add text overlay:', text);
-            alert('Text overlay: ' + text + '\n(This feature records text into the video)');
+            addTextOverlay(text, textFont.value, parseInt(textSize.value), textColor.value);
+            textInput.value = '';
         }
     });
 }
 
-// Sticker functionality (placeholder)
+function addTextOverlay(text, font, size, color) {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay-item overlay-text';
+    overlay.textContent = text;
+    overlay.style.fontFamily = font;
+    overlay.style.fontSize = size + 'px';
+    overlay.style.color = color;
+    overlay.style.left = '50%';
+    overlay.style.top = '30%';
+    overlay.style.transform = 'translate(-50%, -50%)';
+    
+    const overlayData = {
+        type: 'text',
+        content: text,
+        font: font,
+        size: size,
+        color: color,
+        x: 0,
+        y: 0,
+        element: overlay
+    };
+    
+    overlayItems.push(overlayData);
+    overlayContainer.appendChild(overlay);
+    makeDraggable(overlay, overlayData);
+}
+
+// Sticker functionality
 document.querySelectorAll('.sticker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const sticker = btn.dataset.sticker;
-        console.log('Add sticker:', sticker);
-        alert('Sticker: ' + sticker + '\n(This feature records stickers into the video)');
+        const size = parseInt(stickerSize.value);
+        addStickerOverlay(sticker, size);
     });
 });
+
+function addStickerOverlay(sticker, size) {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay-item overlay-sticker';
+    overlay.textContent = sticker;
+    overlay.style.fontSize = size + 'px';
+    overlay.style.left = '50%';
+    overlay.style.top = '50%';
+    overlay.style.transform = 'translate(-50%, -50%)';
+    
+    const overlayData = {
+        type: 'sticker',
+        content: sticker,
+        size: size,
+        x: 0,
+        y: 0,
+        element: overlay
+    };
+    
+    overlayItems.push(overlayData);
+    overlayContainer.appendChild(overlay);
+    makeDraggable(overlay, overlayData);
+}
+
+// Make overlay draggable
+function makeDraggable(element, data) {
+    let isDragging = false;
+    
+    // Mouse events
+    element.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        selectedOverlay = element;
+        element.classList.add('selected');
+        
+        const rect = element.getBoundingClientRect();
+        dragOffset.x = e.clientX - rect.left;
+        dragOffset.y = e.clientY - rect.top;
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging && selectedOverlay === element) {
+            const containerRect = overlayContainer.getBoundingClientRect();
+            let x = e.clientX - containerRect.left - dragOffset.x;
+            let y = e.clientY - containerRect.top - dragOffset.y;
+            
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            element.style.transform = 'none';
+            
+            data.x = x;
+            data.y = y;
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            if (selectedOverlay) {
+                selectedOverlay.classList.remove('selected');
+                selectedOverlay = null;
+            }
+        }
+    });
+    
+    // Touch events
+    element.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        isDragging = true;
+        selectedOverlay = element;
+        element.classList.add('selected');
+        
+        const rect = element.getBoundingClientRect();
+        dragOffset.x = touch.clientX - rect.left;
+        dragOffset.y = touch.clientY - rect.top;
+        
+        // Pinch to zoom
+        if (e.touches.length === 2) {
+            const distance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            touchStartDistance = distance;
+        }
+        
+        e.preventDefault();
+    });
+    
+    element.addEventListener('touchmove', (e) => {
+        if (isDragging && selectedOverlay === element) {
+            // Pinch to zoom
+            if (e.touches.length === 2) {
+                const distance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                const scale = distance / touchStartDistance;
+                const newSize = Math.max(20, Math.min(200, data.size * scale));
+                
+                element.style.fontSize = newSize + 'px';
+                data.size = newSize;
+                touchStartDistance = distance;
+            } else {
+                // Drag
+                const touch = e.touches[0];
+                const containerRect = overlayContainer.getBoundingClientRect();
+                let x = touch.clientX - containerRect.left - dragOffset.x;
+                let y = touch.clientY - containerRect.top - dragOffset.y;
+                
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                element.style.transform = 'none';
+                
+                data.x = x;
+                data.y = y;
+            }
+        }
+        e.preventDefault();
+    });
+    
+    element.addEventListener('touchend', () => {
+        if (isDragging) {
+            isDragging = false;
+            if (selectedOverlay) {
+                selectedOverlay.classList.remove('selected');
+                selectedOverlay = null;
+            }
+        }
+        touchStartDistance = 0;
+    });
+}
 
 // Mirror toggle in panel
 const toggleMirrorBtn = document.getElementById('toggle-mirror-btn');
