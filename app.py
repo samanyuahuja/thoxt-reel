@@ -67,15 +67,15 @@ def get_reels():
 @app.route('/api/reels', methods=['POST'])
 def create_reel():
     """Create new reel"""
-    data = request.json
+    data = request.json or {}
     conn = get_db()
     conn.execute(
         'INSERT INTO reels (id, title, duration, thumbnail, video_blob, views, likes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (data['id'], data['title'], data.get('duration', 0), data.get('thumbnail'), data.get('video_blob'), 0, 0)
+        (data.get('id', ''), data.get('title', ''), data.get('duration', 0), data.get('thumbnail'), data.get('video_blob'), 0, 0)
     )
     conn.commit()
     conn.close()
-    return jsonify({'success': True, 'id': data['id']})
+    return jsonify({'success': True, 'id': data.get('id', '')})
 
 @app.route('/api/reels/<reel_id>', methods=['DELETE'])
 def delete_reel(reel_id):

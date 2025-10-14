@@ -6,7 +6,27 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Mobile UX Improvements & Critical Fixes (Latest - October 14, 2025)
+### Complete Rewrite to Python Flask Stack (Latest - October 14, 2025)
+- **Architecture Migration** ✅:
+  - Completely rebuilt application using Python Flask backend
+  - Replaced React/TypeScript frontend with vanilla HTML/CSS/JavaScript
+  - SQLite database for local data persistence
+  - Node.js shim wrapper in server/index.ts spawns Flask app
+  - Workflow still runs `npm run dev` but boots Flask instead of TypeScript server
+- **Technology Stack**:
+  - Backend: Python 3.11 + Flask + Flask-CORS
+  - Frontend: Vanilla JavaScript + HTML5 + CSS3
+  - Database: SQLite (local file-based)
+  - Media: IndexedDB for client-side video storage
+  - Server: Flask development server on port 5000
+- **Features Preserved**:
+  - Video recording with MediaRecorder API
+  - Teleprompter with mirror mode and filters
+  - Saved reels page with playback
+  - Mobile-responsive design with dark theme
+  - All core functionality intact
+
+### Mobile UX Improvements & Critical Fixes (October 14, 2025)
 - **Camera Portrait Orientation Fix** ✅: 
   - Camera requests true portrait mode (1080x1920, 9:16 aspect ratio)
   - Uses flexible `ideal` constraints instead of rigid `min` to support various mobile cameras
@@ -54,46 +74,45 @@ Preferred communication style: Simple, everyday language.
 
 ## Frontend Architecture
 
-The client-side is built using React 18 with TypeScript, utilizing Vite as the build tool for fast development and optimized production builds. The UI framework is based on Radix UI primitives with shadcn/ui components, styled using Tailwind CSS with a custom dark theme featuring a signature yellow accent color (`--thoxt-yellow: hsl(45, 100%, 51%)`).
-
-State management is handled through TanStack Query (React Query) for server state management and caching, with local component state managed via React hooks. The routing system uses Wouter for lightweight client-side navigation.
+The client-side is built using vanilla HTML5, CSS3, and JavaScript. HTML templates are served by Flask using Jinja2 templating engine. The UI features a custom dark theme with yellow accent colors, fully responsive design for mobile and desktop.
 
 Key frontend architectural decisions:
-- **Component Architecture**: Modular component structure with reusable UI components in `/components/ui/`
-- **Styling System**: CSS-in-JS approach using Tailwind CSS with CSS custom properties for theming
-- **Type Safety**: Full TypeScript integration with strict compiler options
-- **Performance**: Code splitting and lazy loading capabilities through Vite
+- **Template System**: Jinja2 templates in `/templates/` directory with base.html layout
+- **Styling System**: Pure CSS3 with CSS custom properties, mobile-first responsive design
+- **JavaScript**: Vanilla JavaScript for all interactions, no frameworks or build tools
+- **Media Handling**: MediaRecorder API for video recording, IndexedDB for client-side storage
+- **Mobile Support**: Touch-optimized controls, fullscreen recorder, gesture navigation
 
 ## Backend Architecture
 
-The server-side follows a Node.js Express.js architecture with TypeScript support. The application uses an ESM module system and runs on a single-server deployment model with development and production configurations.
+The server-side is built with Python Flask, a lightweight WSGI web application framework. The application runs on a development server in debug mode with hot reloading.
 
-Database architecture utilizes PostgreSQL with Drizzle ORM for type-safe database operations and schema management. The database schema includes tables for users, articles, reels, and script generation requests with proper foreign key relationships.
+Database architecture uses SQLite for local data persistence with a simple schema for reels storage. The Flask app is spawned by a Node.js shim (server/index.ts) to integrate with the existing Replit workflow system.
 
 API structure follows RESTful conventions with endpoints for:
-- Article management (`/api/articles`)
-- Script generation (`/api/generate-script`)
-- File upload and media processing capabilities
+- Reel CRUD operations (`/api/reels`)
+- View and like tracking (`/api/reels/<id>/views`, `/api/reels/<id>/likes`)
+- Static file serving for CSS, JavaScript, and media assets
 
 Key backend architectural decisions:
-- **ORM Choice**: Drizzle ORM selected for type safety and performance over traditional ORMs
-- **Database**: PostgreSQL chosen for ACID compliance and advanced features
-- **API Design**: RESTful API architecture with JSON responses
-- **Error Handling**: Centralized error handling middleware with proper HTTP status codes
+- **Framework**: Flask chosen for simplicity and Python ecosystem
+- **Database**: SQLite for local file-based storage, no external dependencies
+- **Template Engine**: Jinja2 for server-side HTML rendering
+- **API Design**: RESTful JSON API with CORS support for cross-origin requests
+- **Process Management**: Node.js shim wrapper for workflow integration
 
 ## Data Storage Solutions
 
 The application uses a hybrid storage approach:
-- **Primary Database**: PostgreSQL via Neon Database (serverless PostgreSQL)
-- **Development Storage**: In-memory storage implementation for rapid prototyping
-- **Media Storage**: Google Cloud Storage integration for video and image assets
-- **File Processing**: Client-side video processing capabilities with FFmpeg.wasm
+- **Primary Database**: SQLite (local file-based database in reels.db)
+- **Client Storage**: IndexedDB (ThoxtReelsDB) for video blobs and thumbnails
+- **Media Storage**: Browser-based blob storage with download capabilities
+- **Session Storage**: In-memory during active recording sessions
 
-Database schema design includes:
-- Users table with authentication fields
-- Articles table for source content with metadata
-- Reels table linking videos to source articles with processing metadata
-- Script generation requests table for AI workflow tracking
+Database schema design:
+- Reels table with id, title, duration, thumbnail, video_blob, views, likes, created_at
+- IndexedDB stores complete video blobs for playback and download
+- Thumbnail generation using HTML5 Canvas API
 
 ## Authentication and Authorization
 

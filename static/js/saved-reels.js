@@ -48,8 +48,11 @@ function createReelCard(reel) {
     card.className = 'reel-card';
     card.dataset.testid = `card-reel-${reel.id}`;
     
-    // Create video URL from blob
-    const videoURL = URL.createObjectURL(reel.videoBlob);
+    // Create video URL from blob - check if blob exists and is valid
+    let videoURL = '';
+    if (reel.videoBlob && reel.videoBlob instanceof Blob) {
+        videoURL = URL.createObjectURL(reel.videoBlob);
+    }
     
     card.innerHTML = `
         <div class="reel-video-container">

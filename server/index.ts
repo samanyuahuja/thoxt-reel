@@ -1,71 +1,40 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { spawn } from 'child_process';
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+console.log('Starting Flask application via Node.js shim...');
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
+// Spawn the Flask app
+const flaskProcess = spawn('python3', ['app.py'], {
+  env: {
+    ...process.env,
+    PORT: process.env.PORT || '5000',
+    FLASK_ENV: process.env.NODE_ENV === 'development' ? 'development' : 'production'
+  },
+  stdio: 'inherit', // Forward all output to parent process
+  cwd: process.cwd()
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+// Handle Flask process exit
+flaskProcess.on('exit', (code, signal) => {
+  console.log(`Flask process exited with code ${code} and signal ${signal}`);
+  process.exit(code || 0);
+});
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+// Handle errors
+flaskProcess.on('error', (error) => {
+  console.error('Failed to start Flask process:', error);
+  process.exit(1);
+});
 
-    res.status(status).json({ message });
-    throw err;
-  });
+// Forward signals to Flask process
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM, forwarding to Flask...');
+  flaskProcess.kill('SIGTERM');
+});
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+process.on('SIGINT', () => {
+  console.log('Received SIGINT, forwarding to Flask...');
+  flaskProcess.kill('SIGINT');
+});
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+// Keep the Node process alive
+console.log('Node.js shim running, Flask server starting...');
