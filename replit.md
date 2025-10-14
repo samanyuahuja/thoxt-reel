@@ -6,6 +6,25 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
+### Canvas Recording Fix & Mobile Camera Orientation (Latest - October 14, 2025)
+- **Critical Overlay Recording Fix** ✅:
+  - Fixed canvas drawing order: video frame drawn FIRST, overlays drawn on TOP
+  - Previous bug: overlays drawn first, then video covered them
+  - Text and stickers now properly baked into recorded video blobs
+  - Canvas filter reset before overlay rendering to prevent filter inheritance
+- **Mobile Camera Portrait Mode** ✅:
+  - Mobile devices: 1080x1920 portrait (9:16 aspect ratio)
+  - Desktop devices: 1920x1080 landscape (16:9 aspect ratio)
+  - User agent detection for device-specific constraints
+  - Proper video metadata loading and playback initialization
+- **Workflow Change** ✅:
+  - After recording → Save → Redirects to /saved-reels (not /editor)
+  - Edit button added to each reel card in saved reels page
+  - Edit button (purple gradient) opens /editor with reel ID
+  - Clean workflow: Record → Save → My Reels → Edit (optional)
+
+## Recent Changes (October 2025)
+
 ### Complete Rewrite to Python Flask Stack (Latest - October 14, 2025)
 - **Architecture Migration** ✅:
   - Completely rebuilt application using Python Flask backend
