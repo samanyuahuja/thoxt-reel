@@ -417,15 +417,8 @@ export default function SavedReels() {
                               controls
                               loop
                               playsInline
-                              webkit-playsinline="true"
                               preload="metadata"
-                              crossOrigin="anonymous"
                               onLoadedData={() => {
-                                console.log(`✅ Video ready for ${reel.id}:`, {
-                                  duration: videoRefs.current[reel.id]?.duration,
-                                  readyState: videoRefs.current[reel.id]?.readyState,
-                                  canPlayType: videoRefs.current[reel.id]?.canPlayType('video/webm')
-                                });
                                 setLoadingVideos(prev => {
                                   const newSet = new Set(prev);
                                   newSet.delete(reel.id);
@@ -433,28 +426,16 @@ export default function SavedReels() {
                                 })
                               }}
                               onPlay={() => {
-                                console.log(`▶️ Playing: ${reel.id}`);
                                 setPlayingVideo(reel.id);
                                 browserStorage.updateReelViews(reel.id).then(() => loadReels());
                               }}
                               onPause={() => {
-                                console.log(`⏸️ Paused: ${reel.id}`);
                                 if (playingVideo === reel.id) {
                                   setPlayingVideo(null);
                                 }
                               }}
                               onEnded={() => {
-                                console.log(`⏹️ Ended: ${reel.id}`);
                                 handleVideoEnded(reel.id);
-                              }}
-                              onError={(e) => {
-                                const video = videoRefs.current[reel.id];
-                                console.error(`❌ Video error for ${reel.id}:`, {
-                                  error: e,
-                                  videoError: video?.error,
-                                  code: video?.error?.code,
-                                  message: video?.error?.message
-                                });
                               }}
                               data-testid={`reel-video-${reel.id}`}
                               src={videoUrl}
