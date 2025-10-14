@@ -8,6 +8,7 @@ let isMirrored = false;
 let showTeleprompter = false;
 let currentFilter = 'none';
 let recordedBlob = null;
+let canvasRecordingInterval = null;
 
 // DOM elements
 const videoPreview = document.getElementById('video-preview');
@@ -53,8 +54,56 @@ async function startRecording() {
     recordingStartTime = Date.now();
     
     try {
-        // Use canvas for recording if filters or effects are applied
-        const streamToRecord = mediaStream;
+        let streamToRecord;
+        
+        // Use canvas recording if mirror mode or filters are active
+        if (isMirrored || currentFilter !== 'none') {
+            // Setup canvas for recording
+            recordingCanvas.width = videoPreview.videoWidth || 1080;
+            recordingCanvas.height = videoPreview.videoHeight || 1920;
+            
+            // Start drawing video to canvas with transformations
+            canvasRecordingInterval = setInterval(() => {
+                canvasContext.save();
+                
+                // Apply mirror transform if needed
+                if (isMirrored) {
+                    canvasContext.translate(recordingCanvas.width, 0);
+                    canvasContext.scale(-1, 1);
+                }
+                
+                // Apply filter if needed
+                if (currentFilter !== 'none') {
+                    switch (currentFilter) {
+                        case 'grayscale':
+                            canvasContext.filter = 'grayscale(100%)';
+                            break;
+                        case 'sepia':
+                            canvasContext.filter = 'sepia(100%)';
+                            break;
+                        case 'invert':
+                            canvasContext.filter = 'invert(100%)';
+                            break;
+                    }
+                }
+                
+                // Draw video frame
+                canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
+                canvasContext.restore();
+            }, 1000 / 30); // 30 fps
+            
+            // Get canvas stream
+            const canvasStream = recordingCanvas.captureStream(30);
+            
+            // Add audio from original stream
+            const audioTracks = mediaStream.getAudioTracks();
+            audioTracks.forEach(track => canvasStream.addTrack(track));
+            
+            streamToRecord = canvasStream;
+        } else {
+            // Use direct camera stream if no effects
+            streamToRecord = mediaStream;
+        }
         
         mediaRecorder = new MediaRecorder(streamToRecord, {
             mimeType: 'video/webm;codecs=vp9'
@@ -68,6 +117,13 @@ async function startRecording() {
         
         mediaRecorder.onstop = () => {
             recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            
+            // Stop canvas recording if active
+            if (canvasRecordingInterval) {
+                clearInterval(canvasRecordingInterval);
+                canvasRecordingInterval = null;
+            }
+            
             showSaveModal();
         };
         
@@ -79,7 +135,7 @@ async function startRecording() {
         
         startTimer();
         
-        console.log('Recording started');
+        console.log('Recording started' + (isMirrored ? ' with mirror effect' : '') + (currentFilter !== 'none' ? ' with filter' : ''));
     } catch (error) {
         console.error('Error starting recording:', error);
         alert('Could not start recording');
@@ -138,7 +194,7 @@ function toggleFilter() {
     
     applyFilter();
     filterBtn.classList.toggle('active', currentFilter !== 'none');
-    filterBtn.textContent = currentFilter === 'none' ? '🎨 Filter' : `🎨 ${currentFilter}`;
+    filterBtn.textContent = currentFilter === 'none' ? '◐ Filter' : `◐ ${currentFilter}`;
 }
 
 function applyFilter() {
@@ -203,8 +259,8 @@ async function saveReel() {
         
         hideSaveModal();
         
-        // Redirect to saved reels
-        window.location.href = '/saved-reels';
+        // Redirect to editor to apply effects
+        window.location.href = `/editor?id=${reelId}`;
         
     } catch (error) {
         console.error('Error saving reel:', error);

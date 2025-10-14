@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Reel - Thoxt Reels{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <!-- Header -->
+    <div class="editor-header">
+        <button class="back-btn" onclick="confirmExit()" data-testid="button-back">← Back</button>
+        <h2>Edit Reel</h2>
+        <button class="export-btn" onclick="exportReel()" data-testid="button-export">Export</button>
+    </div>
+
+    <!-- Video Preview -->
+    <div class="video-preview-section">
+        <div class="video-preview-container">
+            <video id="preview-video-original" playsinline loop muted data-testid="video-preview-original"></video>
+            <video id="preview-video" playsinline loop muted data-testid="video-preview"></video>
+            <canvas id="editor-canvas" data-testid="canvas-editor"></canvas>
+            
+            <!-- Filter Comparison Slider -->
+            <div id="filter-comparison" class="filter-comparison" style="display: none;">
+                <input type="range" id="comparison-slider" min="0" max="100" value="50" class="comparison-slider" data-testid="slider-comparison">
+            </div>
+            
+            <!-- Text Overlays -->
+            <div id="text-overlays" class="text-overlays" data-testid="container-text-overlays"></div>
+            
+            <!-- Stickers -->
+            <div id="stickers-container" class="stickers-container" data-testid="container-stickers"></div>
+            
+            <!-- Drawing Canvas -->
+            <canvas id="drawing-canvas" class="drawing-canvas" data-testid="canvas-drawing"></canvas>
+        </div>
+        
+        <div class="playback-controls">
+            <button id="play-pause-btn" class="control-icon-btn" data-testid="button-play-pause">▶</button>
+            <input type="range" id="timeline-slider" min="0" max="100" value="0" class="timeline-slider" data-testid="slider-timeline">
+            <span id="time-display" data-testid="text-time-display">0:00 / 0:00</span>
+        </div>
+    </div>
+
+    <!-- Editing Tools Tabs -->
+    <div class="editor-tabs">
+        <button class="editor-tab active" data-tab="filters" data-testid="tab-filters">◐ Filters</button>
+        <button class="editor-tab" data-tab="text" data-testid="tab-text">T Text</button>
+        <button class="editor-tab" data-tab="music" data-testid="tab-music">♪ Music</button>
+        <button class="editor-tab" data-tab="stickers" data-testid="tab-stickers">★ Stickers</button>
+        <button class="editor-tab" data-tab="draw" data-testid="tab-draw">✎ Draw</button>
+        <button class="editor-tab" data-tab="ai" data-testid="tab-ai">AI Transcript</button>
+    </div>
+
+    <!-- Tool Panels -->
+    <div class="tool-panels">
+        <!-- Filters Panel -->
+        <div id="panel-filters" class="tool-panel active" data-testid="panel-filters">
+            <div class="filter-grid">
+                <button class="filter-option" data-filter="none" data-testid="filter-none">
+                    <div class="filter-preview">Original</div>
+                    <span>None</span>
+                </button>
+                <button class="filter-option" data-filter="valencia" data-testid="filter-valencia">
+                    <div class="filter-preview valencia">Valencia</div>
+                    <span>Valencia</span>
+                </button>
+                <button class="filter-option" data-filter="nashville" data-testid="filter-nashville">
+                    <div class="filter-preview nashville">Nashville</div>
+                    <span>Nashville</span>
+                </button>
+                <button class="filter-option" data-filter="toaster" data-testid="filter-toaster">
+                    <div class="filter-preview toaster">Toaster</div>
+                    <span>Toaster</span>
+                </button>
+                <button class="filter-option" data-filter="walden" data-testid="filter-walden">
+                    <div class="filter-preview walden">Walden</div>
+                    <span>Walden</span>
+                </button>
+                <button class="filter-option" data-filter="lofi" data-testid="filter-lofi">
+                    <div class="filter-preview lofi">Lo-Fi</div>
+                    <span>Lo-Fi</span>
+                </button>
+                <button class="filter-option" data-filter="clarendon" data-testid="filter-clarendon">
+                    <div class="filter-preview clarendon">Clarendon</div>
+                    <span>Clarendon</span>
+                </button>
+                <button class="filter-option" data-filter="gingham" data-testid="filter-gingham">
+                    <div class="filter-preview gingham">Gingham</div>
+                    <span>Gingham</span>
+                </button>
+            </div>
+            <button class="compare-btn" onclick="toggleComparison()" data-testid="button-compare">Compare Before/After</button>
+        </div>
+
+        <!-- Text Panel -->
+        <div id="panel-text" class="tool-panel" data-testid="panel-text">
+            <input type="text" id="text-input" placeholder="Enter text..." data-testid="input-text">
+            <div class="text-options">
+                <label>Font:
+                    <select id="font-select" data-testid="select-font">
+                        <option value="Arial">Arial</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Comic Sans MS">Comic Sans</option>
+                    </select>
+                </label>
+                <label>Size:
+                    <input type="range" id="font-size" min="20" max="100" value="40" data-testid="slider-font-size">
+                </label>
+                <label>Color:
+                    <input type="color" id="text-color" value="#ffffff" data-testid="input-text-color">
+                </label>
+            </div>
+            <div class="text-animations">
+                <h4>Animation:</h4>
+                <button class="animation-btn" data-animation="none" data-testid="animation-none">None</button>
+                <button class="animation-btn" data-animation="fade" data-testid="animation-fade">Fade In</button>
+                <button class="animation-btn" data-animation="slide" data-testid="animation-slide">Slide</button>
+                <button class="animation-btn" data-animation="bounce" data-testid="animation-bounce">Bounce</button>
+            </div>
+            <button class="add-text-btn" onclick="addTextOverlay()" data-testid="button-add-text">Add Text</button>
+        </div>
+
+        <!-- Music Panel -->
+        <div id="panel-music" class="tool-panel" data-testid="panel-music">
+            <div class="music-library">
+                <div class="music-track" data-track="upbeat" data-testid="track-upbeat">
+                    <span>Upbeat Energy</span>
+                    <button class="play-preview" data-testid="button-preview-upbeat">▶</button>
+                </div>
+                <div class="music-track" data-track="chill" data-testid="track-chill">
+                    <span>Chill Vibes</span>
+                    <button class="play-preview" data-testid="button-preview-chill">▶</button>
+                </div>
+                <div class="music-track" data-track="dramatic" data-testid="track-dramatic">
+                    <span>Dramatic</span>
+                    <button class="play-preview" data-testid="button-preview-dramatic">▶</button>
+                </div>
+                <div class="music-track" data-track="ambient" data-testid="track-ambient">
+                    <span>Ambient</span>
+                    <button class="play-preview" data-testid="button-preview-ambient">▶</button>
+                </div>
+            </div>
+            <label>Volume:
+                <input type="range" id="music-volume" min="0" max="100" value="50" data-testid="slider-music-volume">
+            </label>
+        </div>
+
+        <!-- Stickers Panel -->
+        <div id="panel-stickers" class="tool-panel" data-testid="panel-stickers">
+            <div class="sticker-grid">
+                <button class="sticker-btn" data-sticker="❤️" data-testid="sticker-heart">❤️</button>
+                <button class="sticker-btn" data-sticker="⭐" data-testid="sticker-star">⭐</button>
+                <button class="sticker-btn" data-sticker="🔥" data-testid="sticker-fire">🔥</button>
+                <button class="sticker-btn" data-sticker="💯" data-testid="sticker-100">💯</button>
+                <button class="sticker-btn" data-sticker="👍" data-testid="sticker-thumbs">👍</button>
+                <button class="sticker-btn" data-sticker="🎉" data-testid="sticker-party">🎉</button>
+                <button class="sticker-btn" data-sticker="✨" data-testid="sticker-sparkle">✨</button>
+                <button class="sticker-btn" data-sticker="🎯" data-testid="sticker-target">🎯</button>
+            </div>
+        </div>
+
+        <!-- Draw Panel -->
+        <div id="panel-draw" class="tool-panel" data-testid="panel-draw">
+            <div class="draw-options">
+                <label>Color:
+                    <input type="color" id="draw-color" value="#ff0000" data-testid="input-draw-color">
+                </label>
+                <label>Brush Size:
+                    <input type="range" id="brush-size" min="2" max="20" value="5" data-testid="slider-brush-size">
+                </label>
+            </div>
+            <button class="clear-drawing-btn" onclick="clearDrawing()" data-testid="button-clear-drawing">Clear Drawing</button>
+        </div>
+
+        <!-- AI Transcript Panel -->
+        <div id="panel-ai" class="tool-panel" data-testid="panel-ai">
+            <div class="feature-note">
+                <p><strong>Note:</strong> AI Transcript requires backend speech-to-text API integration (OpenAI Whisper, Google Cloud Speech-to-Text, etc.)</p>
+                <p>Caption application system is ready once API is configured.</p>
+            </div>
+            <button class="generate-btn" onclick="generateTranscript()" disabled data-testid="button-generate-transcript">Generate AI Transcript (Coming Soon)</button>
+            <div id="transcript-container" class="transcript-container" data-testid="container-transcript">
+                <p class="transcript-placeholder">AI transcript generation requires backend API integration for audio extraction and speech-to-text processing</p>
+            </div>
+            <button class="apply-captions-btn" onclick="applyCaptions()" style="display: none;" data-testid="button-apply-captions">Apply as Captions</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/editor.js"></script>
+{% endblock %}

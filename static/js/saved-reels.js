@@ -68,16 +68,16 @@ function createReelCard(reel) {
         <div class="reel-info">
             <h3 class="reel-title" data-testid="text-title-${reel.id}">${reel.title}</h3>
             <div class="reel-stats">
-                <span data-testid="text-views-${reel.id}">👁️ ${reel.views} views</span>
-                <span data-testid="text-likes-${reel.id}">❤️ ${reel.likes} likes</span>
-                <span data-testid="text-duration-${reel.id}">⏱️ ${reel.duration}s</span>
+                <span data-testid="text-views-${reel.id}">Views: ${reel.views}</span>
+                <span data-testid="text-likes-${reel.id}">Likes: ${reel.likes}</span>
+                <span data-testid="text-duration-${reel.id}">${reel.duration}s</span>
             </div>
             <div class="reel-actions">
                 <button class="action-btn download" onclick="downloadReel('${reel.id}')" data-testid="button-download-${reel.id}">
-                    ⬇️ Download
+                    ↓ Download
                 </button>
                 <button class="action-btn delete" onclick="deleteReel('${reel.id}')" data-testid="button-delete-${reel.id}">
-                    🗑️ Delete
+                    × Delete
                 </button>
             </div>
         </div>

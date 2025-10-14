@@ -55,6 +55,11 @@ def saved_reels():
     """Saved reels page"""
     return render_template('saved-reels.html')
 
+@app.route('/editor')
+def editor():
+    """Video editor page"""
+    return render_template('editor.html')
+
 # API Routes
 @app.route('/api/reels', methods=['GET'])
 def get_reels():
