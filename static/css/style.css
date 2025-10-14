@@ -1351,3 +1351,202 @@ button:disabled {
         font-size: 0.75rem;
     }
 }
+
+/* Instagram-Style Sidebar */
+.recorder-sidebar {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 15px;
+    z-index: 100;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.sidebar-section:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-section.active {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.section-icon {
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.section-label {
+    font-size: 10px;
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Section Panels */
+.section-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.95);
+    border-top: 2px solid #ffd700;
+    z-index: 200;
+    max-height: 60vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.panel-header h3 {
+    color: #ffd700;
+    font-size: 18px;
+    margin: 0;
+}
+
+.panel-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel-close:hover {
+    color: #ffd700;
+}
+
+.panel-content {
+    padding: 20px;
+}
+
+/* Text Panel */
+#text-input {
+    width: 100%;
+    padding: 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.text-controls {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.text-controls label {
+    color: #888;
+    font-size: 14px;
+}
+
+#text-size {
+    width: 100%;
+}
+
+#text-color {
+    width: 60px;
+    height: 40px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Sticker Panel */
+.sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.sticker-btn {
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    font-size: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sticker-btn:hover {
+    border-color: #ffd700;
+    transform: scale(1.1);
+}
+
+/* Filter Panel - Keep existing filter styles */
+.panel-content .filters-list {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+@media (max-width: 768px) {
+    .recorder-sidebar {
+        right: 5px;
+        padding: 15px 8px;
+        gap: 15px;
+    }
+    
+    .section-icon {
+        font-size: 24px;
+    }
+    
+    .section-label {
+        font-size: 9px;
+    }
+    
+    .sticker-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    
+    .sticker-btn {
+        padding: 15px;
+        font-size: 32px;
+    }
+}

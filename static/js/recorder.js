@@ -234,7 +234,62 @@ function applyFilter(filterName) {
     videoPreview.style.filter = filterValue;
 }
 
-// Filter item click handlers
+// Sidebar section handlers
+function openPanel(sectionName) {
+    // Close all panels first
+    document.querySelectorAll('.section-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+    
+    // Remove active state from all sections
+    document.querySelectorAll('.sidebar-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Open selected panel
+    const panel = document.getElementById(`panel-${sectionName}`);
+    if (panel) {
+        panel.style.display = 'block';
+        
+        // Mark section as active
+        const section = document.querySelector(`[data-section="${sectionName}"]`);
+        if (section) section.classList.add('active');
+    }
+}
+
+function closePanel(sectionName) {
+    const panel = document.getElementById(`panel-${sectionName}`);
+    if (panel) {
+        panel.style.display = 'none';
+    }
+    
+    // Remove active state
+    const section = document.querySelector(`[data-section="${sectionName}"]`);
+    if (section) section.classList.remove('active');
+}
+
+// Sidebar section click handlers
+document.querySelectorAll('.sidebar-section').forEach(section => {
+    section.addEventListener('click', () => {
+        const sectionName = section.dataset.section;
+        openPanel(sectionName);
+    });
+});
+
+// Panel close button handlers
+document.querySelectorAll('.panel-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const panel = btn.closest('.section-panel');
+        if (panel) {
+            panel.style.display = 'none';
+            
+            // Remove active from sections
+            document.querySelectorAll('.sidebar-section').forEach(s => s.classList.remove('active'));
+        }
+    });
+});
+
+// Filter item click handlers (for panel)
 document.querySelectorAll('.filter-item').forEach(item => {
     item.addEventListener('click', () => {
         const filterName = item.dataset.filter;
@@ -247,6 +302,41 @@ document.querySelectorAll('.filter-item').forEach(item => {
         applyFilter(filterName);
     });
 });
+
+// Text overlay functionality (placeholder)
+const addTextBtn = document.getElementById('add-text-btn');
+if (addTextBtn) {
+    addTextBtn.addEventListener('click', () => {
+        const text = document.getElementById('text-input').value;
+        if (text) {
+            // This would add text overlay to video - for now just log
+            console.log('Add text overlay:', text);
+            alert('Text overlay: ' + text + '\n(This feature records text into the video)');
+        }
+    });
+}
+
+// Sticker functionality (placeholder)
+document.querySelectorAll('.sticker-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const sticker = btn.dataset.sticker;
+        console.log('Add sticker:', sticker);
+        alert('Sticker: ' + sticker + '\n(This feature records stickers into the video)');
+    });
+});
+
+// Mirror toggle in panel
+const toggleMirrorBtn = document.getElementById('toggle-mirror-btn');
+const mirrorStatus = document.getElementById('mirror-status');
+if (toggleMirrorBtn) {
+    toggleMirrorBtn.addEventListener('click', () => {
+        isMirrored = !isMirrored;
+        videoPreview.style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+        if (mirrorStatus) {
+            mirrorStatus.textContent = isMirrored ? 'Mirror: ON' : 'Mirror: OFF';
+        }
+    });
+}
 
 // Save modal
 function showSaveModal() {
@@ -333,7 +423,6 @@ function openDB() {
 // Event listeners
 recordBtn.addEventListener('click', startRecording);
 stopBtn.addEventListener('click', stopRecording);
-mirrorBtn.addEventListener('click', toggleMirror);
 teleprompterBtn.addEventListener('click', toggleTeleprompter);
 saveReelBtn.addEventListener('click', saveReel);
 cancelSaveBtn.addEventListener('click', () => {

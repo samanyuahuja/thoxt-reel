@@ -20,66 +20,159 @@
         </div>
     </div>
     
-    <!-- Filters Sidebar (Instagram-style) -->
-    <div class="filters-sidebar" id="filters-sidebar" data-testid="filters-sidebar">
-        <div class="filters-list">
-            <div class="filter-item active" data-filter="none" data-testid="filter-none">
-                <div class="filter-thumbnail">
-                    <div class="filter-preview-thumb"></div>
-                </div>
-                <span>None</span>
+    <!-- Instagram-Style Sidebar with Sections -->
+    <div class="recorder-sidebar" id="recorder-sidebar" data-testid="recorder-sidebar">
+        <!-- TEXT Section -->
+        <div class="sidebar-section" data-section="text" data-testid="section-text">
+            <div class="section-icon">T</div>
+            <div class="section-label">TEXT</div>
+        </div>
+        
+        <!-- STICKER Section -->
+        <div class="sidebar-section" data-section="sticker" data-testid="section-sticker">
+            <div class="section-icon">☺</div>
+            <div class="section-label">STICKER</div>
+        </div>
+        
+        <!-- FILTER Section -->
+        <div class="sidebar-section" data-section="filter" data-testid="section-filter">
+            <div class="section-icon">◐</div>
+            <div class="section-label">FILTER</div>
+        </div>
+        
+        <!-- MUSIC Section -->
+        <div class="sidebar-section" data-section="music" data-testid="section-music">
+            <div class="section-icon">♪</div>
+            <div class="section-label">MUSIC</div>
+        </div>
+        
+        <!-- MIRROR Section -->
+        <div class="sidebar-section" data-section="mirror" data-testid="section-mirror">
+            <div class="section-icon">⇄</div>
+            <div class="section-label">MIRROR</div>
+        </div>
+    </div>
+    
+    <!-- Expandable Section Panels -->
+    <div class="section-panel" id="panel-text" style="display: none;" data-testid="panel-text">
+        <div class="panel-header">
+            <h3>Add Text</h3>
+            <button class="panel-close" data-testid="button-close-text">✕</button>
+        </div>
+        <div class="panel-content">
+            <input type="text" id="text-input" placeholder="Enter text..." data-testid="input-text">
+            <div class="text-controls">
+                <label>Size:</label>
+                <input type="range" id="text-size" min="20" max="80" value="40" data-testid="slider-text-size">
+                <label>Color:</label>
+                <input type="color" id="text-color" value="#ffffff" data-testid="input-text-color">
             </div>
-            <div class="filter-item" data-filter="valencia" data-testid="filter-valencia">
-                <div class="filter-thumbnail valencia">
-                    <div class="filter-preview-thumb"></div>
-                </div>
-                <span>Valencia</span>
+            <button id="add-text-btn" class="btn-primary" data-testid="button-add-text">Add Text</button>
+        </div>
+    </div>
+    
+    <div class="section-panel" id="panel-sticker" style="display: none;" data-testid="panel-sticker">
+        <div class="panel-header">
+            <h3>Add Sticker</h3>
+            <button class="panel-close" data-testid="button-close-sticker">✕</button>
+        </div>
+        <div class="panel-content">
+            <div class="sticker-grid">
+                <button class="sticker-btn" data-sticker="😀" data-testid="sticker-smile">😀</button>
+                <button class="sticker-btn" data-sticker="❤️" data-testid="sticker-heart">❤️</button>
+                <button class="sticker-btn" data-sticker="⭐" data-testid="sticker-star">⭐</button>
+                <button class="sticker-btn" data-sticker="🔥" data-testid="sticker-fire">🔥</button>
+                <button class="sticker-btn" data-sticker="👍" data-testid="sticker-thumbs">👍</button>
+                <button class="sticker-btn" data-sticker="✨" data-testid="sticker-sparkle">✨</button>
+                <button class="sticker-btn" data-sticker="💯" data-testid="sticker-hundred">💯</button>
+                <button class="sticker-btn" data-sticker="🎉" data-testid="sticker-party">🎉</button>
             </div>
-            <div class="filter-item" data-filter="nashville" data-testid="filter-nashville">
-                <div class="filter-thumbnail nashville">
-                    <div class="filter-preview-thumb"></div>
+        </div>
+    </div>
+    
+    <div class="section-panel" id="panel-filter" style="display: none;" data-testid="panel-filter">
+        <div class="panel-header">
+            <h3>Filters</h3>
+            <button class="panel-close" data-testid="button-close-filter">✕</button>
+        </div>
+        <div class="panel-content">
+            <div class="filters-list">
+                <div class="filter-item active" data-filter="none" data-testid="filter-none">
+                    <div class="filter-thumbnail">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>None</span>
                 </div>
-                <span>Nashville</span>
-            </div>
-            <div class="filter-item" data-filter="toaster" data-testid="filter-toaster">
-                <div class="filter-thumbnail toaster">
-                    <div class="filter-preview-thumb"></div>
+                <div class="filter-item" data-filter="valencia" data-testid="filter-valencia">
+                    <div class="filter-thumbnail valencia">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Valencia</span>
                 </div>
-                <span>Toaster</span>
-            </div>
-            <div class="filter-item" data-filter="walden" data-testid="filter-walden">
-                <div class="filter-thumbnail walden">
-                    <div class="filter-preview-thumb"></div>
+                <div class="filter-item" data-filter="nashville" data-testid="filter-nashville">
+                    <div class="filter-thumbnail nashville">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Nashville</span>
                 </div>
-                <span>Walden</span>
-            </div>
-            <div class="filter-item" data-filter="lofi" data-testid="filter-lofi">
-                <div class="filter-thumbnail lofi">
-                    <div class="filter-preview-thumb"></div>
+                <div class="filter-item" data-filter="toaster" data-testid="filter-toaster">
+                    <div class="filter-thumbnail toaster">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Toaster</span>
                 </div>
-                <span>Lo-Fi</span>
-            </div>
-            <div class="filter-item" data-filter="clarendon" data-testid="filter-clarendon">
-                <div class="filter-thumbnail clarendon">
-                    <div class="filter-preview-thumb"></div>
+                <div class="filter-item" data-filter="walden" data-testid="filter-walden">
+                    <div class="filter-thumbnail walden">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Walden</span>
                 </div>
-                <span>Clarendon</span>
-            </div>
-            <div class="filter-item" data-filter="gingham" data-testid="filter-gingham">
-                <div class="filter-thumbnail gingham">
-                    <div class="filter-preview-thumb"></div>
+                <div class="filter-item" data-filter="lofi" data-testid="filter-lofi">
+                    <div class="filter-thumbnail lofi">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Lo-Fi</span>
                 </div>
-                <span>Gingham</span>
+                <div class="filter-item" data-filter="clarendon" data-testid="filter-clarendon">
+                    <div class="filter-thumbnail clarendon">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Clarendon</span>
+                </div>
+                <div class="filter-item" data-filter="gingham" data-testid="filter-gingham">
+                    <div class="filter-thumbnail gingham">
+                        <div class="filter-preview-thumb"></div>
+                    </div>
+                    <span>Gingham</span>
+                </div>
             </div>
+        </div>
+    </div>
+    
+    <div class="section-panel" id="panel-music" style="display: none;" data-testid="panel-music">
+        <div class="panel-header">
+            <h3>Background Music</h3>
+            <button class="panel-close" data-testid="button-close-music">✕</button>
+        </div>
+        <div class="panel-content">
+            <p style="color: #888; text-align: center; padding: 20px;">Music coming soon...</p>
+        </div>
+    </div>
+    
+    <div class="section-panel" id="panel-mirror" style="display: none;" data-testid="panel-mirror">
+        <div class="panel-header">
+            <h3>Mirror Mode</h3>
+            <button class="panel-close" data-testid="button-close-mirror">✕</button>
+        </div>
+        <div class="panel-content">
+            <button id="toggle-mirror-btn" class="btn-primary" data-testid="button-toggle-mirror">Toggle Mirror</button>
+            <p id="mirror-status" style="color: #888; margin-top: 10px;" data-testid="text-mirror-status">Mirror: OFF</p>
         </div>
     </div>
     
     <!-- Controls -->
     <div class="controls">
         <div class="control-row">
-            <button id="mirror-btn" class="control-btn" data-testid="button-mirror">
-                ⇄ Mirror
-            </button>
             <button id="teleprompter-btn" class="control-btn" data-testid="button-teleprompter">
                 ≡ Script
             </button>
