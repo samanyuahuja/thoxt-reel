@@ -418,7 +418,6 @@ export default function SavedReels() {
                               loop
                               playsInline
                               preload="metadata"
-                              controlsList="nodownload"
                               onLoadedData={() => {
                                 console.log(`Video loaded for ${reel.id}:`, {
                                   duration: videoRefs.current[reel.id]?.duration,
@@ -448,24 +447,13 @@ export default function SavedReels() {
                               data-testid={`reel-video-${reel.id}`}
                               src={videoUrl}
                             />
-
-                            {/* Gradient Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             
-                            {/* Play/Pause Overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              {loadingVideos.has(reel.id) ? (
+                            {/* Loading spinner - pointer-events-none so it doesn't block clicks */}
+                            {loadingVideos.has(reel.id) && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="w-12 md:w-16 h-12 md:h-16 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-                              ) : playingVideo === reel.id ? (
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Pause className="w-12 md:w-16 h-12 md:h-16 text-white bg-gradient-to-br from-primary to-purple-600 rounded-full p-3 shadow-xl" />
-                                </div>
-                              ) : (
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Play className="w-12 md:w-16 h-12 md:h-16 text-white bg-gradient-to-br from-primary to-purple-600 rounded-full p-3 shadow-xl" />
-                                </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </>
                         ) : (
                           /* Fallback when no recorded video data */
