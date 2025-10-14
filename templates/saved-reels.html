@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Reels - Thoxt Reels{% endblock %}
+
+{% block content %}
+<div class="saved-reels-container">
+    <!-- Header -->
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='/'" data-testid="button-back">← Back</button>
+        <h1>My Reels</h1>
+    </div>
+    
+    <!-- Reels Grid -->
+    <div class="reels-grid" id="reels-grid" data-testid="container-reels-grid">
+        <p class="loading-message">Loading your reels...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/saved-reels.js"></script>
+{% endblock %}

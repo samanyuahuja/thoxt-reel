@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Record Reel - Thoxt Reels{% endblock %}
+
+{% block content %}
+<div class="recorder-container">
+    <!-- Exit Button -->
+    <button class="exit-btn" onclick="window.location.href='/'" data-testid="button-exit">✕</button>
+    
+    <!-- Video Preview -->
+    <div class="video-wrapper">
+        <video id="video-preview" autoplay playsinline muted data-testid="video-preview"></video>
+        <canvas id="recording-canvas" style="display: none;"></canvas>
+    </div>
+    
+    <!-- Teleprompter Overlay -->
+    <div id="teleprompter-overlay" class="teleprompter-overlay" style="display: none;">
+        <div class="teleprompter-content" id="teleprompter-text" data-testid="teleprompter-text">
+            Your script will appear here...
+        </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="controls">
+        <div class="control-row">
+            <button id="mirror-btn" class="control-btn" data-testid="button-mirror">
+                🔄 Mirror
+            </button>
+            <button id="teleprompter-btn" class="control-btn" data-testid="button-teleprompter">
+                📝 Script
+            </button>
+            <button id="filter-btn" class="control-btn" data-testid="button-filter">
+                🎨 Filter
+            </button>
+        </div>
+        
+        <div class="recording-controls">
+            <button id="record-btn" class="record-btn" data-testid="button-record">
+                <span class="record-icon">⚫</span> Record
+            </button>
+            <button id="stop-btn" class="stop-btn" style="display: none;" data-testid="button-stop">
+                <span class="stop-icon">⬛</span> Stop
+            </button>
+        </div>
+        
+        <div class="timer" id="timer" style="display: none;" data-testid="text-timer">00:00</div>
+    </div>
+    
+    <!-- Save Modal -->
+    <div id="save-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Save Your Reel</h2>
+            <input type="text" id="reel-title" placeholder="Enter title..." value="My Reel" data-testid="input-reel-title">
+            <div class="modal-actions">
+                <button id="save-reel-btn" class="btn-primary" data-testid="button-save-reel">Save</button>
+                <button id="cancel-save-btn" class="btn-secondary" data-testid="button-cancel-save">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/recorder.js"></script>
+{% endblock %}
