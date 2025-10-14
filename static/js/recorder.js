@@ -54,6 +54,12 @@ async function initCamera() {
 
 // Start recording
 async function startRecording() {
+    // Check if camera is initialized
+    if (!mediaStream) {
+        alert('Camera not initialized. Please wait a moment and try again.');
+        return;
+    }
+    
     recordedChunks = [];
     recordingStartTime = Date.now();
     
