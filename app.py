@@ -60,6 +60,11 @@ def editor():
     """Video editor page"""
     return render_template('editor.html')
 
+@app.route('/upload')
+def upload():
+    """Video upload page"""
+    return render_template('upload.html')
+
 # API Routes
 @app.route('/api/reels', methods=['GET'])
 def get_reels():

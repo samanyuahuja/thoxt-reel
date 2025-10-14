@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Video - Thoxt Reels{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <!-- Header -->
+    <div class="upload-header">
+        <button class="back-btn" onclick="window.location.href='/'" data-testid="button-back">← Back</button>
+        <h2>Upload Video</h2>
+        <div></div>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="upload-section">
+        <div class="upload-box" id="upload-box" data-testid="upload-box">
+            <div class="upload-icon">↑</div>
+            <h3>Drop video here or click to browse</h3>
+            <p>Supports MP4, WebM, MOV files</p>
+            <input type="file" id="file-input" accept="video/*" data-testid="input-file-upload" style="display: none;">
+            <button class="browse-btn" onclick="document.getElementById('file-input').click()" data-testid="button-browse">Browse Files</button>
+        </div>
+
+        <!-- Preview Area -->
+        <div id="preview-section" class="preview-section" style="display: none;">
+            <video id="preview-video" controls playsinline data-testid="video-upload-preview"></video>
+            <input type="text" id="video-title" placeholder="Enter video title..." class="title-input" data-testid="input-video-title">
+            <div class="upload-actions">
+                <button class="cancel-btn" onclick="cancelUpload()" data-testid="button-cancel-upload">Cancel</button>
+                <button class="save-btn" onclick="saveUploadedVideo()" data-testid="button-save-upload">Save & Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/upload.js"></script>
+{% endblock %}
