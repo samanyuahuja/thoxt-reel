@@ -6,24 +6,34 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Mobile UX Improvements & Critical Fixes (Latest)
-- **Camera Portrait Orientation Fix**: 
-  - Camera now captures in true portrait mode (1080x1920, 9:16 aspect ratio)
-  - Explicit aspectRatio constraint ensures vertical orientation like Instagram
-  - Works correctly on both desktop and mobile devices
-  - Higher quality video capture (1080p instead of 720p)
-- **Audio Playback Fix**:
-  - Saved reels now play with audio (removed muted attribute)
+### Mobile UX Improvements & Critical Fixes (Latest - October 14, 2025)
+- **Camera Portrait Orientation Fix** ✅: 
+  - Camera requests true portrait mode (1080x1920, 9:16 aspect ratio)
+  - Uses flexible `ideal` constraints instead of rigid `min` to support various mobile cameras
+  - Automatic landscape detection and rotation on mobile devices
+  - Verified working with e2e tests: recorded videos are 1080x1920 portrait
+- **Canvas Recording Mode Enhancement** ✅:
+  - Canvas recording ALWAYS activates when rotation needed on mobile
+  - Fixed critical bug where mirror-off mode would skip rotation
+  - Rotation applied to actual recorded blob, not just preview
+  - Works regardless of mirror, filter, or overlay state
+- **Video Orientation Detection** ✅:
+  - Detects landscape videos (videoWidth > videoHeight) on mobile
+  - Applies 90° rotation via CSS for preview feedback
+  - Applies 90° canvas transform during recording for portrait output
+  - State initialization fixed to prevent ReferenceErrors
+- **Audio Playback Fix** ✅:
+  - Saved reels play with audio (removed muted attribute)
   - User-controlled playback (no autoplay)
   - Full sound support for recorded videos
-- **Mobile-Responsive Saved Reels Page**:
+- **Mobile-Responsive Saved Reels Page** ✅:
   - Fully adaptive layout for mobile devices
   - No sidebar overlap on mobile (md:ml-64 instead of ml-64)
   - Responsive header with flex-col on mobile
   - Full-width buttons on mobile, auto-width on desktop
   - Responsive text sizing across all screen sizes
 - **Enhanced Swipe Gesture**:
-  - Visible yellow pulsing indicator appears when swiping right (>10px)
+  - Visible yellow pulsing indicator when swiping right (>10px)
   - Shows animated arrow icon and "Swipe to exit" text
   - Exits to options menu at 100px+ swipe with 300ms slide-out animation
 - **Professional Options Menu**:
