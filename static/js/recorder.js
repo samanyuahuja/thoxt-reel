@@ -36,9 +36,9 @@ async function initCamera() {
         // ALWAYS use portrait mode (vertical video like Instagram/TikTok)
         const constraints = {
             video: {
-                width: { ideal: 1080 },
-                height: { ideal: 1920 },
-                aspectRatio: { ideal: 9/16 },
+                width: { min: 720, ideal: 1080, max: 1080 },
+                height: { min: 1280, ideal: 1920, max: 1920 },
+                aspectRatio: { exact: 9/16 },
                 facingMode: 'user'
             },
             audio: true
@@ -57,6 +57,12 @@ async function initCamera() {
         
         console.log('Camera initialized successfully');
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
+        
+        // Force portrait if camera gave us landscape
+        if (videoPreview.videoWidth > videoPreview.videoHeight) {
+            console.warn('Camera gave landscape, forcing portrait with CSS rotation');
+            videoPreview.style.transform = 'rotate(90deg)';
+        }
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Could not access camera. Please check permissions.');
@@ -138,14 +144,25 @@ async function startRecording() {
                 canvasContext.save();
                 canvasContext.textAlign = 'center';
                 canvasContext.textBaseline = 'middle';
+                
+                // Calculate size scaling from container to canvas
+                const overlayContainer = document.getElementById('overlay-container');
+                const containerRect = overlayContainer.getBoundingClientRect();
+                const scaleX = recordingCanvas.width / containerRect.width;
+                const scaleY = recordingCanvas.height / containerRect.height;
+                const scaleFactor = Math.min(scaleX, scaleY);
+                
                 overlayItems.forEach(item => {
                     console.log('Drawing overlay:', item.type, 'at', item.x, item.y, 'content:', item.content);
+                    // Scale font size to canvas dimensions
+                    const scaledSize = item.size * scaleFactor;
+                    
                     if (item.type === 'text') {
-                        canvasContext.font = `${item.size}px ${item.font}`;
+                        canvasContext.font = `${scaledSize}px ${item.font}`;
                         canvasContext.fillStyle = item.color;
                         canvasContext.fillText(item.content, item.x, item.y);
                     } else if (item.type === 'sticker') {
-                        canvasContext.font = `${item.size}px Arial`;
+                        canvasContext.font = `${scaledSize}px Arial`;
                         canvasContext.fillText(item.content, item.x, item.y);
                     }
                 });
