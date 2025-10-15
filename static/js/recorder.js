@@ -14,6 +14,7 @@ let selectedOverlay = null;
 let dragOffset = { x: 0, y: 0 };
 let touchStartDistance = 0;
 let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
+let isRotated = false; // Track if video needs rotation
 
 // DOM elements
 const videoPreview = document.getElementById('video-preview');
@@ -30,6 +31,36 @@ const saveModal = document.getElementById('save-modal');
 const reelTitleInput = document.getElementById('reel-title');
 const saveReelBtn = document.getElementById('save-reel-btn');
 const cancelSaveBtn = document.getElementById('cancel-save-btn');
+
+// Helper function to update video preview transform
+function updateVideoTransform() {
+    if (isRotated) {
+        // Landscape camera - needs rotation to portrait
+        let transform = 'rotate(90deg)';
+        if (isMirrored) {
+            transform += ' scaleY(-1)'; // Flip vertically when rotated
+        }
+        videoPreview.style.transform = transform;
+        videoPreview.style.width = '100vh';
+        videoPreview.style.height = '100vw';
+        videoPreview.style.position = 'absolute';
+        videoPreview.style.top = '50%';
+        videoPreview.style.left = '50%';
+        videoPreview.style.marginTop = '-50vw';
+        videoPreview.style.marginLeft = '-50vh';
+    } else {
+        // Portrait camera - normal display
+        let transform = isMirrored ? 'scaleX(-1)' : 'none';
+        videoPreview.style.transform = transform;
+        videoPreview.style.width = '100%';
+        videoPreview.style.height = '100%';
+        videoPreview.style.position = 'static';
+        videoPreview.style.top = 'auto';
+        videoPreview.style.left = 'auto';
+        videoPreview.style.marginTop = '0';
+        videoPreview.style.marginLeft = '0';
+    }
+}
 
 // Initialize camera
 async function initCamera() {
@@ -59,6 +90,17 @@ async function initCamera() {
         console.log('Camera mode:', currentFacingMode);
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
         console.log('Aspect ratio:', (videoPreview.videoWidth / videoPreview.videoHeight).toFixed(2));
+        
+        // Check if camera is landscape and needs rotation
+        isRotated = videoPreview.videoWidth > videoPreview.videoHeight;
+        if (isRotated) {
+            console.log('LANDSCAPE detected - rotating to PORTRAIT');
+        } else {
+            console.log('PORTRAIT camera - normal display');
+        }
+        
+        // Apply transform
+        updateVideoTransform();
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Could not access camera. Please check permissions.');
@@ -308,7 +350,7 @@ function stopTimer() {
 // Mirror toggle
 function toggleMirror() {
     isMirrored = !isMirrored;
-    videoPreview.style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+    updateVideoTransform();
     mirrorBtn.classList.toggle('active', isMirrored);
 }
 
@@ -680,7 +722,7 @@ const mirrorStatus = document.getElementById('mirror-status');
 if (toggleMirrorBtn) {
     toggleMirrorBtn.addEventListener('click', () => {
         isMirrored = !isMirrored;
-        videoPreview.style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+        updateVideoTransform();
         if (mirrorStatus) {
             mirrorStatus.textContent = isMirrored ? 'Mirror: ON' : 'Mirror: OFF';
         }
