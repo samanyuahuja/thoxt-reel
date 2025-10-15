@@ -34,10 +34,23 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 
 // Helper function to update video preview transform
 function updateVideoTransform() {
-    // Always display normally - don't rotate preview
-    // (Phone already shows correctly based on how you're holding it)
-    let transform = isMirrored ? 'scaleX(-1)' : 'none';
-    videoPreview.style.transform = transform;
+    if (isRotated) {
+        // Camera is landscape, need to rotate to portrait display
+        let transform = 'rotate(90deg)';
+        if (isMirrored) {
+            transform += ' scaleY(-1)';
+        }
+        videoPreview.style.transform = transform;
+        videoPreview.style.width = 'auto';
+        videoPreview.style.height = '100vh';
+        videoPreview.style.maxWidth = '100vh';
+    } else {
+        // Camera is already portrait
+        let transform = isMirrored ? 'scaleX(-1)' : 'none';
+        videoPreview.style.transform = transform;
+        videoPreview.style.width = '100%';
+        videoPreview.style.height = '100%';
+    }
 }
 
 // Initialize camera

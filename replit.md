@@ -8,11 +8,11 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ### Portrait Camera & Overlay Recording (Latest - October 15, 2025)
 - **Instagram-Style Portrait Video** ✅:
-  - Camera displays naturally based on device orientation (no preview rotation)
   - Works when phone is held PORTRAIT (upright/vertical) like Instagram
   - Camera flip button (⟲) to switch between front/back camera
   - Final recorded video ALWAYS 1080x1920 portrait output
-  - Canvas recording rotates landscape feeds to portrait automatically
+  - If camera gives landscape, preview rotates 90° to display as portrait
+  - Canvas recording ensures portrait output regardless of camera orientation
   - Mobile web app meta tags for full-screen experience
 - **Overlay Recording with Rotation Support** ✅:
   - Overlays stored as relative positions (0-1 range) - device independent
