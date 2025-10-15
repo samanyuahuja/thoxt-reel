@@ -36,18 +36,25 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 function updateVideoTransform() {
     const vw = videoPreview.videoWidth;
     const vh = videoPreview.videoHeight;
-
-    let transform = '';
     const isLandscape = vw > vh;
+
+    let transform = 'translate(-50%, -50%)';
 
     // If camera gives landscape, rotate to portrait
     if (isLandscape) {
-        transform += 'rotate(90deg)';
+        transform += ' rotate(90deg)';
+        // Scale up to fill container after rotation
+        const scale = vh / vw;
+        videoPreview.style.width = '100vh';
+        videoPreview.style.height = 'auto';
+    } else {
+        videoPreview.style.width = '100%';
+        videoPreview.style.height = '100%';
     }
 
     // Mirror for front camera
     if (isMirrored) {
-        transform += (transform ? ' ' : '') + 'scaleX(-1)';
+        transform += ' scaleX(-1)';
     }
 
     videoPreview.style.transform = transform;
