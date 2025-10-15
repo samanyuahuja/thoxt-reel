@@ -33,10 +33,11 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 // Initialize camera
 async function initCamera() {
     try {
-        // Try to get portrait video - don't specify width/height, let aspect ratio control it
+        // Force portrait video with explicit dimensions
         const constraints = {
             video: {
-                aspectRatio: { ideal: 9/16 },  // Portrait aspect ratio
+                width: { ideal: 1080 },
+                height: { ideal: 1920 },
                 facingMode: 'user'
             },
             audio: true
@@ -56,6 +57,16 @@ async function initCamera() {
         console.log('Camera initialized successfully');
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
         console.log('Aspect ratio:', (videoPreview.videoWidth / videoPreview.videoHeight).toFixed(2));
+        
+        // If camera gave landscape, rotate preview to look portrait
+        if (videoPreview.videoWidth > videoPreview.videoHeight) {
+            console.log('Landscape camera detected - rotating preview to portrait');
+            videoPreview.style.transform = 'rotate(90deg)';
+            videoPreview.style.transformOrigin = 'center center';
+            // Adjust container to accommodate rotated video
+            const container = videoPreview.parentElement;
+            container.style.aspectRatio = '9/16';
+        }
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Could not access camera. Please check permissions.');
