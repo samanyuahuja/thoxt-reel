@@ -34,23 +34,37 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 
 // Helper function to update video preview transform
 function updateVideoTransform() {
-    if (isRotated) {
-        // Camera is landscape, need to rotate to portrait display
-        let transform = 'rotate(90deg)';
-        if (isMirrored) {
-            transform += ' scaleY(-1)';
-        }
-        videoPreview.style.transform = transform;
-        videoPreview.style.width = 'auto';
-        videoPreview.style.height = '100vh';
-        videoPreview.style.maxWidth = '100vh';
+    const vw = videoPreview.videoWidth;
+    const vh = videoPreview.videoHeight;
+
+    let transform = '';
+
+    // Detect if rotation needed (landscape camera)
+    if (vw > vh) {
+        // Rotate 90deg to portrait
+        transform += 'rotate(90deg)';
+    }
+
+    // Mirror if front camera
+    if (isMirrored) {
+        transform += (transform ? ' ' : '') + 'scaleX(-1)';
+    }
+
+    videoPreview.style.transform = transform;
+
+    // Fit video to container like reels
+    if (vw > vh) {
+        // Rotated: width becomes height, height becomes width
+        videoPreview.style.width = '100vh';
+        videoPreview.style.height = 'auto';
     } else {
-        // Camera is already portrait
-        let transform = isMirrored ? 'scaleX(-1)' : 'none';
-        videoPreview.style.transform = transform;
         videoPreview.style.width = '100%';
         videoPreview.style.height = '100%';
     }
+
+    // Center video inside container
+    videoPreview.style.objectFit = 'cover';
+    videoPreview.style.objectPosition = 'center';
 }
 
 // Initialize camera
