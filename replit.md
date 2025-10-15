@@ -14,11 +14,13 @@ The application provides a comprehensive suite of features including AI-assisted
   - Preview shows naturally without CSS rotation hacks
   - Like Instagram/TikTok - works on all mobile and desktop devices
 - **Overlay Recording with Rotation Support** ✅:
+  - Overlays stored as relative positions (0-1 range) - device independent
   - Canvas always outputs 1080x1920 portrait video
-  - Overlays transform correctly when camera is rotated from landscape
+  - Coordinate transformation for landscape: (x,y) → (height-y, x) for 90° rotation
+  - Same rotation matrix applied to both video and overlays
   - Size scaling works for both portrait and rotated landscape cameras
   - Drawing order: video frame FIRST, then overlays on TOP
-  - Text alignment: center/middle for accurate positioning
+  - Text/sticker alignment: center/middle for accurate positioning
 - **Workflow** ✅:
   - After recording → Save → Redirects to /saved-reels (not /editor)
   - Edit button added to each reel card in saved reels page
