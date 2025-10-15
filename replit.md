@@ -6,18 +6,20 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Canvas Recording Fix & Portrait Camera (Latest - October 14, 2025)
-- **Critical Overlay Recording Fix** ✅:
-  - Fixed canvas drawing order: video frame drawn FIRST, overlays drawn on TOP
-  - Fixed coordinate scaling: container pixels → canvas pixels using proper scaling math
-  - Canvas text alignment: textAlign='center', textBaseline='middle'
-  - Previous bugs: overlays drawn under video, wrong coordinates
-  - Text and stickers now properly appear in recorded video blobs at correct positions
-- **Portrait Camera for All Devices** ✅:
-  - ALL devices use 1080x1920 portrait (9:16 aspect ratio) like Instagram/TikTok
-  - No device detection - unified vertical video experience
-  - Proper video metadata loading and playback initialization
-- **Workflow Change** ✅:
+### Portrait Camera & Overlay Recording (Latest - October 15, 2025)
+- **Instagram-Style Portrait Video** ✅:
+  - Camera requests portrait aspect ratio (9:16) naturally
+  - Final recorded video ALWAYS 1080x1920 portrait output
+  - If camera gives landscape, automatically rotates to portrait in recording
+  - Preview shows naturally without CSS rotation hacks
+  - Like Instagram/TikTok - works on all mobile and desktop devices
+- **Overlay Recording with Rotation Support** ✅:
+  - Canvas always outputs 1080x1920 portrait video
+  - Overlays transform correctly when camera is rotated from landscape
+  - Size scaling works for both portrait and rotated landscape cameras
+  - Drawing order: video frame FIRST, then overlays on TOP
+  - Text alignment: center/middle for accurate positioning
+- **Workflow** ✅:
   - After recording → Save → Redirects to /saved-reels (not /editor)
   - Edit button added to each reel card in saved reels page
   - Edit button (purple gradient) opens /editor with reel ID

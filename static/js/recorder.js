@@ -161,39 +161,23 @@ async function startRecording() {
                 canvasContext.restore();
                 
                 // Draw overlays (text and stickers) on TOP of video
+                // Overlays are in 1080x1920 space, draw directly without rotation
                 canvasContext.save();
-                
-                // Apply same rotation as video if landscape
-                if (isLandscape) {
-                    canvasContext.translate(recordingCanvas.width / 2, recordingCanvas.height / 2);
-                    canvasContext.rotate(90 * Math.PI / 180);
-                    canvasContext.translate(-videoPreview.videoWidth / 2, -videoPreview.videoHeight / 2);
-                }
-                
                 canvasContext.textAlign = 'center';
                 canvasContext.textBaseline = 'middle';
                 
-                // Calculate size scaling from container to canvas
+                // Calculate size scaling from container to 1080x1920
                 const overlayContainer = document.getElementById('overlay-container');
                 const containerRect = overlayContainer.getBoundingClientRect();
-                
-                // Scale factor depends on whether we rotated
-                let scaleFactor;
-                if (isLandscape) {
-                    // For rotated landscape: scale to video dimensions, not canvas
-                    const scaleX = videoPreview.videoWidth / containerRect.width;
-                    const scaleY = videoPreview.videoHeight / containerRect.height;
-                    scaleFactor = Math.min(scaleX, scaleY);
-                } else {
-                    // For portrait: scale to canvas dimensions
-                    const scaleX = recordingCanvas.width / containerRect.width;
-                    const scaleY = recordingCanvas.height / containerRect.height;
-                    scaleFactor = Math.min(scaleX, scaleY);
-                }
+                const scaleX = 1080 / containerRect.width;
+                const scaleY = 1920 / containerRect.height;
+                const scaleFactor = Math.min(scaleX, scaleY);
                 
                 overlayItems.forEach(item => {
-                    console.log('Drawing overlay:', item.type, 'at', item.x, item.y, 'content:', item.content);
-                    // Scale font size to canvas dimensions
+                    // Coordinates are already in 1080x1920 space
+                    console.log('Drawing overlay:', item.type, 'at', item.x.toFixed(0), item.y.toFixed(0), 'size:', item.size);
+                    
+                    // Scale font size to canvas
                     const scaledSize = item.size * scaleFactor;
                     
                     if (item.type === 'text') {
@@ -463,19 +447,13 @@ function addTextOverlay(text, font, size, color) {
         const rect = overlay.getBoundingClientRect();
         const containerRect = overlayContainer.getBoundingClientRect();
         
-        // Calculate canvas coordinates scaled to video dimensions
-        const videoWidth = videoPreview.videoWidth || 1080;
-        const videoHeight = videoPreview.videoHeight || 1920;
-        const containerWidth = containerRect.width;
-        const containerHeight = containerRect.height;
+        // Position in container (pixels) - center of text
+        const xInContainer = rect.left - containerRect.left + rect.width / 2;
+        const yInContainer = rect.top - containerRect.top + rect.height / 2;
         
-        // Position in container (pixels)
-        const xInContainer = rect.left - containerRect.left + rect.width / 2;  // Center of text
-        const yInContainer = rect.top - containerRect.top + rect.height / 2;   // Center of text
-        
-        // Scale to canvas/video dimensions
-        const x = (xInContainer / containerWidth) * videoWidth;
-        const y = (yInContainer / containerHeight) * videoHeight;
+        // ALWAYS scale to canonical 1080x1920 canvas space
+        const x = (xInContainer / containerRect.width) * 1080;
+        const y = (yInContainer / containerRect.height) * 1920;
         
         const overlayData = {
             type: 'text',
@@ -488,7 +466,7 @@ function addTextOverlay(text, font, size, color) {
             element: overlay
         };
         
-        console.log('Text overlay created:', overlayData.content, 'at canvas position', overlayData.x, overlayData.y, 'canvas size:', videoWidth, 'x', videoHeight);
+        console.log('Text overlay created:', overlayData.content, 'at 1080x1920 position', overlayData.x.toFixed(0), overlayData.y.toFixed(0));
         
         overlayItems.push(overlayData);
         makeDraggable(overlay, overlayData);
@@ -520,19 +498,13 @@ function addStickerOverlay(sticker, size) {
         const rect = overlay.getBoundingClientRect();
         const containerRect = overlayContainer.getBoundingClientRect();
         
-        // Calculate canvas coordinates scaled to video dimensions
-        const videoWidth = videoPreview.videoWidth || 1080;
-        const videoHeight = videoPreview.videoHeight || 1920;
-        const containerWidth = containerRect.width;
-        const containerHeight = containerRect.height;
+        // Position in container (pixels) - center of sticker
+        const xInContainer = rect.left - containerRect.left + rect.width / 2;
+        const yInContainer = rect.top - containerRect.top + rect.height / 2;
         
-        // Position in container (pixels)
-        const xInContainer = rect.left - containerRect.left + rect.width / 2;  // Center of sticker
-        const yInContainer = rect.top - containerRect.top + rect.height / 2;   // Center of sticker
-        
-        // Scale to canvas/video dimensions
-        const x = (xInContainer / containerWidth) * videoWidth;
-        const y = (yInContainer / containerHeight) * videoHeight;
+        // ALWAYS scale to canonical 1080x1920 canvas space
+        const x = (xInContainer / containerRect.width) * 1080;
+        const y = (yInContainer / containerRect.height) * 1920;
         
         const overlayData = {
             type: 'sticker',
@@ -543,7 +515,7 @@ function addStickerOverlay(sticker, size) {
             element: overlay
         };
         
-        console.log('Sticker overlay created:', overlayData.content, 'at canvas position', overlayData.x, overlayData.y, 'canvas size:', videoWidth, 'x', videoHeight);
+        console.log('Sticker overlay created:', overlayData.content, 'at 1080x1920 position', overlayData.x.toFixed(0), overlayData.y.toFixed(0));
         
         overlayItems.push(overlayData);
         makeDraggable(overlay, overlayData);
@@ -576,15 +548,13 @@ function makeDraggable(element, data) {
             element.style.top = y + 'px';
             element.style.transform = 'none';
             
-            // Scale to canvas coordinates
-            const videoWidth = videoPreview.videoWidth || 1080;
-            const videoHeight = videoPreview.videoHeight || 1920;
+            // Scale to 1080x1920 canvas coordinates
             const elementRect = element.getBoundingClientRect();
             const xInContainer = elementRect.left - containerRect.left + elementRect.width / 2;
             const yInContainer = elementRect.top - containerRect.top + elementRect.height / 2;
             
-            data.x = (xInContainer / containerRect.width) * videoWidth;
-            data.y = (yInContainer / containerRect.height) * videoHeight;
+            data.x = (xInContainer / containerRect.width) * 1080;
+            data.y = (yInContainer / containerRect.height) * 1920;
         }
     });
     
@@ -647,15 +617,13 @@ function makeDraggable(element, data) {
                 element.style.top = y + 'px';
                 element.style.transform = 'none';
                 
-                // Scale to canvas coordinates
-                const videoWidth = videoPreview.videoWidth || 1080;
-                const videoHeight = videoPreview.videoHeight || 1920;
+                // Scale to 1080x1920 canvas coordinates
                 const elementRect = element.getBoundingClientRect();
                 const xInContainer = elementRect.left - containerRect.left + elementRect.width / 2;
                 const yInContainer = elementRect.top - containerRect.top + elementRect.height / 2;
                 
-                data.x = (xInContainer / containerRect.width) * videoWidth;
-                data.y = (yInContainer / containerRect.height) * videoHeight;
+                data.x = (xInContainer / containerRect.width) * 1080;
+                data.y = (yInContainer / containerRect.height) * 1920;
             }
         }
         e.preventDefault();
