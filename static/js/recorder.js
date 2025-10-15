@@ -38,9 +38,10 @@ function updateVideoTransform() {
     const vh = videoPreview.videoHeight;
 
     let transform = '';
+    const isLandscape = vw > vh;
 
     // If camera gives landscape, rotate to portrait
-    if (vw > vh) {
+    if (isLandscape) {
         transform += 'rotate(90deg)';
     }
 
@@ -50,16 +51,6 @@ function updateVideoTransform() {
     }
 
     videoPreview.style.transform = transform;
-    videoPreview.style.objectFit = 'cover';
-    
-    // Adjust dimensions based on rotation
-    if (videoPreview.videoWidth > videoPreview.videoHeight) {
-        videoPreview.style.width = '100vh'; // take full vertical height
-        videoPreview.style.height = 'auto';
-    } else {
-        videoPreview.style.width = '100%';
-        videoPreview.style.height = '100%';
-    }
 }
 
 // Initialize camera
@@ -78,38 +69,18 @@ async function initCamera() {
         mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoPreview.srcObject = mediaStream;
         
-        // Lock to portrait orientation
+        // Lock to portrait orientation on mobile
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('portrait').catch(() => {});
         }
         
-        // Wait for video metadata to load
+        // Wait for video metadata to load and apply transform
         await new Promise(resolve => {
             videoPreview.onloadedmetadata = () => {
                 videoPreview.play();
+                updateVideoTransform();
                 resolve();
             };
-        });
-        
-        // Apply transform on metadata load
-        videoPreview.addEventListener('loadedmetadata', () => {
-            const vw = videoPreview.videoWidth;
-            const vh = videoPreview.videoHeight;
-
-            let transform = '';
-
-            // If camera gives landscape, rotate to portrait
-            if (vw > vh) {
-                transform += 'rotate(90deg)';
-            }
-
-            // Mirror for front camera
-            if (isMirrored) {
-                transform += (transform ? ' ' : '') + 'scaleX(-1)';
-            }
-
-            videoPreview.style.transform = transform;
-            videoPreview.style.objectFit = 'cover';
         });
         
         console.log('Camera initialized successfully');
