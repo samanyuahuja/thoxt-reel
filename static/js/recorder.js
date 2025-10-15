@@ -13,6 +13,7 @@ let overlayItems = [];
 let selectedOverlay = null;
 let dragOffset = { x: 0, y: 0 };
 let touchStartDistance = 0;
+let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
 
 // DOM elements
 const videoPreview = document.getElementById('video-preview');
@@ -33,12 +34,12 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 // Initialize camera
 async function initCamera() {
     try {
-        // Force portrait video with explicit dimensions
+        // Use current facing mode
         const constraints = {
             video: {
                 width: { ideal: 1080 },
                 height: { ideal: 1920 },
-                facingMode: 'user'
+                facingMode: currentFacingMode
             },
             audio: true
         };
@@ -55,18 +56,9 @@ async function initCamera() {
         });
         
         console.log('Camera initialized successfully');
+        console.log('Camera mode:', currentFacingMode);
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
         console.log('Aspect ratio:', (videoPreview.videoWidth / videoPreview.videoHeight).toFixed(2));
-        
-        // If camera gave landscape, rotate preview to look portrait
-        if (videoPreview.videoWidth > videoPreview.videoHeight) {
-            console.log('Landscape camera detected - rotating preview to portrait');
-            videoPreview.style.transform = 'rotate(90deg)';
-            videoPreview.style.transformOrigin = 'center center';
-            // Adjust container to accommodate rotated video
-            const container = videoPreview.parentElement;
-            container.style.aspectRatio = '9/16';
-        }
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Could not access camera. Please check permissions.');
@@ -777,6 +769,20 @@ function openDB() {
     });
 }
 
+// Flip camera function
+async function flipCamera() {
+    // Stop current stream
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Toggle facing mode
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    
+    // Reinitialize camera
+    await initCamera();
+}
+
 // Event listeners
 recordBtn.addEventListener('click', startRecording);
 stopBtn.addEventListener('click', stopRecording);
@@ -787,6 +793,7 @@ cancelSaveBtn.addEventListener('click', () => {
     recordedBlob = null;
     recordedChunks = [];
 });
+document.getElementById('camera-flip-btn').addEventListener('click', flipCamera);
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {

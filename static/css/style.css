@@ -122,6 +122,28 @@ body {
     justify-content: center;
 }
 
+.camera-flip-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-flip-btn:hover {
+    background: rgba(255, 215, 0, 0.3);
+}
+
 .exit-btn:hover {
     background: rgba(255, 0, 0, 0.7);
 }
