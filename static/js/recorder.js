@@ -33,12 +33,10 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 // Initialize camera
 async function initCamera() {
     try {
-        // ALWAYS use portrait mode (vertical video like Instagram/TikTok)
+        // Try to get portrait video - don't specify width/height, let aspect ratio control it
         const constraints = {
             video: {
-                width: { min: 720, ideal: 1080, max: 1080 },
-                height: { min: 1280, ideal: 1920, max: 1920 },
-                aspectRatio: { exact: 9/16 },
+                aspectRatio: { ideal: 9/16 },  // Portrait aspect ratio
                 facingMode: 'user'
             },
             audio: true
@@ -57,12 +55,7 @@ async function initCamera() {
         
         console.log('Camera initialized successfully');
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
-        
-        // Force portrait if camera gave us landscape
-        if (videoPreview.videoWidth > videoPreview.videoHeight) {
-            console.warn('Camera gave landscape, forcing portrait with CSS rotation');
-            videoPreview.style.transform = 'rotate(90deg)';
-        }
+        console.log('Aspect ratio:', (videoPreview.videoWidth / videoPreview.videoHeight).toFixed(2));
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Could not access camera. Please check permissions.');
@@ -83,11 +76,20 @@ async function startRecording() {
     try {
         let streamToRecord;
         
-        // Use canvas recording if mirror mode, filters, or overlays are active
-        if (isMirrored || currentFilter !== 'none' || overlayItems.length > 0) {
-            // Setup canvas for recording
-            recordingCanvas.width = videoPreview.videoWidth || 1080;
-            recordingCanvas.height = videoPreview.videoHeight || 1920;
+        // Check if camera gave landscape when we wanted portrait
+        const isLandscape = videoPreview.videoWidth > videoPreview.videoHeight;
+        
+        // Use canvas recording if mirror mode, filters, overlays, OR need rotation
+        if (isMirrored || currentFilter !== 'none' || overlayItems.length > 0 || isLandscape) {
+            // Setup canvas - ALWAYS 1080x1920 portrait for all recordings
+            recordingCanvas.width = 1080;
+            recordingCanvas.height = 1920;
+            
+            if (isLandscape) {
+                console.log('Camera is landscape', videoPreview.videoWidth, 'x', videoPreview.videoHeight, '- will rotate to portrait 1080x1920');
+            } else {
+                console.log('Camera is portrait', videoPreview.videoWidth, 'x', videoPreview.videoHeight, '- recording as 1080x1920');
+            }
             
             console.log('Canvas recording mode activated');
             console.log('Canvas size:', recordingCanvas.width, 'x', recordingCanvas.height);
@@ -97,10 +99,22 @@ async function startRecording() {
             canvasRecordingInterval = setInterval(() => {
                 canvasContext.save();
                 
+                // Handle landscape to portrait rotation
+                if (isLandscape) {
+                    // Rotate 90 degrees clockwise and center
+                    canvasContext.translate(recordingCanvas.width / 2, recordingCanvas.height / 2);
+                    canvasContext.rotate(90 * Math.PI / 180);
+                    canvasContext.translate(-videoPreview.videoWidth / 2, -videoPreview.videoHeight / 2);
+                }
+                
                 // Apply mirror transform if needed
-                if (isMirrored) {
+                if (isMirrored && !isLandscape) {
                     canvasContext.translate(recordingCanvas.width, 0);
                     canvasContext.scale(-1, 1);
+                } else if (isMirrored && isLandscape) {
+                    // Mirror for rotated video
+                    canvasContext.translate(0, videoPreview.videoHeight);
+                    canvasContext.scale(1, -1);
                 }
                 
                 // Apply filter if needed
@@ -134,7 +148,13 @@ async function startRecording() {
                 }
                 
                 // Draw video frame FIRST
-                canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
+                if (isLandscape) {
+                    // For rotated landscape video, draw at video dimensions (will be rotated to fit canvas)
+                    canvasContext.drawImage(videoPreview, 0, 0, videoPreview.videoWidth, videoPreview.videoHeight);
+                } else {
+                    // For portrait video, stretch to fill canvas
+                    canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
+                }
                 
                 // Reset filter for overlays
                 canvasContext.filter = 'none';
@@ -142,15 +162,34 @@ async function startRecording() {
                 
                 // Draw overlays (text and stickers) on TOP of video
                 canvasContext.save();
+                
+                // Apply same rotation as video if landscape
+                if (isLandscape) {
+                    canvasContext.translate(recordingCanvas.width / 2, recordingCanvas.height / 2);
+                    canvasContext.rotate(90 * Math.PI / 180);
+                    canvasContext.translate(-videoPreview.videoWidth / 2, -videoPreview.videoHeight / 2);
+                }
+                
                 canvasContext.textAlign = 'center';
                 canvasContext.textBaseline = 'middle';
                 
                 // Calculate size scaling from container to canvas
                 const overlayContainer = document.getElementById('overlay-container');
                 const containerRect = overlayContainer.getBoundingClientRect();
-                const scaleX = recordingCanvas.width / containerRect.width;
-                const scaleY = recordingCanvas.height / containerRect.height;
-                const scaleFactor = Math.min(scaleX, scaleY);
+                
+                // Scale factor depends on whether we rotated
+                let scaleFactor;
+                if (isLandscape) {
+                    // For rotated landscape: scale to video dimensions, not canvas
+                    const scaleX = videoPreview.videoWidth / containerRect.width;
+                    const scaleY = videoPreview.videoHeight / containerRect.height;
+                    scaleFactor = Math.min(scaleX, scaleY);
+                } else {
+                    // For portrait: scale to canvas dimensions
+                    const scaleX = recordingCanvas.width / containerRect.width;
+                    const scaleY = recordingCanvas.height / containerRect.height;
+                    scaleFactor = Math.min(scaleX, scaleY);
+                }
                 
                 overlayItems.forEach(item => {
                     console.log('Drawing overlay:', item.type, 'at', item.x, item.y, 'content:', item.content);
