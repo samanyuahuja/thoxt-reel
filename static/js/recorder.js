@@ -14,7 +14,7 @@ let selectedOverlay = null;
 let dragOffset = { x: 0, y: 0 };
 let touchStartDistance = 0;
 let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
-let isRotated = false; // Track if video needs rotation
+// Removed rotation logic - camera always gives portrait
 
 // DOM elements
 const videoPreview = document.getElementById('video-preview');
@@ -34,25 +34,9 @@ const cancelSaveBtn = document.getElementById('cancel-save-btn');
 
 // Helper function to update video preview transform
 function updateVideoTransform() {
-    const vw = videoPreview.videoWidth;
-    const vh = videoPreview.videoHeight;
-    const isLandscape = vw > vh;
-
     let transform = 'translate(-50%, -50%)';
 
-    // If camera gives landscape, rotate to portrait
-    if (isLandscape) {
-        transform += ' rotate(90deg)';
-        // Scale up to fill container after rotation
-        const scale = vh / vw;
-        videoPreview.style.width = '100vh';
-        videoPreview.style.height = 'auto';
-    } else {
-        videoPreview.style.width = '100%';
-        videoPreview.style.height = '100%';
-    }
-
-    // Mirror for front camera
+    // Mirror for front camera only
     if (isMirrored) {
         transform += ' scaleX(-1)';
     }
@@ -93,17 +77,8 @@ async function initCamera() {
         console.log('Camera initialized successfully');
         console.log('Camera mode:', currentFacingMode);
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
-        console.log('Aspect ratio:', (videoPreview.videoWidth / videoPreview.videoHeight).toFixed(2));
         
-        // Check if camera is landscape and needs rotation
-        isRotated = videoPreview.videoWidth > videoPreview.videoHeight;
-        if (isRotated) {
-            console.log('LANDSCAPE detected - rotating to PORTRAIT');
-        } else {
-            console.log('PORTRAIT camera - normal display');
-        }
-        
-        // Apply transform
+        // Apply transform (mirror only if front camera)
         updateVideoTransform();
     } catch (error) {
         console.error('Error accessing camera:', error);
@@ -125,20 +100,11 @@ async function startRecording() {
     try {
         let streamToRecord;
         
-        // Check if camera gave landscape when we wanted portrait
-        const isLandscape = videoPreview.videoWidth > videoPreview.videoHeight;
-        
-        // Use canvas recording if mirror mode, filters, overlays, OR need rotation
-        if (isMirrored || currentFilter !== 'none' || overlayItems.length > 0 || isLandscape) {
-            // Setup canvas - ALWAYS 1080x1920 portrait for all recordings
+        // Use canvas recording if mirror mode, filters, or overlays
+        if (isMirrored || currentFilter !== 'none' || overlayItems.length > 0) {
+            // Setup canvas - ALWAYS 1080x1920 portrait
             recordingCanvas.width = 1080;
             recordingCanvas.height = 1920;
-            
-            if (isLandscape) {
-                console.log('Camera is landscape', videoPreview.videoWidth, 'x', videoPreview.videoHeight, '- will rotate to portrait 1080x1920');
-            } else {
-                console.log('Camera is portrait', videoPreview.videoWidth, 'x', videoPreview.videoHeight, '- recording as 1080x1920');
-            }
             
             console.log('Canvas recording mode activated');
             console.log('Canvas size:', recordingCanvas.width, 'x', recordingCanvas.height);
@@ -148,22 +114,10 @@ async function startRecording() {
             canvasRecordingInterval = setInterval(() => {
                 canvasContext.save();
                 
-                // Handle landscape to portrait rotation
-                if (isLandscape) {
-                    // Rotate 90 degrees clockwise and center
-                    canvasContext.translate(recordingCanvas.width / 2, recordingCanvas.height / 2);
-                    canvasContext.rotate(90 * Math.PI / 180);
-                    canvasContext.translate(-videoPreview.videoWidth / 2, -videoPreview.videoHeight / 2);
-                }
-                
                 // Apply mirror transform if needed
-                if (isMirrored && !isLandscape) {
+                if (isMirrored) {
                     canvasContext.translate(recordingCanvas.width, 0);
                     canvasContext.scale(-1, 1);
-                } else if (isMirrored && isLandscape) {
-                    // Mirror for rotated video
-                    canvasContext.translate(0, videoPreview.videoHeight);
-                    canvasContext.scale(1, -1);
                 }
                 
                 // Apply filter if needed
@@ -196,14 +150,8 @@ async function startRecording() {
                     }
                 }
                 
-                // Draw video frame FIRST
-                if (isLandscape) {
-                    // For rotated landscape video, draw at video dimensions (will be rotated to fit canvas)
-                    canvasContext.drawImage(videoPreview, 0, 0, videoPreview.videoWidth, videoPreview.videoHeight);
-                } else {
-                    // For portrait video, stretch to fill canvas
-                    canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
-                }
+                // Draw video frame FIRST - stretch to fill portrait canvas
+                canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
                 
                 // Reset filter for overlays
                 canvasContext.filter = 'none';
@@ -212,18 +160,10 @@ async function startRecording() {
                 // Draw overlays (text and stickers) on TOP of video
                 canvasContext.save();
                 
-                // Apply SAME rotation/mirror as video
-                if (isLandscape) {
-                    canvasContext.translate(recordingCanvas.width / 2, recordingCanvas.height / 2);
-                    canvasContext.rotate(90 * Math.PI / 180);
-                    canvasContext.translate(-videoPreview.videoWidth / 2, -videoPreview.videoHeight / 2);
-                }
-                if (isMirrored && !isLandscape) {
+                // Apply SAME mirror as video
+                if (isMirrored) {
                     canvasContext.translate(recordingCanvas.width, 0);
                     canvasContext.scale(-1, 1);
-                } else if (isMirrored && isLandscape) {
-                    canvasContext.translate(0, videoPreview.videoHeight);
-                    canvasContext.scale(1, -1);
                 }
                 
                 canvasContext.textAlign = 'center';
@@ -232,27 +172,14 @@ async function startRecording() {
                 // Calculate size scaling
                 const overlayContainer = document.getElementById('overlay-container');
                 const containerRect = overlayContainer.getBoundingClientRect();
-                const scaleX = (isLandscape ? videoPreview.videoWidth : 1080) / containerRect.width;
-                const scaleY = (isLandscape ? videoPreview.videoHeight : 1920) / containerRect.height;
+                const scaleX = 1080 / containerRect.width;
+                const scaleY = 1920 / containerRect.height;
                 const scaleFactor = Math.min(scaleX, scaleY);
                 
                 overlayItems.forEach(item => {
-                    // Convert relative to absolute coordinates
-                    // Overlays are positioned relative to preview, which shows the raw camera
-                    // For landscape camera, we need to account for the 90° rotation
-                    let drawX, drawY;
-                    if (isLandscape) {
-                        // Before rotation, overlay is in landscape space
-                        // After 90° clockwise: (x,y) → (videoHeight - y, x)
-                        const landscapeX = item.relX * videoPreview.videoWidth;
-                        const landscapeY = item.relY * videoPreview.videoHeight;
-                        drawX = videoPreview.videoHeight - landscapeY;
-                        drawY = landscapeX;
-                    } else {
-                        // Portrait - direct mapping to canvas
-                        drawX = item.relX * 1080;
-                        drawY = item.relY * 1920;
-                    }
+                    // Portrait - direct mapping to canvas
+                    const drawX = item.relX * 1080;
+                    const drawY = item.relY * 1920;
                     
                     console.log('Drawing overlay:', item.type, 'at', drawX.toFixed(0), drawY.toFixed(0));
                     
