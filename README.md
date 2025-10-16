@@ -6,6 +6,196 @@ Thoxt Reels is a comprehensive video recording and editing platform designed to 
 
 The motivation behind Thoxt Reels stems from the growing demand for video content in digital media. Written content, while valuable, often reaches limited audiences compared to video. However, creating professional videos requires significant time, technical expertise, and expensive software. Thoxt Reels democratizes this process by providing an all-in-one solution that combines AI-powered script generation, professional recording tools, and Instagram-quality editing capabilities.
 
+## Setup Instructions for Evaluators and Users
+
+### Running on Replit (Easiest Method)
+
+**1. Open the Replit Project**
+   - Fork or open the existing Replit workspace
+   - All dependencies are pre-installed
+
+**2. Add Your OpenAI API Key**
+   - Click on "Secrets" (lock icon in left sidebar)
+   - Add key name: `OPENAI_API_KEY`
+   - Add your OpenAI API key as the value
+   - Get a free key from: https://platform.openai.com/api-keys
+
+**3. Run the Application**
+   - Click the "Run" button at the top
+   - Wait for "Running on http://0.0.0.0:5000" message
+   - Click the webview or open in new tab
+
+**4. Start Creating**
+   - Navigate through the app using the main menu
+   - Try AI Teleprompter, Create New Reel, or My Reels
+
+### Running Locally (VS Code or Any IDE)
+
+**1. Clone/Download the Project**
+```bash
+git clone <repository-url>
+cd thoxt-reels
+```
+
+**2. Install Python Dependencies**
+```bash
+pip install flask flask-cors openai python-dotenv requests
+```
+
+**3. Set Up OpenAI API Key**
+
+Create a `.env` file in the project root:
+```
+OPENAI_API_KEY=sk-your-actual-key-here
+PORT=5000
+```
+
+**Important:** Add `.env` to `.gitignore` to protect your API key:
+```bash
+echo ".env" >> .gitignore
+```
+
+**4. Run the Application**
+```bash
+python app.py
+```
+
+**5. Open Your Browser**
+```
+http://localhost:5000
+```
+
+### Alternative: VS Code Terminal Method
+
+Set environment variable directly in terminal before running:
+
+**Mac/Linux:**
+```bash
+export OPENAI_API_KEY="sk-your-key-here"
+python app.py
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:OPENAI_API_KEY="sk-your-key-here"
+python app.py
+```
+
+**Windows (Command Prompt):**
+```cmd
+set OPENAI_API_KEY=sk-your-key-here
+python app.py
+```
+
+## Requirements
+
+- **Python 3.11+** - Download from python.org
+- **Node.js 18+** (optional, only for npm workflow wrapper)
+- **Modern Browser** - Chrome, Firefox, Safari, or Edge
+- **Camera Access** - Required for video recording features
+- **OpenAI API Key** - For AI script generation feature only
+
+**Note:** The AI Script Generator uses `gpt-4o-mini`, which costs approximately $0.15 per 1M input tokens and $0.60 per 1M output tokens. Testing the feature uses minimal tokens and costs very little.
+
+## Quick Test Checklist for Evaluators
+
+### ✅ AI Script Generation
+1. Navigate to "AI Teleprompter" from main menu
+2. Enter a topic (e.g., "healthy eating tips")
+3. Select duration: 15, 30, or 60 seconds
+4. Choose tone: engaging, professional, casual, or educational
+5. Click "Generate Script"
+6. Verify script generates without errors
+
+### ✅ Video Recording
+1. Click "Create New Reel" from main menu
+2. Grant camera permissions when prompted
+3. Record a short video (5-10 seconds)
+4. Click stop button
+5. Verify recording preview appears
+
+### ✅ Teleprompter Feature
+1. Generate a script using AI Teleprompter
+2. Click "Use This Script" button
+3. Verify teleprompter opens in recorder
+4. Click record and observe word-by-word highlighting
+5. Verify yellow highlight moves through text at ~150 words/minute
+
+### ✅ Instagram-Style Editing Features
+1. In recorder, test the vertical sidebar sections:
+   - **TEXT**: Add custom text overlays with font/color options
+   - **STICKER**: Add emoji stickers and drag to position
+   - **FILTER**: Apply Instagram filters (Valencia, Nashville, etc.)
+   - **MUSIC**: Background audio controls (UI ready)
+   - **MIRROR**: Toggle mirror mode for selfie recording
+
+2. Test camera controls:
+   - Click camera flip button (⟲) to switch front/back camera
+   - Verify portrait orientation (1080x1920)
+
+### ✅ Save and Playback
+1. After recording, enter a title for your reel
+2. Click "Save Reel"
+3. Navigate to "My Reels" from main menu
+4. Verify video appears in gallery
+5. Click play and confirm audio works
+6. Test Edit and Download buttons
+
+### ✅ Mobile Responsiveness
+1. Open application on mobile device or resize browser to mobile width
+2. Verify fullscreen recorder interface
+3. Test touch controls and gestures
+4. Verify portrait video orientation
+
+## Features Overview
+
+### Core Features
+
+**1. AI-Powered Script Generation**
+- Uses OpenAI GPT-4o-mini for professional script writing
+- Customizable duration (15/30/60 seconds)
+- Multiple tone options (engaging, professional, casual, educational)
+- Instant generation with clean, emoji-free output
+
+**2. Professional Recording Studio**
+- Portrait orientation: 1080x1920 pixels (Instagram/TikTok optimized)
+- Front and back camera support with flip button
+- Real-time preview with mirror mode
+- Touch-optimized controls for mobile devices
+
+**3. Smart Teleprompter**
+- Word-by-word highlighting at 150 words/minute
+- Auto-scroll to keep current word centered
+- High-contrast, large font for easy reading
+- Seamless integration with AI-generated scripts
+
+**4. Instagram-Quality Filters**
+- 8 professional filters: Valencia, Nashville, Toaster, Walden, Lo-Fi, Clarendon, Gingham, Black & White
+- Real-time filter preview
+- Baked into recorded video
+
+**5. Advanced Overlay System**
+- Draggable text overlays with custom fonts and colors
+- Emoji stickers with resizable placement
+- Multi-touch support for mobile (drag and pinch-to-zoom)
+- All overlays recorded into final video
+
+**6. Local Storage**
+- Videos stored in browser IndexedDB
+- Thumbnail auto-generation
+- Offline access to saved reels
+- Download to device functionality
+
+## Security and Privacy
+
+**IMPORTANT: Never share your personal OpenAI API key publicly.**
+
+- Each user must use their own OpenAI API key
+- Keys are stored securely in environment variables
+- Videos are stored locally in browser (not on server)
+- No external data transmission except OpenAI API calls
+- Use `.gitignore` to prevent committing sensitive files
+
 ## Integration with Thoxt Website
 
 Thoxt Reels is designed as a standalone web application that integrates seamlessly with the broader Thoxt content ecosystem. The platform serves as a content transformation hub where:
@@ -79,6 +269,31 @@ Recorded videos are stored locally in IndexedDB as binary blobs with associated 
 
 The entire system is optimized for mobile devices with touch controls, gesture navigation, and responsive layouts that adapt from desktop monitors to smartphone screens. Portrait orientation is enforced for Instagram-compatible output, and all features work seamlessly across device types.
 
+## Troubleshooting
+
+**Camera not working:**
+- Ensure browser has camera permissions
+- Try HTTPS connection (required for camera access)
+- Check if another app is using the camera
+
+**AI Script Generator errors:**
+- Verify OpenAI API key is set correctly
+- Check API key has sufficient credits
+- Ensure internet connection is active
+
+**Videos not saving:**
+- Check browser supports IndexedDB
+- Ensure sufficient storage space
+- Try clearing browser cache
+
+**Port 5000 already in use:**
+- Change PORT in .env file to another port (e.g., 8000)
+- Or stop other applications using port 5000
+
 ## Future Development
 
 The platform is designed for extensibility with planned features including cloud storage integration, collaborative editing, advanced AI capabilities for auto-captioning and scene detection, and direct social media API integration for one-click publishing. The modular architecture ensures that new features can be added without disrupting existing functionality.
+
+## License and Credits
+
+Built with Flask, OpenAI GPT-4o-mini, and modern web technologies. Designed for content creators, journalists, and social media enthusiasts.
