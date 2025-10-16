@@ -8,27 +8,6 @@ The motivation behind Thoxt Reels stems from the growing demand for video conten
 
 ## Setup Instructions for Evaluators and Users
 
-### Running on Replit (Easiest Method)
-
-**1. Open the Replit Project**
-   - Fork or open the existing Replit workspace
-   - All dependencies are pre-installed
-
-**2. Add Your OpenAI API Key**
-   - Click on "Secrets" (lock icon in left sidebar)
-   - Add key name: `OPENAI_API_KEY`
-   - Add your OpenAI API key as the value
-   - Get a free key from: https://platform.openai.com/api-keys
-
-**3. Run the Application**
-   - Click the "Run" button at the top
-   - Wait for "Running on http://0.0.0.0:5000" message
-   - Click the webview or open in new tab
-
-**4. Start Creating**
-   - Navigate through the app using the main menu
-   - Try AI Teleprompter, Create New Reel, or My Reels
-
 ### Running Locally (VS Code or Any IDE)
 
 **1. Clone/Download the Project**
