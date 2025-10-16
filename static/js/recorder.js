@@ -1,3 +1,4 @@
+// Global variables
 let mediaStream = null;
 let mediaRecorder = null;
 let recordedChunks = [];
@@ -12,11 +13,13 @@ let overlayItems = [];
 let selectedOverlay = null;
 let dragOffset = { x: 0, y: 0 };
 let touchStartDistance = 0;
-let currentFacingMode = 'user';
+let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
+// Removed rotation logic - camera always gives portrait
 let teleprompterWords = [];
 let currentWordIndex = 0;
 let teleprompterInterval = null;
 
+// DOM elements
 const videoPreview = document.getElementById('video-preview');
 const recordingCanvas = document.getElementById('recording-canvas');
 const canvasContext = recordingCanvas.getContext('2d');
@@ -32,9 +35,11 @@ const reelTitleInput = document.getElementById('reel-title');
 const saveReelBtn = document.getElementById('save-reel-btn');
 const cancelSaveBtn = document.getElementById('cancel-save-btn');
 
+// Helper function to update video preview transform
 function updateVideoTransform() {
     let transform = 'translate(-50%, -50%)';
 
+    // Mirror for front camera only
     if (isMirrored) {
         transform += ' scaleX(-1)';
     }
@@ -42,8 +47,10 @@ function updateVideoTransform() {
     videoPreview.style.transform = transform;
 }
 
+// Initialize camera
 async function initCamera() {
     try {
+        // Use current facing mode
         const constraints = {
             video: {
                 width: { ideal: 1080 },
@@ -56,10 +63,12 @@ async function initCamera() {
         mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoPreview.srcObject = mediaStream;
         
+        // Lock to portrait orientation on mobile
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('portrait').catch(() => {});
         }
         
+        // Wait for video metadata to load and apply transform
         await new Promise(resolve => {
             videoPreview.onloadedmetadata = () => {
                 videoPreview.play();
@@ -72,6 +81,7 @@ async function initCamera() {
         console.log('Camera mode:', currentFacingMode);
         console.log('Video dimensions:', videoPreview.videoWidth, 'x', videoPreview.videoHeight);
         
+        // Apply transform (mirror only if front camera)
         updateVideoTransform();
     } catch (error) {
         console.error('Error accessing camera:', error);
@@ -79,11 +89,14 @@ async function initCamera() {
     }
 }
 
+// Start recording
 async function startRecording() {
+    // Start teleprompter word highlighting immediately if active (independent of camera)
     if (showTeleprompter && teleprompterWords.length > 0) {
         startTeleprompterHighlight();
     }
     
+    // Check if camera is initialized
     if (!mediaStream) {
         alert('Camera not initialized. Please wait a moment and try again.');
         return;
@@ -95,7 +108,9 @@ async function startRecording() {
     try {
         let streamToRecord;
         
+        // Use canvas recording if mirror mode, filters, or overlays
         if (isMirrored || currentFilter !== 'none' || overlayItems.length > 0) {
+            // Setup canvas - ALWAYS 1080x1920 portrait
             recordingCanvas.width = 1080;
             recordingCanvas.height = 1920;
             
@@ -103,14 +118,17 @@ async function startRecording() {
             console.log('Canvas size:', recordingCanvas.width, 'x', recordingCanvas.height);
             console.log('Overlay items:', overlayItems.length);
             
+            // Start drawing video to canvas with transformations
             canvasRecordingInterval = setInterval(() => {
                 canvasContext.save();
                 
+                // Apply mirror transform if needed
                 if (isMirrored) {
                     canvasContext.translate(recordingCanvas.width, 0);
                     canvasContext.scale(-1, 1);
                 }
                 
+                // Apply filter if needed
                 if (currentFilter !== 'none') {
                     switch (currentFilter) {
                         case 'valencia':
@@ -140,13 +158,17 @@ async function startRecording() {
                     }
                 }
                 
+                // Draw video frame FIRST - stretch to fill portrait canvas
                 canvasContext.drawImage(videoPreview, 0, 0, recordingCanvas.width, recordingCanvas.height);
                 
+                // Reset filter for overlays
                 canvasContext.filter = 'none';
                 canvasContext.restore();
                 
+                // Draw overlays (text and stickers) on TOP of video
                 canvasContext.save();
                 
+                // Apply SAME mirror as video
                 if (isMirrored) {
                     canvasContext.translate(recordingCanvas.width, 0);
                     canvasContext.scale(-1, 1);
@@ -155,6 +177,7 @@ async function startRecording() {
                 canvasContext.textAlign = 'center';
                 canvasContext.textBaseline = 'middle';
                 
+                // Calculate size scaling
                 const overlayContainer = document.getElementById('overlay-container');
                 const containerRect = overlayContainer.getBoundingClientRect();
                 const scaleX = 1080 / containerRect.width;
@@ -162,11 +185,13 @@ async function startRecording() {
                 const scaleFactor = Math.min(scaleX, scaleY);
                 
                 overlayItems.forEach(item => {
+                    // Portrait - direct mapping to canvas
                     const drawX = item.relX * 1080;
                     const drawY = item.relY * 1920;
                     
                     console.log('Drawing overlay:', item.type, 'at', drawX.toFixed(0), drawY.toFixed(0));
                     
+                    // Scale font size
                     const scaledSize = item.size * scaleFactor;
                     
                     if (item.type === 'text') {
@@ -179,15 +204,18 @@ async function startRecording() {
                     }
                 });
                 canvasContext.restore();
-            }, 1000 / 30);
+            }, 1000 / 30); // 30 fps
             
+            // Get canvas stream
             const canvasStream = recordingCanvas.captureStream(30);
             
+            // Add audio from original stream
             const audioTracks = mediaStream.getAudioTracks();
             audioTracks.forEach(track => canvasStream.addTrack(track));
             
             streamToRecord = canvasStream;
         } else {
+            // Use direct camera stream if no effects
             streamToRecord = mediaStream;
         }
         
@@ -204,6 +232,7 @@ async function startRecording() {
         mediaRecorder.onstop = () => {
             recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
             
+            // Stop canvas recording if active
             if (canvasRecordingInterval) {
                 clearInterval(canvasRecordingInterval);
                 canvasRecordingInterval = null;
@@ -227,11 +256,13 @@ async function startRecording() {
     }
 }
 
+// Stop recording
 function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         stopTimer();
         
+        // Stop teleprompter word highlighting
         stopTeleprompterHighlight();
         
         recordBtn.style.display = 'flex';
@@ -241,6 +272,7 @@ function stopRecording() {
     }
 }
 
+// Timer functions
 function startTimer() {
     timerInterval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
@@ -257,16 +289,19 @@ function stopTimer() {
     }
 }
 
+// Mirror toggle
 function toggleMirror() {
     isMirrored = !isMirrored;
     updateVideoTransform();
     mirrorBtn.classList.toggle('active', isMirrored);
 }
 
+// Prepare teleprompter with word highlighting
 function prepareTeleprompter(scriptText) {
     const teleprompterText = document.getElementById('teleprompter-text');
     const words = scriptText.split(/\s+/).filter(word => word.length > 0);
     
+    // Create spans for each word
     teleprompterText.innerHTML = words.map((word, index) => 
         `<span class="word" data-word-index="${index}">${word}</span>`
     ).join(' ');
@@ -275,22 +310,28 @@ function prepareTeleprompter(scriptText) {
     currentWordIndex = 0;
 }
 
+// Start word-by-word highlighting
 function startTeleprompterHighlight() {
     if (teleprompterWords.length === 0) return;
     
     currentWordIndex = 0;
     
+    // Average reading speed: ~150 words per minute = 2.5 words per second
+    // Interval: 400ms per word (2.5 words/sec)
     teleprompterInterval = setInterval(() => {
+        // Remove previous highlight
         const prevWord = document.querySelector('.word.highlight');
         if (prevWord) {
             prevWord.classList.remove('highlight');
         }
         
+        // Highlight current word
         if (currentWordIndex < teleprompterWords.length) {
             const currentWord = document.querySelector(`[data-word-index="${currentWordIndex}"]`);
             if (currentWord) {
                 currentWord.classList.add('highlight');
                 
+                // Auto-scroll to keep current word in view
                 currentWord.scrollIntoView({ 
                     behavior: 'smooth', 
                     block: 'center',
@@ -299,28 +340,33 @@ function startTeleprompterHighlight() {
             }
             currentWordIndex++;
         } else {
+            // Loop back to start
             currentWordIndex = 0;
         }
-    }, 400);
+    }, 400); // 400ms per word = ~150 words/minute reading speed
 }
 
+// Stop word highlighting
 function stopTeleprompterHighlight() {
     if (teleprompterInterval) {
         clearInterval(teleprompterInterval);
         teleprompterInterval = null;
     }
     
+    // Remove all highlights
     const highlightedWords = document.querySelectorAll('.word.highlight');
     highlightedWords.forEach(word => word.classList.remove('highlight'));
     currentWordIndex = 0;
 }
 
+// Teleprompter toggle
 function toggleTeleprompter() {
     showTeleprompter = !showTeleprompter;
     teleprompterOverlay.style.display = showTeleprompter ? 'block' : 'none';
     teleprompterBtn.classList.toggle('active', showTeleprompter);
 }
 
+// Instagram-style filters
 function applyFilter(filterName) {
     currentFilter = filterName;
     let filterValue = 'none';
@@ -359,19 +405,24 @@ function applyFilter(filterName) {
     videoPreview.style.filter = filterValue;
 }
 
+// Sidebar section handlers
 function openPanel(sectionName) {
+    // Close all panels first
     document.querySelectorAll('.section-panel').forEach(panel => {
         panel.style.display = 'none';
     });
     
+    // Remove active state from all sections
     document.querySelectorAll('.sidebar-section').forEach(section => {
         section.classList.remove('active');
     });
     
+    // Open selected panel
     const panel = document.getElementById(`panel-${sectionName}`);
     if (panel) {
         panel.style.display = 'block';
         
+        // Mark section as active
         const section = document.querySelector(`[data-section="${sectionName}"]`);
         if (section) section.classList.add('active');
     }
@@ -383,10 +434,12 @@ function closePanel(sectionName) {
         panel.style.display = 'none';
     }
     
+    // Remove active state
     const section = document.querySelector(`[data-section="${sectionName}"]`);
     if (section) section.classList.remove('active');
 }
 
+// Sidebar section click handlers
 document.querySelectorAll('.sidebar-section').forEach(section => {
     section.addEventListener('click', () => {
         const sectionName = section.dataset.section;
@@ -394,28 +447,34 @@ document.querySelectorAll('.sidebar-section').forEach(section => {
     });
 });
 
+// Panel close button handlers
 document.querySelectorAll('.panel-close').forEach(btn => {
     btn.addEventListener('click', () => {
         const panel = btn.closest('.section-panel');
         if (panel) {
             panel.style.display = 'none';
             
+            // Remove active from sections
             document.querySelectorAll('.sidebar-section').forEach(s => s.classList.remove('active'));
         }
     });
 });
 
+// Filter item click handlers (for panel)
 document.querySelectorAll('.filter-item').forEach(item => {
     item.addEventListener('click', () => {
         const filterName = item.dataset.filter;
         
+        // Update active state
         document.querySelectorAll('.filter-item').forEach(i => i.classList.remove('active'));
         item.classList.add('active');
         
+        // Apply filter
         applyFilter(filterName);
     });
 });
 
+// Text overlay functionality
 const addTextBtn = document.getElementById('add-text-btn');
 const textInput = document.getElementById('text-input');
 const textFont = document.getElementById('text-font');
@@ -424,6 +483,7 @@ const textSizeDisplay = document.getElementById('text-size-display');
 const textColor = document.getElementById('text-color');
 const overlayContainer = document.getElementById('overlay-container');
 
+// Update size display
 if (textSize && textSizeDisplay) {
     textSize.addEventListener('input', () => {
         textSizeDisplay.textContent = textSize.value + 'px';
@@ -462,13 +522,16 @@ function addTextOverlay(text, font, size, color) {
     
     overlayContainer.appendChild(overlay);
     
+    // Calculate actual position after adding to DOM
     setTimeout(() => {
         const rect = overlay.getBoundingClientRect();
         const containerRect = overlayContainer.getBoundingClientRect();
         
+        // Position in container (pixels) - center of text  
         const xInContainer = rect.left - containerRect.left + rect.width / 2;
         const yInContainer = rect.top - containerRect.top + rect.height / 2;
         
+        // Store as relative position (0-1 range)
         const relX = xInContainer / containerRect.width;
         const relY = yInContainer / containerRect.height;
         
@@ -490,6 +553,7 @@ function addTextOverlay(text, font, size, color) {
     }, 0);
 }
 
+// Sticker functionality
 document.querySelectorAll('.sticker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const sticker = btn.dataset.sticker;
@@ -509,13 +573,16 @@ function addStickerOverlay(sticker, size) {
     
     overlayContainer.appendChild(overlay);
     
+    // Calculate actual position after adding to DOM
     setTimeout(() => {
         const rect = overlay.getBoundingClientRect();
         const containerRect = overlayContainer.getBoundingClientRect();
         
+        // Position in container (pixels) - center of sticker
         const xInContainer = rect.left - containerRect.left + rect.width / 2;
         const yInContainer = rect.top - containerRect.top + rect.height / 2;
         
+        // Store as relative position (0-1 range)
         const relX = xInContainer / containerRect.width;
         const relY = yInContainer / containerRect.height;
         
@@ -535,9 +602,11 @@ function addStickerOverlay(sticker, size) {
     }, 0);
 }
 
+// Make overlay draggable
 function makeDraggable(element, data) {
     let isDragging = false;
     
+    // Mouse events
     element.addEventListener('mousedown', (e) => {
         isDragging = true;
         selectedOverlay = element;
@@ -559,6 +628,7 @@ function makeDraggable(element, data) {
             element.style.top = y + 'px';
             element.style.transform = 'none';
             
+            // Store as relative position
             const elementRect = element.getBoundingClientRect();
             const xInContainer = elementRect.left - containerRect.left + elementRect.width / 2;
             const yInContainer = elementRect.top - containerRect.top + elementRect.height / 2;
@@ -571,25 +641,53 @@ function makeDraggable(element, data) {
     document.addEventListener('mouseup', () => {
         if (isDragging) {
             isDragging = false;
-            element.classList.remove('selected');
+            if (selectedOverlay) {
+                selectedOverlay.classList.remove('selected');
+                selectedOverlay = null;
+            }
         }
     });
     
+    // Touch events
     element.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
-            selectedOverlay = element;
-            element.classList.add('selected');
-            const touch = e.touches[0];
-            const rect = element.getBoundingClientRect();
-            dragOffset.x = touch.clientX - rect.left;
-            dragOffset.y = touch.clientY - rect.top;
-            e.preventDefault();
+        const touch = e.touches[0];
+        isDragging = true;
+        selectedOverlay = element;
+        element.classList.add('selected');
+        
+        const rect = element.getBoundingClientRect();
+        dragOffset.x = touch.clientX - rect.left;
+        dragOffset.y = touch.clientY - rect.top;
+        
+        // Pinch to zoom
+        if (e.touches.length === 2) {
+            const distance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            touchStartDistance = distance;
         }
+        
+        e.preventDefault();
     });
     
     element.addEventListener('touchmove', (e) => {
-        if (selectedOverlay === element) {
-            if (e.touches.length === 1) {
+        if (isDragging && selectedOverlay === element) {
+            // Pinch to zoom
+            if (e.touches.length === 2) {
+                const distance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                const scale = distance / touchStartDistance;
+                const newSize = Math.max(20, Math.min(200, data.size * scale));
+                
+                element.style.fontSize = newSize + 'px';
+                data.size = newSize;
+                touchStartDistance = distance;
+            } else {
+                // Drag
                 const touch = e.touches[0];
                 const containerRect = overlayContainer.getBoundingClientRect();
                 let x = touch.clientX - containerRect.left - dragOffset.x;
@@ -599,6 +697,7 @@ function makeDraggable(element, data) {
                 element.style.top = y + 'px';
                 element.style.transform = 'none';
                 
+                // Store as relative position
                 const elementRect = element.getBoundingClientRect();
                 const xInContainer = elementRect.left - containerRect.left + elementRect.width / 2;
                 const yInContainer = elementRect.top - containerRect.top + elementRect.height / 2;
@@ -606,19 +705,39 @@ function makeDraggable(element, data) {
                 data.relX = xInContainer / containerRect.width;
                 data.relY = yInContainer / containerRect.height;
             }
-            e.preventDefault();
         }
+        e.preventDefault();
     });
     
     element.addEventListener('touchend', () => {
-        element.classList.remove('selected');
-        selectedOverlay = null;
+        if (isDragging) {
+            isDragging = false;
+            if (selectedOverlay) {
+                selectedOverlay.classList.remove('selected');
+                selectedOverlay = null;
+            }
+        }
+        touchStartDistance = 0;
     });
 }
 
+// Mirror toggle in panel
+const toggleMirrorBtn = document.getElementById('toggle-mirror-btn');
+const mirrorStatus = document.getElementById('mirror-status');
+if (toggleMirrorBtn) {
+    toggleMirrorBtn.addEventListener('click', () => {
+        isMirrored = !isMirrored;
+        updateVideoTransform();
+        if (mirrorStatus) {
+            mirrorStatus.textContent = isMirrored ? 'Mirror: ON' : 'Mirror: OFF';
+        }
+    });
+}
+
+// Save modal
 function showSaveModal() {
     saveModal.style.display = 'flex';
-    reelTitleInput.value = '';
+    reelTitleInput.value = 'My Reel ' + new Date().toLocaleString();
     reelTitleInput.focus();
 }
 
@@ -626,75 +745,61 @@ function hideSaveModal() {
     saveModal.style.display = 'none';
 }
 
+// Save reel to IndexedDB
 async function saveReel() {
-    const title = reelTitleInput.value.trim();
-    
-    if (!title) {
-        alert('Please enter a title for your reel');
-        return;
-    }
-    
-    if (!recordedBlob) {
-        alert('No recording to save');
-        return;
-    }
-    
+    const title = reelTitleInput.value.trim() || 'Untitled Reel';
     const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = 1080;
-    canvas.height = 1920;
-    const ctx = canvas.getContext('2d');
-    
-    const video = document.createElement('video');
-    video.src = URL.createObjectURL(recordedBlob);
-    
-    await new Promise(resolve => {
-        video.onloadedmetadata = () => {
-            video.currentTime = 1;
-            resolve();
-        };
-    });
-    
-    await new Promise(resolve => {
-        video.onseeked = () => {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            resolve();
-        };
-    });
-    
-    const thumbnailDataURL = canvas.toDataURL('image/jpeg', 0.8);
-    
-    const reelId = 'reel_' + Date.now();
+    const reelId = 'reel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     
     try {
+        // Open IndexedDB
         const db = await openDB();
         const transaction = db.transaction(['reels'], 'readwrite');
         const store = transaction.objectStore('reels');
         
+        // Generate thumbnail
+        const thumbnail = await generateThumbnail();
+        
+        // Save reel
         const reel = {
             id: reelId,
             title: title,
             duration: duration,
-            thumbnail: thumbnailDataURL,
             videoBlob: recordedBlob,
+            thumbnail: thumbnail,
             views: 0,
             likes: 0,
             createdAt: new Date().toISOString()
         };
         
-        await store.put(reel);
+        await store.add(reel);
         
-        console.log('Reel saved successfully');
+        console.log('Reel saved successfully:', reelId);
+        
         hideSaveModal();
         
+        // Redirect to saved reels page
         window.location.href = '/saved-reels';
+        
     } catch (error) {
         console.error('Error saving reel:', error);
-        alert('Error saving reel. Please try again.');
+        alert('Error saving reel');
     }
 }
 
+// Generate thumbnail from video
+function generateThumbnail() {
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 240;
+        canvas.height = 427;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+    });
+}
+
+// IndexedDB operations
 function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('ThoxtReelsDB', 1);
@@ -711,38 +816,45 @@ function openDB() {
     });
 }
 
-function toggleCamera() {
-    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    
+// Flip camera function
+async function flipCamera() {
+    // Stop current stream
     if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
     }
     
-    initCamera();
+    // Toggle facing mode
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    
+    // Reinitialize camera
+    await initCamera();
 }
 
+// Event listeners
+recordBtn.addEventListener('click', startRecording);
+stopBtn.addEventListener('click', stopRecording);
+teleprompterBtn.addEventListener('click', toggleTeleprompter);
+saveReelBtn.addEventListener('click', saveReel);
+cancelSaveBtn.addEventListener('click', () => {
+    hideSaveModal();
+    recordedBlob = null;
+    recordedChunks = [];
+});
+document.getElementById('camera-flip-btn').addEventListener('click', flipCamera);
+
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     initCamera();
     
-    recordBtn.addEventListener('click', startRecording);
-    stopBtn.addEventListener('click', stopRecording);
-    mirrorBtn.addEventListener('click', toggleMirror);
-    teleprompterBtn.addEventListener('click', toggleTeleprompter);
-    saveReelBtn.addEventListener('click', saveReel);
-    cancelSaveBtn.addEventListener('click', hideSaveModal);
-    
-    document.getElementById('camera-flip-btn').addEventListener('click', toggleCamera);
-    
+    // Check if teleprompter mode is enabled
     const urlParams = new URLSearchParams(window.location.search);
-    const teleprompterEnabled = urlParams.get('teleprompter') === 'true';
-    
-    if (teleprompterEnabled) {
-        const script = sessionStorage.getItem('teleprompterScript');
-        if (script) {
-            prepareTeleprompter(script);
-            showTeleprompter = true;
-            teleprompterOverlay.style.display = 'block';
-            teleprompterBtn.classList.add('active');
+    if (urlParams.get('teleprompter') === 'true') {
+        // Load script from sessionStorage if available
+        const savedScript = sessionStorage.getItem('teleprompterScript');
+        if (savedScript) {
+            // Prepare teleprompter with word-by-word highlighting
+            prepareTeleprompter(savedScript);
         }
+        setTimeout(() => toggleTeleprompter(), 500);
     }
 });

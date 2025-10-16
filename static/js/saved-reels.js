@@ -1,7 +1,10 @@
+// Global variables
 let reels = [];
 
+// DOM elements
 const reelsGrid = document.getElementById('reels-grid');
 
+// Load reels from IndexedDB
 async function loadReels() {
     try {
         const db = await openDB();
@@ -24,6 +27,7 @@ async function loadReels() {
     }
 }
 
+// Display reels in grid
 function displayReels() {
     if (reels.length === 0) {
         reelsGrid.innerHTML = '<p class="loading-message">No reels yet. Create your first reel!</p>';
@@ -38,11 +42,13 @@ function displayReels() {
     });
 }
 
+// Create reel card element
 function createReelCard(reel) {
     const card = document.createElement('div');
     card.className = 'reel-card';
     card.dataset.testid = `card-reel-${reel.id}`;
     
+    // Create video URL from blob - check if blob exists and is valid
     let videoURL = '';
     if (reel.videoBlob && reel.videoBlob instanceof Blob) {
         videoURL = URL.createObjectURL(reel.videoBlob);
@@ -68,28 +74,31 @@ function createReelCard(reel) {
             </div>
             <div class="reel-actions">
                 <button class="action-btn edit" onclick="editReel('${reel.id}')" data-testid="button-edit-${reel.id}">
-                    Edit
+                    ✎ Edit
                 </button>
                 <button class="action-btn download" onclick="downloadReel('${reel.id}')" data-testid="button-download-${reel.id}">
-                    Download
+                    ↓ Download
                 </button>
                 <button class="action-btn delete" onclick="deleteReel('${reel.id}')" data-testid="button-delete-${reel.id}">
-                    Delete
+                    × Delete
                 </button>
             </div>
         </div>
     `;
     
+    // Update views when video plays
     const video = card.querySelector('video');
     video.addEventListener('play', () => updateViews(reel.id));
     
     return card;
 }
 
+// Edit reel
 function editReel(reelId) {
     window.location.href = `/editor?id=${reelId}`;
 }
 
+// Update views
 async function updateViews(reelId) {
     try {
         const db = await openDB();
@@ -109,6 +118,7 @@ async function updateViews(reelId) {
     }
 }
 
+// Download reel
 async function downloadReel(reelId) {
     try {
         const db = await openDB();
@@ -135,6 +145,7 @@ async function downloadReel(reelId) {
     }
 }
 
+// Delete reel
 async function deleteReel(reelId) {
     if (!confirm('Are you sure you want to delete this reel?')) {
         return;
@@ -148,6 +159,7 @@ async function deleteReel(reelId) {
         
         console.log('Reel deleted:', reelId);
         
+        // Reload reels
         await loadReels();
     } catch (error) {
         console.error('Error deleting reel:', error);
@@ -155,6 +167,7 @@ async function deleteReel(reelId) {
     }
 }
 
+// IndexedDB operations
 function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('ThoxtReelsDB', 1);
@@ -171,6 +184,7 @@ function openDB() {
     });
 }
 
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     loadReels();
 });

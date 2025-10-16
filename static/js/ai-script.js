@@ -1,3 +1,5 @@
+// AI Script Generator
+
 const topicInput = document.getElementById('topic-input');
 const durationSelect = document.getElementById('duration-select');
 const toneSelect = document.getElementById('tone-select');
@@ -10,6 +12,7 @@ const loadingIndicator = document.getElementById('loading-indicator');
 
 let currentScript = '';
 
+// Generate script
 generateBtn.addEventListener('click', async () => {
     const topic = topicInput.value.trim();
     
@@ -18,6 +21,7 @@ generateBtn.addEventListener('click', async () => {
         return;
     }
     
+    // Show loading
     loadingIndicator.style.display = 'block';
     scriptResult.style.display = 'none';
     generateBtn.disabled = true;
@@ -25,6 +29,7 @@ generateBtn.addEventListener('click', async () => {
     const duration = parseInt(durationSelect.value);
     const tone = toneSelect.value;
     
+    // Create prompt based on parameters
     const prompt = `Generate a ${duration}-second video script about: ${topic}
 
 Requirements:
@@ -39,6 +44,7 @@ Script:`;
     try {
         console.log('Generating script using cloud AI...');
         
+        // Call backend API which uses Replit AI Integrations
         const response = await fetch('/api/generate-script', {
             method: 'POST',
             headers: {
@@ -74,13 +80,17 @@ Script:`;
     }
 });
 
+// Use script with teleprompter
 useScriptBtn.addEventListener('click', () => {
     if (currentScript) {
+        // Store script in sessionStorage
         sessionStorage.setItem('teleprompterScript', currentScript);
+        // Navigate to recorder with teleprompter enabled
         window.location.href = '/recorder?teleprompter=true';
     }
 });
 
+// Regenerate script
 regenerateBtn.addEventListener('click', () => {
     generateBtn.click();
 });

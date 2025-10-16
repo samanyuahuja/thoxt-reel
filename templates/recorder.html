@@ -5,8 +5,9 @@
 {% block content %}
 <div class="recorder-container">
     <!-- Exit Button -->
-    <button class="exit-btn" onclick="window.location.href='/'" data-testid="button-exit">X</button>
+    <button class="exit-btn" onclick="window.location.href='/'" data-testid="button-exit">✕</button>
     
+    <!-- Camera Flip Button -->
     <button class="camera-flip-btn" id="camera-flip-btn" data-testid="button-camera-flip">⟲</button>
     
     <!-- Video Preview -->
@@ -37,16 +38,19 @@
             <div class="section-label">STICKER</div>
         </div>
         
+        <!-- FILTER Section -->
         <div class="sidebar-section" data-section="filter" data-testid="section-filter">
             <div class="section-icon">◐</div>
             <div class="section-label">FILTER</div>
         </div>
         
+        <!-- MUSIC Section -->
         <div class="sidebar-section" data-section="music" data-testid="section-music">
             <div class="section-icon">♪</div>
             <div class="section-label">MUSIC</div>
         </div>
         
+        <!-- MIRROR Section -->
         <div class="sidebar-section" data-section="mirror" data-testid="section-mirror">
             <div class="section-icon">⇄</div>
             <div class="section-label">MIRROR</div>
@@ -92,14 +96,14 @@
                 <span id="sticker-size-display">60px</span>
             </div>
             <div class="sticker-grid">
-                <button class="sticker-btn" data-sticker="SMILE" data-testid="sticker-smile">SMILE</button>
-                <button class="sticker-btn" data-sticker="HEART" data-testid="sticker-heart">HEART</button>
-                <button class="sticker-btn" data-sticker="STAR" data-testid="sticker-star">STAR</button>
-                <button class="sticker-btn" data-sticker="FIRE" data-testid="sticker-fire">FIRE</button>
-                <button class="sticker-btn" data-sticker="THUMBS" data-testid="sticker-thumbs">THUMBS</button>
-                <button class="sticker-btn" data-sticker="SPARKLE" data-testid="sticker-sparkle">SPARKLE</button>
-                <button class="sticker-btn" data-sticker="100" data-testid="sticker-hundred">100</button>
-                <button class="sticker-btn" data-sticker="PARTY" data-testid="sticker-party">PARTY</button>
+                <button class="sticker-btn" data-sticker="😀" data-testid="sticker-smile">😀</button>
+                <button class="sticker-btn" data-sticker="❤️" data-testid="sticker-heart">❤️</button>
+                <button class="sticker-btn" data-sticker="⭐" data-testid="sticker-star">⭐</button>
+                <button class="sticker-btn" data-sticker="🔥" data-testid="sticker-fire">🔥</button>
+                <button class="sticker-btn" data-sticker="👍" data-testid="sticker-thumbs">👍</button>
+                <button class="sticker-btn" data-sticker="✨" data-testid="sticker-sparkle">✨</button>
+                <button class="sticker-btn" data-sticker="💯" data-testid="sticker-hundred">💯</button>
+                <button class="sticker-btn" data-sticker="🎉" data-testid="sticker-party">🎉</button>
             </div>
         </div>
     </div>

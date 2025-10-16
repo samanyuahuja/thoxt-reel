@@ -16,7 +16,7 @@ body {
     min-height: 100vh;
 }
 
-
+/* Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -27,7 +27,7 @@ body {
     justify-content: center;
 }
 
-
+/* Options Menu */
 .options-menu {
     text-align: center;
     width: 100%;
@@ -100,7 +100,7 @@ body {
     font-size: 0.9rem;
 }
 
-
+/* Recorder */
 .recorder-container {
     position: fixed;
     top: 0;
@@ -166,10 +166,10 @@ body {
     overflow: hidden;
 }
 
-
+/* Portrait aspect ratio container on desktop */
 @media (min-width: 768px) {
     .video-wrapper {
-        max-width: 56.25vh; 
+        max-width: 56.25vh; /* 9:16 aspect ratio */
     }
 }
 
@@ -191,7 +191,7 @@ body {
     height: 100%;
 }
 
-
+/* Teleprompter */
 .teleprompter-overlay {
     position: absolute;
     bottom: 150px;
@@ -233,7 +233,7 @@ body {
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
 }
 
-
+/* Controls */
 .controls {
     position: absolute;
     bottom: 0;
@@ -316,7 +316,7 @@ body {
     font-weight: bold;
 }
 
-
+/* Modal */
 .modal {
     position: fixed;
     top: 0;
@@ -387,7 +387,7 @@ body {
     background: #666;
 }
 
-
+/* Saved Reels */
 .saved-reels-container {
     min-height: 100vh;
     padding: 20px;
@@ -504,7 +504,7 @@ body {
     font-size: 1.2rem;
 }
 
-
+/* Mobile Responsive */
 @media (max-width: 768px) {
     .logo {
         font-size: 2rem;
@@ -534,7 +534,7 @@ body {
     }
 }
 
-
+/* Editor Page */
 .editor-container {
     width: 100vw;
     height: 100vh;
@@ -681,7 +681,7 @@ body {
     font-size: 3rem;
 }
 
-
+/* Text animations */
 .anim-fade {
     animation: fadeIn 0.5s ease-in;
 }
@@ -838,7 +838,7 @@ body {
     margin: 0 auto 8px;
 }
 
-
+/* Instagram filter previews */
 .valencia { filter: contrast(1.08) brightness(1.08) sepia(0.08); }
 .nashville { filter: sepia(0.2) contrast(1.2) brightness(1.05) saturate(1.2); }
 .toaster { filter: contrast(1.5) brightness(0.9) sepia(0.1); }
@@ -868,7 +868,7 @@ body {
     background: #333;
 }
 
-
+/* Text Panel */
 #text-input {
     width: 100%;
     padding: 12px;
@@ -945,7 +945,7 @@ body {
     background: #ffed4e;
 }
 
-
+/* Music Panel */
 .music-library {
     display: flex;
     flex-direction: column;
@@ -990,7 +990,7 @@ body {
     justify-content: center;
 }
 
-
+/* Stickers Panel */
 .sticker-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
@@ -1012,7 +1012,7 @@ body {
     border-color: #ffd700;
 }
 
-
+/* Draw Panel */
 .draw-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1043,7 +1043,7 @@ body {
     background: #b91c1c;
 }
 
-
+/* AI Panel */
 .generate-btn {
     width: 100%;
     padding: 12px;
@@ -1098,7 +1098,7 @@ body {
     background: #ffed4e;
 }
 
-
+/* Mobile responsive */
 @media (max-width: 768px) {
     .editor-header h2 {
         font-size: 1rem;
@@ -1157,7 +1157,7 @@ button:disabled {
     color: #ff6b6b;
 }
 
-
+/* Upload Page */
 .upload-container {
     width: 100vw;
     min-height: 100vh;
@@ -1311,7 +1311,7 @@ button:disabled {
     }
 }
 
-
+/* Filters Sidebar (Instagram-style) */
 .filters-sidebar {
     position: absolute;
     bottom: 100px;
@@ -1368,7 +1368,7 @@ button:disabled {
     background: inherit;
 }
 
-
+/* Instagram filter styles for thumbnails */
 .filter-thumbnail.valencia {
     filter: contrast(1.08) brightness(1.08) sepia(0.08);
 }
@@ -1419,7 +1419,7 @@ button:disabled {
     }
 }
 
-
+/* Instagram-Style Sidebar */
 .recorder-sidebar {
     position: absolute;
     right: 0;
@@ -1466,7 +1466,7 @@ button:disabled {
     text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-
+/* Section Panels */
 .section-panel {
     position: absolute;
     bottom: 0;
@@ -1525,7 +1525,7 @@ button:disabled {
     padding: 20px;
 }
 
-
+/* Text Panel */
 #text-input {
     width: 100%;
     padding: 12px;
@@ -1562,7 +1562,7 @@ button:disabled {
     cursor: pointer;
 }
 
-
+/* Sticker Panel */
 .sticker-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1584,7 +1584,7 @@ button:disabled {
     transform: scale(1.1);
 }
 
-
+/* Filter Panel - Keep existing filter styles */
 .panel-content .filters-list {
     display: flex;
     gap: 15px;
@@ -1618,7 +1618,7 @@ button:disabled {
     }
 }
 
-
+/* Overlay Container for Text and Stickers */
 .overlay-container {
     position: absolute;
     top: 0;
@@ -1652,7 +1652,7 @@ button:disabled {
     font-size: 60px;
 }
 
-
+/* Text and Sticker Controls */
 .text-controls, .sticker-size-control {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -1682,7 +1682,7 @@ button:disabled {
     filter: grayscale(100%);
 }
 
-
+/* Edit button styling */
 .action-btn.edit {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
@@ -1693,7 +1693,7 @@ button:disabled {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-
+/* AI Script Generator */
 .ai-script-container {
     max-width: 800px;
     margin: 0 auto;
@@ -1850,7 +1850,7 @@ button:disabled {
     100% { transform: rotate(360deg); }
 }
 
-
+/* Mobile responsive */
 @media (max-width: 768px) {
     .ai-script-container {
         padding: 15px;
