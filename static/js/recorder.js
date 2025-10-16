@@ -15,6 +15,9 @@ let dragOffset = { x: 0, y: 0 };
 let touchStartDistance = 0;
 let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
 // Removed rotation logic - camera always gives portrait
+let teleprompterWords = [];
+let currentWordIndex = 0;
+let teleprompterInterval = null;
 
 // DOM elements
 const videoPreview = document.getElementById('video-preview');
@@ -88,6 +91,11 @@ async function initCamera() {
 
 // Start recording
 async function startRecording() {
+    // Start teleprompter word highlighting immediately if active (independent of camera)
+    if (showTeleprompter && teleprompterWords.length > 0) {
+        startTeleprompterHighlight();
+    }
+    
     // Check if camera is initialized
     if (!mediaStream) {
         alert('Camera not initialized. Please wait a moment and try again.');
@@ -254,6 +262,9 @@ function stopRecording() {
         mediaRecorder.stop();
         stopTimer();
         
+        // Stop teleprompter word highlighting
+        stopTeleprompterHighlight();
+        
         recordBtn.style.display = 'flex';
         stopBtn.style.display = 'none';
         
@@ -283,6 +294,69 @@ function toggleMirror() {
     isMirrored = !isMirrored;
     updateVideoTransform();
     mirrorBtn.classList.toggle('active', isMirrored);
+}
+
+// Prepare teleprompter with word highlighting
+function prepareTeleprompter(scriptText) {
+    const teleprompterText = document.getElementById('teleprompter-text');
+    const words = scriptText.split(/\s+/).filter(word => word.length > 0);
+    
+    // Create spans for each word
+    teleprompterText.innerHTML = words.map((word, index) => 
+        `<span class="word" data-word-index="${index}">${word}</span>`
+    ).join(' ');
+    
+    teleprompterWords = words;
+    currentWordIndex = 0;
+}
+
+// Start word-by-word highlighting
+function startTeleprompterHighlight() {
+    if (teleprompterWords.length === 0) return;
+    
+    currentWordIndex = 0;
+    
+    // Average reading speed: ~150 words per minute = 2.5 words per second
+    // Interval: 400ms per word (2.5 words/sec)
+    teleprompterInterval = setInterval(() => {
+        // Remove previous highlight
+        const prevWord = document.querySelector('.word.highlight');
+        if (prevWord) {
+            prevWord.classList.remove('highlight');
+        }
+        
+        // Highlight current word
+        if (currentWordIndex < teleprompterWords.length) {
+            const currentWord = document.querySelector(`[data-word-index="${currentWordIndex}"]`);
+            if (currentWord) {
+                currentWord.classList.add('highlight');
+                
+                // Auto-scroll to keep current word in view
+                currentWord.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest'
+                });
+            }
+            currentWordIndex++;
+        } else {
+            // Loop back to start
+            currentWordIndex = 0;
+        }
+    }, 400); // 400ms per word = ~150 words/minute reading speed
+}
+
+// Stop word highlighting
+function stopTeleprompterHighlight() {
+    if (teleprompterInterval) {
+        clearInterval(teleprompterInterval);
+        teleprompterInterval = null;
+    }
+    
+    // Remove all highlights
+    const highlightedWords = document.querySelectorAll('.word.highlight');
+    highlightedWords.forEach(word => word.classList.remove('highlight'));
+    currentWordIndex = 0;
 }
 
 // Teleprompter toggle
@@ -778,8 +852,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load script from sessionStorage if available
         const savedScript = sessionStorage.getItem('teleprompterScript');
         if (savedScript) {
-            const teleprompterText = document.getElementById('teleprompter-text');
-            teleprompterText.textContent = savedScript;
+            // Prepare teleprompter with word-by-word highlighting
+            prepareTeleprompter(savedScript);
         }
         setTimeout(() => toggleTeleprompter(), 500);
     }
