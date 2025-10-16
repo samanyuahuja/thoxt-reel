@@ -23,12 +23,10 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch articles
   const { data: articles, isLoading: articlesLoading } = useQuery<Article[]>({
     queryKey: ["/api/articles"],
   });
 
-  // Script generation mutation
   const generateScriptMutation = useMutation({
     mutationFn: async (params: { 
       articleId?: string; 
@@ -49,7 +47,6 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
     },
     onError: (error) => {
       console.error("Script generation error:", error);
-      // Provide a fallback script when API fails
       const fallbackScript = generateFallbackScript(customTopic || selectedArticleId, selectedTone, selectedDuration);
       setGeneratedScript(fallbackScript);
       onScriptGenerated(fallbackScript);
@@ -62,7 +59,6 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
     },
   });
 
-  // Generate fallback script when API is unavailable
   const generateFallbackScript = (source: string, tone: string, duration: number): string => {
     const toneStyles = {
       engaging: "Hey everyone! 🔥",
@@ -138,7 +134,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
               onValueChange={(value) => {
                 setSelectedArticleId(value);
                 if (value) {
-                  setCustomTopic(""); // Clear custom topic when article is selected
+                  setCustomTopic(""); 
                 }
               }}
               disabled={articlesLoading || !!customTopic}
@@ -164,7 +160,7 @@ export default function AIToolsSidebar({ onScriptGenerated }: AIToolsSidebarProp
               onChange={(e) => {
                 setCustomTopic(e.target.value);
                 if (e.target.value) {
-                  setSelectedArticleId(""); // Clear article selection when custom topic is entered
+                  setSelectedArticleId(""); 
                 }
               }}
               className="w-full bg-input text-foreground p-2 rounded border border-border focus:outline-none focus:ring-2 focus:ring-ring"
