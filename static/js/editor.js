@@ -1,4 +1,3 @@
-// Global variables
 let video = null;
 let currentFilter = 'none';
 let textOverlays = [];
@@ -9,7 +8,6 @@ let drawingPaths = [];
 let currentAnimation = 'none';
 let comparisonMode = false;
 
-// DOM elements
 const previewVideoOriginal = document.getElementById('preview-video-original');
 const previewVideo = document.getElementById('preview-video');
 const editorCanvas = document.getElementById('editor-canvas');
@@ -27,7 +25,6 @@ const drawColor = document.getElementById('draw-color');
 const brushSize = document.getElementById('brush-size');
 const musicVolume = document.getElementById('music-volume');
 
-// Load video from IndexedDB
 async function loadVideoFromStorage() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -48,24 +45,21 @@ async function loadVideoFromStorage() {
             const reel = request.result;
             if (reel && reel.videoBlob) {
                 const videoURL = URL.createObjectURL(reel.videoBlob);
-                // Set both videos to the same source
                 previewVideoOriginal.src = videoURL;
                 previewVideo.src = videoURL;
                 previewVideoOriginal.load();
                 previewVideo.load();
                 setupCanvas();
                 
-                // Sync playback between both videos
                 previewVideo.addEventListener('play', () => previewVideoOriginal.play());
                 previewVideo.addEventListener('pause', () => previewVideoOriginal.pause());
                 previewVideo.addEventListener('seeked', () => {
                     previewVideoOriginal.currentTime = previewVideo.currentTime;
                 });
                 
-                // Drift correction for long playback
                 previewVideo.addEventListener('timeupdate', () => {
                     const drift = Math.abs(previewVideo.currentTime - previewVideoOriginal.currentTime);
-                    if (drift > 0.1) { // More than 100ms drift
+                    if (drift > 0.1) {
                         previewVideoOriginal.currentTime = previewVideo.currentTime;
                     }
                 });
@@ -85,7 +79,6 @@ async function loadVideoFromStorage() {
     }
 }
 
-// Setup canvas
 function setupCanvas() {
     const width = previewVideo.videoWidth || 1080;
     const height = previewVideo.videoHeight || 1920;
@@ -95,28 +88,23 @@ function setupCanvas() {
     drawingCanvas.height = height;
 }
 
-// Tab switching
 document.querySelectorAll('.editor-tab').forEach(tab => {
     tab.addEventListener('click', () => {
         const targetPanel = tab.dataset.tab;
         
-        // Update active tab
         document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         
-        // Update active panel
         document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
         document.getElementById(`panel-${targetPanel}`).classList.add('active');
     });
 });
 
-// Filter application
 document.querySelectorAll('.filter-option').forEach(btn => {
     btn.addEventListener('click', () => {
         currentFilter = btn.dataset.filter;
         applyFilter(currentFilter);
         
-        // Update active state
         document.querySelectorAll('.filter-option').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     });
@@ -153,7 +141,6 @@ function applyFilter(filter) {
     editorCanvas.style.filter = filterCSS;
 }
 
-// Comparison toggle
 function toggleComparison() {
     comparisonMode = !comparisonMode;
     filterComparison.style.display = comparisonMode ? 'block' : 'none';
@@ -162,7 +149,6 @@ function toggleComparison() {
         updateComparison(50);
         comparisonSlider.value = 50;
     } else {
-        // Reset clipPath when comparison mode is disabled
         previewVideo.style.clipPath = '';
     }
 }
@@ -176,7 +162,6 @@ function updateComparison(value) {
     previewVideo.style.clipPath = `inset(0 ${100 - value}% 0 0)`;
 }
 
-// Text overlay
 function addTextOverlay() {
     const text = textInput.value.trim();
     if (!text) return;
@@ -209,12 +194,10 @@ function renderTextOverlay(overlay) {
     div.style.top = overlay.y + '%';
     div.textContent = overlay.text;
     
-    // Add animation class
     if (overlay.animation !== 'none') {
         div.classList.add(`anim-${overlay.animation}`);
     }
     
-    // Make draggable
     div.draggable = true;
     div.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', overlay.id);
@@ -233,7 +216,6 @@ function renderTextOverlay(overlay) {
     document.getElementById('text-overlays').appendChild(div);
 }
 
-// Animation selection
 document.querySelectorAll('.animation-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentAnimation = btn.dataset.animation;
@@ -242,7 +224,6 @@ document.querySelectorAll('.animation-btn').forEach(btn => {
     });
 });
 
-// Music selection
 document.querySelectorAll('.music-track').forEach(track => {
     track.addEventListener('click', () => {
         selectedMusic = track.dataset.track;
@@ -251,7 +232,6 @@ document.querySelectorAll('.music-track').forEach(track => {
     });
 });
 
-// Stickers
 document.querySelectorAll('.sticker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         addSticker(btn.dataset.sticker);
@@ -281,7 +261,6 @@ function renderSticker(sticker) {
     div.style.top = sticker.y + '%';
     div.style.transform = `scale(${sticker.scale})`;
     
-    // Make draggable
     div.draggable = true;
     div.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', sticker.id);
@@ -300,7 +279,6 @@ function renderSticker(sticker) {
     document.getElementById('stickers-container').appendChild(div);
 }
 
-// Drawing
 const drawCtx = drawingCanvas.getContext('2d');
 
 drawingCanvas.addEventListener('mousedown', startDrawing);
@@ -362,16 +340,9 @@ function clearDrawing() {
     drawCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
 }
 
-// AI Transcript - Requires backend API integration
 let transcriptSegments = [];
 
 async function generateTranscript() {
-    // This feature requires backend integration with speech-to-text API
-    // Implementation would:
-    // 1. Extract audio from video blob
-    // 2. Send to backend API (OpenAI Whisper, Google Cloud Speech-to-Text, etc.)
-    // 3. Receive timestamped transcript
-    // 4. Display in UI and allow caption application
     
     alert('AI Transcript requires backend speech-to-text API integration. The caption application system is ready once API is configured.');
 }
@@ -382,7 +353,6 @@ function applyCaptions() {
         return;
     }
     
-    // Apply transcript as text overlays
     transcriptSegments.forEach((segment, index) => {
         const overlay = {
             id: Date.now() + index,
@@ -392,7 +362,7 @@ function applyCaptions() {
             color: '#ffffff',
             animation: 'fade',
             x: 50,
-            y: 80 + (index * 10) // Stagger positions
+            y: 80 + (index * 10)
         };
         
         textOverlays.push(overlay);
@@ -402,7 +372,6 @@ function applyCaptions() {
     alert(`${transcriptSegments.length} caption(s) applied to video!`);
 }
 
-// Playback controls
 playPauseBtn.addEventListener('click', () => {
     if (previewVideo.paused) {
         previewVideo.play();
@@ -430,14 +399,8 @@ timelineSlider.addEventListener('input', (e) => {
     previewVideo.currentTime = time;
 });
 
-// Export functionality
 async function exportReel() {
     alert('Export functionality would render video with all effects and save to IndexedDB');
-    // In a real implementation, this would:
-    // 1. Use canvas to render each frame with all effects
-    // 2. Combine with FFmpeg.wasm or similar
-    // 3. Save to IndexedDB
-    // 4. Redirect to saved-reels
 }
 
 function confirmExit() {
@@ -446,7 +409,6 @@ function confirmExit() {
     }
 }
 
-// IndexedDB
 function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('ThoxtReelsDB', 1);
@@ -461,7 +423,6 @@ function openDB() {
     });
 }
 
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadVideoFromStorage();
 });

@@ -4,60 +4,60 @@
 
 {% block content %}
 <div class="recorder-container">
-    <!-- Exit Button -->
+    
     <button class="exit-btn" onclick="window.location.href='/'" data-testid="button-exit">✕</button>
     
-    <!-- Camera Flip Button -->
+    
     <button class="camera-flip-btn" id="camera-flip-btn" data-testid="button-camera-flip">⟲</button>
     
-    <!-- Video Preview -->
+    
     <div class="video-wrapper">
         <video id="video-preview" autoplay playsinline muted data-testid="video-preview"></video>
         <canvas id="recording-canvas" style="display: none;"></canvas>
         <div id="overlay-container" class="overlay-container" data-testid="overlay-container"></div>
     </div>
     
-    <!-- Teleprompter Overlay -->
+    
     <div id="teleprompter-overlay" class="teleprompter-overlay" style="display: none;">
         <div class="teleprompter-content" id="teleprompter-text" data-testid="teleprompter-text">
             Your script will appear here...
         </div>
     </div>
     
-    <!-- Instagram-Style Sidebar with Sections -->
+    
     <div class="recorder-sidebar" id="recorder-sidebar" data-testid="recorder-sidebar">
-        <!-- TEXT Section -->
+        
         <div class="sidebar-section" data-section="text" data-testid="section-text">
             <div class="section-icon">T</div>
             <div class="section-label">TEXT</div>
         </div>
         
-        <!-- STICKER Section -->
+        
         <div class="sidebar-section" data-section="sticker" data-testid="section-sticker">
             <div class="section-icon">☺</div>
             <div class="section-label">STICKER</div>
         </div>
         
-        <!-- FILTER Section -->
+        
         <div class="sidebar-section" data-section="filter" data-testid="section-filter">
             <div class="section-icon">◐</div>
             <div class="section-label">FILTER</div>
         </div>
         
-        <!-- MUSIC Section -->
+        
         <div class="sidebar-section" data-section="music" data-testid="section-music">
             <div class="section-icon">♪</div>
             <div class="section-label">MUSIC</div>
         </div>
         
-        <!-- MIRROR Section -->
+        
         <div class="sidebar-section" data-section="mirror" data-testid="section-mirror">
             <div class="section-icon">⇄</div>
             <div class="section-label">MIRROR</div>
         </div>
     </div>
     
-    <!-- Expandable Section Panels -->
+    
     <div class="section-panel" id="panel-text" style="display: none;" data-testid="panel-text">
         <div class="panel-header">
             <h3>Add Text</h3>
@@ -194,7 +194,7 @@
         </div>
     </div>
     
-    <!-- Controls -->
+    
     <div class="controls">
         <div class="control-row">
             <button id="teleprompter-btn" class="control-btn" data-testid="button-teleprompter">
@@ -214,7 +214,7 @@
         <div class="timer" id="timer" style="display: none;" data-testid="text-timer">00:00</div>
     </div>
     
-    <!-- Save Modal -->
+    
     <div id="save-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <h2>Save Your Reel</h2>

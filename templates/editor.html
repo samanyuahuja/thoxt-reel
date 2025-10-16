@@ -4,32 +4,32 @@
 
 {% block content %}
 <div class="editor-container">
-    <!-- Header -->
+    
     <div class="editor-header">
         <button class="back-btn" onclick="confirmExit()" data-testid="button-back">← Back</button>
         <h2>Edit Reel</h2>
         <button class="export-btn" onclick="exportReel()" data-testid="button-export">Export</button>
     </div>
 
-    <!-- Video Preview -->
+    
     <div class="video-preview-section">
         <div class="video-preview-container">
             <video id="preview-video-original" playsinline loop muted data-testid="video-preview-original"></video>
             <video id="preview-video" playsinline loop muted data-testid="video-preview"></video>
             <canvas id="editor-canvas" data-testid="canvas-editor"></canvas>
             
-            <!-- Filter Comparison Slider -->
+            
             <div id="filter-comparison" class="filter-comparison" style="display: none;">
                 <input type="range" id="comparison-slider" min="0" max="100" value="50" class="comparison-slider" data-testid="slider-comparison">
             </div>
             
-            <!-- Text Overlays -->
+            
             <div id="text-overlays" class="text-overlays" data-testid="container-text-overlays"></div>
             
-            <!-- Stickers -->
+            
             <div id="stickers-container" class="stickers-container" data-testid="container-stickers"></div>
             
-            <!-- Drawing Canvas -->
+            
             <canvas id="drawing-canvas" class="drawing-canvas" data-testid="canvas-drawing"></canvas>
         </div>
         
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <!-- Editing Tools Tabs -->
+    
     <div class="editor-tabs">
         <button class="editor-tab active" data-tab="filters" data-testid="tab-filters">◐ Filters</button>
         <button class="editor-tab" data-tab="text" data-testid="tab-text">T Text</button>
@@ -50,9 +50,9 @@
         <button class="editor-tab" data-tab="ai" data-testid="tab-ai">AI Transcript</button>
     </div>
 
-    <!-- Tool Panels -->
+    
     <div class="tool-panels">
-        <!-- Filters Panel -->
+        
         <div id="panel-filters" class="tool-panel active" data-testid="panel-filters">
             <div class="filter-grid">
                 <button class="filter-option" data-filter="none" data-testid="filter-none">
@@ -91,7 +91,7 @@
             <button class="compare-btn" onclick="toggleComparison()" data-testid="button-compare">Compare Before/After</button>
         </div>
 
-        <!-- Text Panel -->
+        
         <div id="panel-text" class="tool-panel" data-testid="panel-text">
             <input type="text" id="text-input" placeholder="Enter text..." data-testid="input-text">
             <div class="text-options">
@@ -120,7 +120,7 @@
             <button class="add-text-btn" onclick="addTextOverlay()" data-testid="button-add-text">Add Text</button>
         </div>
 
-        <!-- Music Panel -->
+        
         <div id="panel-music" class="tool-panel" data-testid="panel-music">
             <div class="music-library">
                 <div class="music-track" data-track="upbeat" data-testid="track-upbeat">
@@ -145,7 +145,7 @@
             </label>
         </div>
 
-        <!-- Stickers Panel -->
+        
         <div id="panel-stickers" class="tool-panel" data-testid="panel-stickers">
             <div class="sticker-grid">
                 <button class="sticker-btn" data-sticker="❤️" data-testid="sticker-heart">❤️</button>
@@ -159,7 +159,7 @@
             </div>
         </div>
 
-        <!-- Draw Panel -->
+        
         <div id="panel-draw" class="tool-panel" data-testid="panel-draw">
             <div class="draw-options">
                 <label>Color:
@@ -172,7 +172,7 @@
             <button class="clear-drawing-btn" onclick="clearDrawing()" data-testid="button-clear-drawing">Clear Drawing</button>
         </div>
 
-        <!-- AI Transcript Panel -->
+        
         <div id="panel-ai" class="tool-panel" data-testid="panel-ai">
             <div class="feature-note">
                 <p><strong>Note:</strong> AI Transcript requires backend speech-to-text API integration (OpenAI Whisper, Google Cloud Speech-to-Text, etc.)</p>

@@ -1,15 +1,12 @@
-// Global variables
 let uploadedFile = null;
 let videoBlob = null;
 
-// DOM elements
 const uploadBox = document.getElementById('upload-box');
 const fileInput = document.getElementById('file-input');
 const previewSection = document.getElementById('preview-section');
 const previewVideo = document.getElementById('preview-video');
 const videoTitle = document.getElementById('video-title');
 
-// Drag and drop handlers
 uploadBox.addEventListener('dragover', (e) => {
     e.preventDefault();
     uploadBox.style.borderColor = '#ffd700';
@@ -33,22 +30,18 @@ uploadBox.addEventListener('drop', (e) => {
     }
 });
 
-// File input handler
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         handleFileSelect(e.target.files[0]);
     }
 });
 
-// Handle file selection
 function handleFileSelect(file) {
-    // Validate file type
     if (!file.type.startsWith('video/')) {
         alert('Please select a valid video file');
         return;
     }
     
-    // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
         alert('File size must be less than 100MB');
@@ -58,20 +51,16 @@ function handleFileSelect(file) {
     uploadedFile = file;
     videoBlob = file;
     
-    // Create preview
     const videoURL = URL.createObjectURL(file);
     previewVideo.src = videoURL;
     
-    // Show preview section
     uploadBox.style.display = 'none';
     previewSection.style.display = 'block';
     
-    // Set default title
-    const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
     videoTitle.value = fileName;
 }
 
-// Cancel upload
 function cancelUpload() {
     uploadedFile = null;
     videoBlob = null;
@@ -83,22 +72,18 @@ function cancelUpload() {
     fileInput.value = '';
 }
 
-// Save uploaded video
 async function saveUploadedVideo() {
     const title = videoTitle.value.trim() || 'Uploaded Video';
     const duration = Math.floor(previewVideo.duration) || 0;
     const reelId = 'reel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     
     try {
-        // Open IndexedDB
         const db = await openDB();
         const transaction = db.transaction(['reels'], 'readwrite');
         const store = transaction.objectStore('reels');
         
-        // Generate thumbnail
         const thumbnail = await generateThumbnail();
         
-        // Save reel
         const reel = {
             id: reelId,
             title: title,
@@ -114,7 +99,6 @@ async function saveUploadedVideo() {
         
         console.log('Uploaded video saved successfully:', reelId);
         
-        // Redirect to editor
         window.location.href = `/editor?id=${reelId}`;
         
     } catch (error) {
@@ -123,7 +107,6 @@ async function saveUploadedVideo() {
     }
 }
 
-// Generate thumbnail from video
 function generateThumbnail() {
     return new Promise((resolve) => {
         const canvas = document.createElement('canvas');
@@ -131,9 +114,8 @@ function generateThumbnail() {
         canvas.height = 427;
         const ctx = canvas.getContext('2d');
         
-        // Wait for video to load metadata
         previewVideo.addEventListener('loadeddata', () => {
-            previewVideo.currentTime = 1; // Seek to 1 second for thumbnail
+            previewVideo.currentTime = 1;
         }, { once: true });
         
         previewVideo.addEventListener('seeked', () => {
@@ -143,7 +125,6 @@ function generateThumbnail() {
     });
 }
 
-// IndexedDB operations
 function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('ThoxtReelsDB', 1);

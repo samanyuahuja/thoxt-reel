@@ -4,14 +4,14 @@
 
 {% block content %}
 <div class="upload-container">
-    <!-- Header -->
+    
     <div class="upload-header">
         <button class="back-btn" onclick="window.location.href='/'" data-testid="button-back">← Back</button>
         <h2>Upload Video</h2>
         <div></div>
     </div>
 
-    <!-- Upload Area -->
+    
     <div class="upload-section">
         <div class="upload-box" id="upload-box" data-testid="upload-box">
             <div class="upload-icon">↑</div>
@@ -21,7 +21,7 @@
             <button class="browse-btn" onclick="document.getElementById('file-input').click()" data-testid="button-browse">Browse Files</button>
         </div>
 
-        <!-- Preview Area -->
+        
         <div id="preview-section" class="preview-section" style="display: none;">
             <video id="preview-video" controls playsinline data-testid="video-upload-preview"></video>
             <input type="text" id="video-title" placeholder="Enter video title..." class="title-input" data-testid="input-video-title">
