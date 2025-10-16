@@ -6,7 +6,21 @@ The application provides a comprehensive suite of features including AI-assisted
 
 ## Recent Changes (October 2025)
 
-### Portrait Camera & Overlay Recording (Latest - October 15, 2025)
+### LM Studio AI Integration for Teleprompter (Latest - October 16, 2025)
+- **Local AI Script Generation** ✅:
+  - Integration with LM Studio running Llama-3.2-1b-instruct locally
+  - New /ai-script page for generating video scripts
+  - Configurable parameters: topic, duration (15/30/60s), tone (engaging/professional/casual/educational)
+  - Backend endpoint calls LM Studio API at localhost:1234
+  - Generated scripts saved to sessionStorage and displayed in teleprompter
+  - Complete workflow: Generate Script → Use This Script → Record with Teleprompter
+- **Technical Implementation**:
+  - OpenAI-compatible API calls to local LM Studio server
+  - Proper error handling for connection issues
+  - System prompt optimized for social media video scripts
+  - Temperature: 0.7, Max tokens: 300
+
+### Portrait Camera & Overlay Recording (October 15, 2025)
 - **Instagram-Style Portrait Video** ✅:
   - Works when phone is held PORTRAIT (upright/vertical) like Instagram
   - Camera flip button (⟲) to switch between front/back camera
