@@ -6,7 +6,7 @@
 <div class="editor-container">
     <!-- Header -->
     <div class="editor-header">
-        <button class="back-btn" onclick="confirmExit()" data-testid="button-back">Back</button>
+        <button class="back-btn" onclick="confirmExit()" data-testid="button-back">← Back</button>
         <h2>Edit Reel</h2>
         <button class="export-btn" onclick="exportReel()" data-testid="button-export">Export</button>
     </div>
@@ -34,7 +34,7 @@
         </div>
         
         <div class="playback-controls">
-            <button id="play-pause-btn" class="control-icon-btn" data-testid="button-play-pause">Play</button>
+            <button id="play-pause-btn" class="control-icon-btn" data-testid="button-play-pause">▶</button>
             <input type="range" id="timeline-slider" min="0" max="100" value="0" class="timeline-slider" data-testid="slider-timeline">
             <span id="time-display" data-testid="text-time-display">0:00 / 0:00</span>
         </div>
@@ -42,11 +42,11 @@
 
     <!-- Editing Tools Tabs -->
     <div class="editor-tabs">
-        <button class="editor-tab active" data-tab="filters" data-testid="tab-filters">Filters</button>
-        <button class="editor-tab" data-tab="text" data-testid="tab-text">Text</button>
-        <button class="editor-tab" data-tab="music" data-testid="tab-music">Music</button>
-        <button class="editor-tab" data-tab="stickers" data-testid="tab-stickers">Stickers</button>
-        <button class="editor-tab" data-tab="draw" data-testid="tab-draw">Draw</button>
+        <button class="editor-tab active" data-tab="filters" data-testid="tab-filters">◐ Filters</button>
+        <button class="editor-tab" data-tab="text" data-testid="tab-text">T Text</button>
+        <button class="editor-tab" data-tab="music" data-testid="tab-music">♪ Music</button>
+        <button class="editor-tab" data-tab="stickers" data-testid="tab-stickers">★ Stickers</button>
+        <button class="editor-tab" data-tab="draw" data-testid="tab-draw">✎ Draw</button>
         <button class="editor-tab" data-tab="ai" data-testid="tab-ai">AI Transcript</button>
     </div>
 
@@ -125,19 +125,19 @@
             <div class="music-library">
                 <div class="music-track" data-track="upbeat" data-testid="track-upbeat">
                     <span>Upbeat Energy</span>
-                    <button class="play-preview" data-testid="button-preview-upbeat">Play</button>
+                    <button class="play-preview" data-testid="button-preview-upbeat">▶</button>
                 </div>
                 <div class="music-track" data-track="chill" data-testid="track-chill">
                     <span>Chill Vibes</span>
-                    <button class="play-preview" data-testid="button-preview-chill">Play</button>
+                    <button class="play-preview" data-testid="button-preview-chill">▶</button>
                 </div>
                 <div class="music-track" data-track="dramatic" data-testid="track-dramatic">
                     <span>Dramatic</span>
-                    <button class="play-preview" data-testid="button-preview-dramatic">Play</button>
+                    <button class="play-preview" data-testid="button-preview-dramatic">▶</button>
                 </div>
                 <div class="music-track" data-track="ambient" data-testid="track-ambient">
                     <span>Ambient</span>
-                    <button class="play-preview" data-testid="button-preview-ambient">Play</button>
+                    <button class="play-preview" data-testid="button-preview-ambient">▶</button>
                 </div>
             </div>
             <label>Volume:

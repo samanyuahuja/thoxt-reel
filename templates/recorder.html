@@ -5,9 +5,10 @@
 {% block content %}
 <div class="recorder-container">
     <!-- Exit Button -->
-    <button class="exit-btn" onclick="window.location.href='/'" data-testid="button-exit">X</button>
+    <button class="exit-btn" onclick="window.location.href='/'" data-testid="button-exit">✕</button>
     
-    <button class="camera-flip-btn" id="camera-flip-btn" data-testid="button-camera-flip">FLIP</button>
+    <!-- Camera Flip Button -->
+    <button class="camera-flip-btn" id="camera-flip-btn" data-testid="button-camera-flip">⟲</button>
     
     <!-- Video Preview -->
     <div class="video-wrapper">
@@ -31,23 +32,27 @@
             <div class="section-label">TEXT</div>
         </div>
         
+        <!-- STICKER Section -->
         <div class="sidebar-section" data-section="sticker" data-testid="section-sticker">
-            <div class="section-icon">S</div>
+            <div class="section-icon">☺</div>
             <div class="section-label">STICKER</div>
         </div>
         
+        <!-- FILTER Section -->
         <div class="sidebar-section" data-section="filter" data-testid="section-filter">
-            <div class="section-icon">F</div>
+            <div class="section-icon">◐</div>
             <div class="section-label">FILTER</div>
         </div>
         
+        <!-- MUSIC Section -->
         <div class="sidebar-section" data-section="music" data-testid="section-music">
-            <div class="section-icon">M</div>
+            <div class="section-icon">♪</div>
             <div class="section-label">MUSIC</div>
         </div>
         
+        <!-- MIRROR Section -->
         <div class="sidebar-section" data-section="mirror" data-testid="section-mirror">
-            <div class="section-icon">MR</div>
+            <div class="section-icon">⇄</div>
             <div class="section-label">MIRROR</div>
         </div>
     </div>
@@ -56,7 +61,7 @@
     <div class="section-panel" id="panel-text" style="display: none;" data-testid="panel-text">
         <div class="panel-header">
             <h3>Add Text</h3>
-            <button class="panel-close" data-testid="button-close-text">X</button>
+            <button class="panel-close" data-testid="button-close-text">✕</button>
         </div>
         <div class="panel-content">
             <input type="text" id="text-input" placeholder="Enter text..." data-testid="input-text">
@@ -82,7 +87,7 @@
     <div class="section-panel" id="panel-sticker" style="display: none;" data-testid="panel-sticker">
         <div class="panel-header">
             <h3>Add Sticker</h3>
-            <button class="panel-close" data-testid="button-close-sticker">X</button>
+            <button class="panel-close" data-testid="button-close-sticker">✕</button>
         </div>
         <div class="panel-content">
             <div class="sticker-size-control">
@@ -106,7 +111,7 @@
     <div class="section-panel" id="panel-filter" style="display: none;" data-testid="panel-filter">
         <div class="panel-header">
             <h3>Filters</h3>
-            <button class="panel-close" data-testid="button-close-filter">X</button>
+            <button class="panel-close" data-testid="button-close-filter">✕</button>
         </div>
         <div class="panel-content">
             <div class="filters-list">
@@ -171,7 +176,7 @@
     <div class="section-panel" id="panel-music" style="display: none;" data-testid="panel-music">
         <div class="panel-header">
             <h3>Background Music</h3>
-            <button class="panel-close" data-testid="button-close-music">X</button>
+            <button class="panel-close" data-testid="button-close-music">✕</button>
         </div>
         <div class="panel-content">
             <p style="color: #888; text-align: center; padding: 20px;">Music coming soon...</p>
@@ -181,7 +186,7 @@
     <div class="section-panel" id="panel-mirror" style="display: none;" data-testid="panel-mirror">
         <div class="panel-header">
             <h3>Mirror Mode</h3>
-            <button class="panel-close" data-testid="button-close-mirror">X</button>
+            <button class="panel-close" data-testid="button-close-mirror">✕</button>
         </div>
         <div class="panel-content">
             <button id="toggle-mirror-btn" class="btn-primary" data-testid="button-toggle-mirror">Toggle Mirror</button>
@@ -193,16 +198,16 @@
     <div class="controls">
         <div class="control-row">
             <button id="teleprompter-btn" class="control-btn" data-testid="button-teleprompter">
-                Script
+                ≡ Script
             </button>
         </div>
         
         <div class="recording-controls">
             <button id="record-btn" class="record-btn" data-testid="button-record">
-                Record
+                <span class="record-icon">●</span> Record
             </button>
             <button id="stop-btn" class="stop-btn" style="display: none;" data-testid="button-stop">
-                Stop
+                <span class="stop-icon">■</span> Stop
             </button>
         </div>
         
