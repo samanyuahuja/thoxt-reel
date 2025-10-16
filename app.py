@@ -160,7 +160,7 @@ Script:"""
         response = client.chat.completions.create(
             model="gpt-4o-mini",  # Using gpt-4o-mini for faster, cost-effective results
             messages=[
-                {"role": "system", "content": "You are a professional script writer for social media videos. Create concise, engaging scripts."},
+                {"role": "system", "content": "You are a professional script writer for social media videos. Create concise, engaging scripts. NEVER use emojis - keep the content professional and text-only."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
