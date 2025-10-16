@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}AI Script Generator - Thoxt Reels{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="ai-script-container">
+        <h1 class="page-title">AI Script Generator</h1>
+        <p class="page-subtitle">Generate a script for your video using AI</p>
+        
+        <div class="script-form">
+            <div class="form-group">
+                <label for="topic-input">What's your video about?</label>
+                <textarea 
+                    id="topic-input" 
+                    placeholder="E.g., Tips for productivity, How to make coffee, My travel experience in Paris..."
+                    rows="4"
+                    data-testid="input-topic"
+                ></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="duration-select">Video Duration</label>
+                <select id="duration-select" data-testid="select-duration">
+                    <option value="15">15 seconds</option>
+                    <option value="30" selected>30 seconds</option>
+                    <option value="60">60 seconds</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="tone-select">Tone</label>
+                <select id="tone-select" data-testid="select-tone">
+                    <option value="engaging" selected>Engaging</option>
+                    <option value="professional">Professional</option>
+                    <option value="casual">Casual</option>
+                    <option value="educational">Educational</option>
+                </select>
+            </div>
+            
+            <button id="generate-btn" class="btn-primary" data-testid="button-generate">
+                Generate Script
+            </button>
+        </div>
+        
+        <div id="script-result" class="script-result" style="display: none;">
+            <h2>Your Script</h2>
+            <div id="script-text" class="script-display" data-testid="script-display"></div>
+            <div class="script-actions">
+                <button id="use-script-btn" class="btn-primary" data-testid="button-use-script">
+                    Use This Script
+                </button>
+                <button id="regenerate-btn" class="btn-secondary" data-testid="button-regenerate">
+                    Regenerate
+                </button>
+            </div>
+        </div>
+        
+        <div id="loading-indicator" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Generating your script...</p>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/ai-script.js"></script>
+{% endblock %}

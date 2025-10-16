@@ -775,6 +775,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if teleprompter mode is enabled
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('teleprompter') === 'true') {
+        // Load script from sessionStorage if available
+        const savedScript = sessionStorage.getItem('teleprompterScript');
+        if (savedScript) {
+            const teleprompterText = document.getElementById('teleprompter-text');
+            teleprompterText.textContent = savedScript;
+        }
         setTimeout(() => toggleTeleprompter(), 500);
     }
 });

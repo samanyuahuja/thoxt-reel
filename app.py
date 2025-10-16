@@ -5,6 +5,7 @@ import os
 import json
 from datetime import datetime
 import base64
+import requests
 
 app = Flask(__name__)
 CORS(app)
@@ -65,6 +66,11 @@ def upload():
     """Video upload page"""
     return render_template('upload.html')
 
+@app.route('/ai-script')
+def ai_script():
+    """AI script generator page"""
+    return render_template('ai-script.html')
+
 # API Routes
 @app.route('/api/reels', methods=['GET'])
 def get_reels():
@@ -113,6 +119,59 @@ def update_likes(reel_id):
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+@app.route('/api/generate-script', methods=['POST'])
+def generate_script():
+    """Generate script using LM Studio local AI"""
+    data = request.json or {}
+    topic = data.get('topic', '')
+    duration = data.get('duration', 30)
+    tone = data.get('tone', 'engaging')
+    
+    if not topic:
+        return jsonify({'error': 'Topic is required'}), 400
+    
+    # Create prompt based on parameters
+    prompt = f"""Generate a {duration}-second video script about: {topic}
+
+Requirements:
+- Tone: {tone}
+- Duration: approximately {duration} seconds when spoken
+- Format: Just the script text, no extra formatting
+- Make it perfect for a social media reel/short video
+- Keep it concise and engaging
+
+Script:"""
+    
+    try:
+        # Call LM Studio API (OpenAI-compatible)
+        response = requests.post(
+            'http://localhost:1234/v1/chat/completions',
+            json={
+                'model': 'llama-3.2-1b-instruct',
+                'messages': [
+                    {'role': 'system', 'content': 'You are a professional script writer for social media videos. Create concise, engaging scripts.'},
+                    {'role': 'user', 'content': prompt}
+                ],
+                'temperature': 0.7,
+                'max_tokens': 300
+            },
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            script = result['choices'][0]['message']['content'].strip()
+            return jsonify({'script': script})
+        else:
+            return jsonify({'error': f'LM Studio API error: {response.status_code}'}), 500
+            
+    except requests.exceptions.ConnectionError:
+        return jsonify({'error': 'Cannot connect to LM Studio. Make sure it is running on localhost:1234'}), 500
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'Request timed out. LM Studio may be busy.'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Static files
 @app.route('/static/<path:filename>')
