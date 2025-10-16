@@ -1,5 +1,7 @@
 # Thoxt Reels - AI-Powered Video Creation Platform
 
+Video demo: https://youtu.be/v--ycJCig0U
+
 ## Project Overview and Motivation
 
 Thoxt Reels is a comprehensive video recording and editing platform designed to revolutionize how content creators, journalists, and bloggers transform their written content into engaging social media videos. The platform addresses a critical gap in the content creation workflow: the ability to quickly convert articles and ideas into professional-quality vertical videos optimized for Instagram Reels, TikTok, and other short-form video platforms.
