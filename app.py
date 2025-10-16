@@ -144,6 +144,7 @@ Requirements:
 Script:"""
     
     try:
+        print(f"Attempting to connect to LM Studio at http://192.168.1.188:1234...")
         # Call LM Studio API (OpenAI-compatible)
         response = requests.post(
             'http://192.168.1.188:1234/v1/chat/completions',
@@ -159,19 +160,32 @@ Script:"""
             timeout=30
         )
         
+        print(f"LM Studio response status: {response.status_code}")
+        
         if response.status_code == 200:
             result = response.json()
+            print(f"Response received: {result}")
             script = result['choices'][0]['message']['content'].strip()
             return jsonify({'script': script})
         else:
-            return jsonify({'error': f'LM Studio API error: {response.status_code}'}), 500
+            error_msg = f'LM Studio API error: {response.status_code} - {response.text}'
+            print(error_msg)
+            return jsonify({'error': error_msg}), 500
             
-    except requests.exceptions.ConnectionError:
-        return jsonify({'error': 'Cannot connect to LM Studio. Make sure it is running on 192.168.1.188:1234'}), 500
-    except requests.exceptions.Timeout:
-        return jsonify({'error': 'Request timed out. LM Studio may be busy.'}), 500
+    except requests.exceptions.ConnectionError as e:
+        error_msg = f'Cannot connect to LM Studio at 192.168.1.188:1234. Error: {str(e)}'
+        print(error_msg)
+        return jsonify({'error': error_msg}), 500
+    except requests.exceptions.Timeout as e:
+        error_msg = f'Request timed out. LM Studio may be busy. Error: {str(e)}'
+        print(error_msg)
+        return jsonify({'error': error_msg}), 500
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = f'Unexpected error: {str(e)}'
+        print(error_msg)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': error_msg}), 500
 
 # Static files
 @app.route('/static/<path:filename>')

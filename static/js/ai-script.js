@@ -47,11 +47,14 @@ generateBtn.addEventListener('click', async () => {
             scriptResult.style.display = 'block';
             loadingIndicator.style.display = 'none';
         } else {
-            throw new Error(data.error || 'Failed to generate script');
+            const errorMsg = data.error || 'Failed to generate script';
+            console.error('Server error:', errorMsg);
+            throw new Error(errorMsg);
         }
     } catch (error) {
         console.error('Error generating script:', error);
-        alert('Failed to generate script. Make sure LM Studio is running on 192.168.1.188:1234');
+        const errorMessage = error.message || error.toString();
+        alert(`Failed to generate script:\n\n${errorMessage}\n\nMake sure LM Studio is running on 192.168.1.188:1234`);
         loadingIndicator.style.display = 'none';
     } finally {
         generateBtn.disabled = false;
