@@ -122,7 +122,7 @@ def update_likes(reel_id):
 
 @app.route('/api/generate-script', methods=['POST'])
 def generate_script():
-    """Generate script using OpenAI via Replit AI Integrations"""
+    """Generate script using OpenAI"""
     import os
     from openai import OpenAI
     
@@ -133,6 +133,11 @@ def generate_script():
     
     if not topic:
         return jsonify({'error': 'Topic is required'}), 400
+    
+    # Check for OpenAI API key
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    if not openai_api_key:
+        return jsonify({'error': 'OPENAI_API_KEY not set. Please add your OpenAI API key to Secrets.'}), 400
     
     # Create prompt based on parameters
     prompt = f"""Generate a {duration}-second video script about: {topic}
@@ -147,15 +152,11 @@ Requirements:
 Script:"""
     
     try:
-        print("Using Replit AI Integrations (OpenAI)...")
+        print("Using OpenAI API...")
         
-        # This is using Replit's AI Integrations service
-        client = OpenAI(
-            base_url=os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL'),
-            api_key=os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY')
-        )
+        # Use user's own OpenAI API key
+        client = OpenAI(api_key=openai_api_key)
         
-        # the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
         response = client.chat.completions.create(
             model="gpt-4o-mini",  # Using gpt-4o-mini for faster, cost-effective results
             messages=[
