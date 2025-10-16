@@ -51,7 +51,7 @@ generateBtn.addEventListener('click', async () => {
         }
     } catch (error) {
         console.error('Error generating script:', error);
-        alert('Failed to generate script. Make sure LM Studio is running on localhost:1234');
+        alert('Failed to generate script. Make sure LM Studio is running on 192.168.1.188:1234');
         loadingIndicator.style.display = 'none';
     } finally {
         generateBtn.disabled = false;

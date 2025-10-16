@@ -146,7 +146,7 @@ Script:"""
     try:
         # Call LM Studio API (OpenAI-compatible)
         response = requests.post(
-            'http://localhost:1234/v1/chat/completions',
+            'http://192.168.1.188:1234/v1/chat/completions',
             json={
                 'model': 'llama-3.2-1b-instruct',
                 'messages': [
@@ -167,7 +167,7 @@ Script:"""
             return jsonify({'error': f'LM Studio API error: {response.status_code}'}), 500
             
     except requests.exceptions.ConnectionError:
-        return jsonify({'error': 'Cannot connect to LM Studio. Make sure it is running on localhost:1234'}), 500
+        return jsonify({'error': 'Cannot connect to LM Studio. Make sure it is running on 192.168.1.188:1234'}), 500
     except requests.exceptions.Timeout:
         return jsonify({'error': 'Request timed out. LM Studio may be busy.'}), 500
     except Exception as e:
