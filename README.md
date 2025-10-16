@@ -99,7 +99,7 @@ python app.py
 
 ## Quick Test Checklist for Evaluators
 
-### ✅ AI Script Generation
+### AI Script Generation
 1. Navigate to "AI Teleprompter" from main menu
 2. Enter a topic (e.g., "healthy eating tips")
 3. Select duration: 15, 30, or 60 seconds
@@ -107,21 +107,21 @@ python app.py
 5. Click "Generate Script"
 6. Verify script generates without errors
 
-### ✅ Video Recording
+### Video Recording
 1. Click "Create New Reel" from main menu
 2. Grant camera permissions when prompted
 3. Record a short video (5-10 seconds)
 4. Click stop button
 5. Verify recording preview appears
 
-### ✅ Teleprompter Feature
+### Teleprompter Feature
 1. Generate a script using AI Teleprompter
 2. Click "Use This Script" button
 3. Verify teleprompter opens in recorder
 4. Click record and observe word-by-word highlighting
 5. Verify yellow highlight moves through text at ~150 words/minute
 
-### ✅ Instagram-Style Editing Features
+### Instagram-Style Editing Features
 1. In recorder, test the vertical sidebar sections:
    - **TEXT**: Add custom text overlays with font/color options
    - **STICKER**: Add emoji stickers and drag to position
@@ -133,7 +133,7 @@ python app.py
    - Click camera flip button (⟲) to switch front/back camera
    - Verify portrait orientation (1080x1920)
 
-### ✅ Save and Playback
+### Save and Playback
 1. After recording, enter a title for your reel
 2. Click "Save Reel"
 3. Navigate to "My Reels" from main menu
@@ -141,7 +141,7 @@ python app.py
 5. Click play and confirm audio works
 6. Test Edit and Download buttons
 
-### ✅ Mobile Responsiveness
+### Mobile Responsiveness
 1. Open application on mobile device or resize browser to mobile width
 2. Verify fullscreen recorder interface
 3. Test touch controls and gestures
