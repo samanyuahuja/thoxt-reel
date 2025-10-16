@@ -42,10 +42,10 @@ Requirements:
 Script:`;
     
     try {
-        console.log('Calling local AI server at 192.168.1.188:5001...');
+        console.log('Generating script using cloud AI...');
         
-        // Call local Flask AI server directly from browser (client-side)
-        const response = await fetch('http://192.168.1.188:5001/generate', {
+        // Call backend API which uses Replit AI Integrations
+        const response = await fetch('/api/generate-script', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -57,12 +57,13 @@ Script:`;
             })
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
-            throw new Error(`AI Server error: ${response.status}`);
+            throw new Error(data.error || `Server error: ${response.status}`);
         }
         
-        const data = await response.json();
-        console.log('AI Server response received:', data);
+        console.log('Script generated successfully!');
         
         currentScript = data.script.trim();
         scriptText.textContent = currentScript;
@@ -72,7 +73,7 @@ Script:`;
     } catch (error) {
         console.error('Error generating script:', error);
         const errorMessage = error.message || error.toString();
-        alert(`Failed to generate script:\n\n${errorMessage}\n\nMake sure:\n1. Local AI server is running: python local_ai_server.py\n2. Server is on 192.168.1.188:5001\n3. Model loaded: Llama-3.2-1B-Instruct-Q8_0.gguf`);
+        alert(`Failed to generate script:\n\n${errorMessage}`);
         loadingIndicator.style.display = 'none';
     } finally {
         generateBtn.disabled = false;

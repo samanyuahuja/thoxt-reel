@@ -122,7 +122,10 @@ def update_likes(reel_id):
 
 @app.route('/api/generate-script', methods=['POST'])
 def generate_script():
-    """Generate script using LM Studio local AI"""
+    """Generate script using OpenAI via Replit AI Integrations"""
+    import os
+    from openai import OpenAI
+    
     data = request.json or {}
     topic = data.get('topic', '')
     duration = data.get('duration', 30)
@@ -144,44 +147,37 @@ Requirements:
 Script:"""
     
     try:
-        print(f"Attempting to connect to LM Studio at http://192.168.1.188:1234...")
-        # Call LM Studio API (OpenAI-compatible)
-        response = requests.post(
-            'http://192.168.1.188:1234/v1/chat/completions',
-            json={
-                'model': 'llama-3.2-1b-instruct',
-                'messages': [
-                    {'role': 'system', 'content': 'You are a professional script writer for social media videos. Create concise, engaging scripts.'},
-                    {'role': 'user', 'content': prompt}
-                ],
-                'temperature': 0.7,
-                'max_tokens': 300
-            },
-            timeout=30
+        print("Using Replit AI Integrations (OpenAI)...")
+        
+        # This is using Replit's AI Integrations service
+        client = OpenAI(
+            base_url=os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL'),
+            api_key=os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY')
         )
         
-        print(f"LM Studio response status: {response.status_code}")
+        # the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # Using gpt-4o-mini for faster, cost-effective results
+            messages=[
+                {"role": "system", "content": "You are a professional script writer for social media videos. Create concise, engaging scripts."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
         
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Response received: {result}")
-            script = result['choices'][0]['message']['content'].strip()
-            return jsonify({'script': script})
+        script = response.choices[0].message.content
+        if script:
+            script = script.strip()
         else:
-            error_msg = f'LM Studio API error: {response.status_code} - {response.text}'
-            print(error_msg)
-            return jsonify({'error': error_msg}), 500
+            script = ""
+        
+        print(f"Script generated successfully: {len(script)} characters")
+        
+        return jsonify({'script': script})
             
-    except requests.exceptions.ConnectionError as e:
-        error_msg = f'Cannot connect to LM Studio at 192.168.1.188:1234. Error: {str(e)}'
-        print(error_msg)
-        return jsonify({'error': error_msg}), 500
-    except requests.exceptions.Timeout as e:
-        error_msg = f'Request timed out. LM Studio may be busy. Error: {str(e)}'
-        print(error_msg)
-        return jsonify({'error': error_msg}), 500
     except Exception as e:
-        error_msg = f'Unexpected error: {str(e)}'
+        error_msg = f'AI generation error: {str(e)}'
         print(error_msg)
         import traceback
         traceback.print_exc()
